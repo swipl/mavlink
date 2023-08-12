@@ -69,7 +69,7 @@ mavlink_includes(Mavlink, Bases) :-
     findall(Base, mavlink_include(Mavlink, Base), Bases).
 
 mavlink_include(Mavlink, Base) :-
-    xpath(Mavlink, //(include), element(_, _, [Include])),
+    xpath(Mavlink, include, element(_, _, [Include])),
     file_name_extension(Base, xml, Include).
 
 %!  mavlink_message_definitions(+Base, -Mavlink) is semidet.
