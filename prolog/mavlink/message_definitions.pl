@@ -73,6 +73,19 @@ mavlink_include(Mavlink, Base) :-
     file_name_extension(Base, xml, Include).
 
 %!  mavlink_message_definitions(+Base, -Mavlink) is semidet.
+%
+%   Loads an arbitrary MAVLink message definition structure where the
+%   first `Base` argument specifies `standard` or some other message
+%   set; the `xml` extension automatically applies. The predicate
+%   requires Internet access to GitHub, naturally. It operates
+%   semi-deterministically, not unifying with _every_ `mavlink` element
+%   within the definition---with a trailing choice point, as would
+%   happen if the predicate tried to find multiple elements. Normally,
+%   one definition has one element. The rule unifies with just one by
+%   finding the first element; it fails if more than one because only
+%   one allowed. Using `xpath_chk/3` instead of `xpath/3` results in
+%   finding the first only but also unifying the loaded structure with a
+%   single element also ensures the constraint.
 
 mavlink_message_definitions(Base, Mavlink) :-
     file_name_extension(Base, xml, File),
@@ -82,5 +95,5 @@ mavlink_message_definitions(Base, Mavlink) :-
                      host('raw.githubusercontent.com'),
                      path(Path)
                    ]),
-    load_structure(URL, DOM, []),
-    xpath_chk(DOM, //(mavlink), Mavlink).
+    load_structure(URL, [Element], []),
+    xpath_chk(Element, /(mavlink), Mavlink).
