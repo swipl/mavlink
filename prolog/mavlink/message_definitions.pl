@@ -86,6 +86,8 @@ mavlink_include(Mavlink, Base) :-
 %   one allowed. Using `xpath_chk/3` instead of `xpath/3` results in
 %   finding the first only but also unifying the loaded structure with a
 %   single element also ensures the constraint.
+%
+%   @see https://github.com/mavlink/mavlink/tree/master/message_definitions/v1.0
 
 mavlink_message_definitions(Base, Mavlink) :-
     file_name_extension(Base, xml, File),
