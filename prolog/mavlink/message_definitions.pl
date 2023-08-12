@@ -89,7 +89,7 @@ mavlink_include(Mavlink, Base) :-
 
 mavlink_message_definitions(Base, Mavlink) :-
     file_name_extension(Base, xml, File),
-    directory_file_path('/mavlink/mavlink/master/message_definitions/v1.0/',
+    directory_file_path('/mavlink/mavlink/master/message_definitions/v1.0',
                         File, Path),
     parse_url(URL, [ protocol(https),
                      host('raw.githubusercontent.com'),
