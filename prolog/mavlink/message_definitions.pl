@@ -33,6 +33,14 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 %!  mavlink_message_definitions_r(+Base, -Mavlinks:list) is det.
 %
+%   Recursively downloads multiple XML elements containing MAVLink
+%   message definitions.
+%
+%   Searches through the included graph of message definitions.
+%   Recursively accumulates base-element pairs for a given base, e.g.
+%   `all`, along with all its included message definitions, eliminating
+%   duplicated includes.
+%
 %   Things to note:
 %
 %       * The inner predicate accumulates the base-element pairs in
@@ -74,6 +82,8 @@ mavlink_include(Mavlink, Base) :-
 
 %!  mavlink_message_definitions(+Base, -Mavlink) is semidet.
 %
+%   Downloads MAVLink message definitions from GitHub.
+%
 %   Loads an arbitrary MAVLink message definition structure where the
 %   first `Base` argument specifies `standard` or some other message
 %   set; the `xml` extension automatically applies. The predicate
@@ -86,6 +96,8 @@ mavlink_include(Mavlink, Base) :-
 %   one allowed. Using `xpath_chk/3` instead of `xpath/3` results in
 %   finding the first only but also unifying the loaded structure with a
 %   single element also ensures the constraint.
+%
+%   @see https://mavlink.io/en/
 %
 %   @see https://github.com/mavlink/mavlink/tree/master/message_definitions/v1.0
 
