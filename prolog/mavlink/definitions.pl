@@ -152,13 +152,9 @@ mavlink_message_field_definition(Message, MessageName,
                                                        Options)) :-
     mavlink_message_field(Message, FieldName, Type, Options).
 
-%!  mavlink_enum(+Mavlink, ?EnumName, -Options, -Enum) is nondet.
-
 mavlink_enum(Mavlink, EnumName, Options, Enum) :-
     xpath(Mavlink, enums/enum(@name=EnumName), Enum),
     attrs_options(Enum, [name=_], Options).
-
-%!  mavlink_enum_entry(+Enum, ?EntryName, ?Value, -Options) is nondet.
 
 mavlink_enum_entry(Enum, EntryName, Value, Options) :-
     xpath(Enum, entry(@value(number)=Value,
