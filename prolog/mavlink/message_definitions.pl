@@ -30,6 +30,12 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
           [ mavlink_message_definitions_r/2,     % +Base,-Mavlinks:list
             mavlink_message_definitions/2        % +Base,-Mavlink
           ]).
+:- autoload(library(filesex), [directory_file_path/3]).
+:- autoload(library(lists), [reverse/2, subtract/3, append/3]).
+:- autoload(library(pairs), [pairs_keys/2]).
+:- autoload(library(sgml), [load_structure/3]).
+:- autoload(library(url), [parse_url/2]).
+:- autoload(library(xpath), [xpath/3, xpath_chk/3]).
 
 %!  mavlink_message_definitions_r(+Base, -Mavlinks:list) is det.
 %
