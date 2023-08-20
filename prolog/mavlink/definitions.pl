@@ -27,8 +27,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 :- module(mavlink_definitions,
-          [ mavlink_definitions_r/2,     % +Base,-Mavlinks:list
-            mavlink_definitions/2        % +Base,-Mavlink
+          [ mavlink_definitions_r/2,            % +Base,-Mavlinks:list
+            mavlink_definitions/2               % +Base,-Mavlink
           ]).
 :- autoload(library(filesex), [directory_file_path/3]).
 :- autoload(library(lists), [reverse/2, subtract/3, append/3]).
