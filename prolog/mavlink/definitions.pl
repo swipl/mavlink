@@ -36,6 +36,9 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 :- autoload(library(sgml), [load_structure/3]).
 :- autoload(library(url), [parse_url/2]).
 :- autoload(library(xpath), [xpath/3, xpath_chk/3]).
+:- autoload(library(option), [merge_options/3]).
+
+:- use_module(library(xpath)).
 
 %!  mavlink_definitions_r(+Base, -Mavlinks:list) is det.
 %
@@ -117,3 +120,61 @@ mavlink_definitions(Base, Mavlink) :-
                    ]),
     load_structure(URL, [Element], []),
     xpath_chk(Element, /(mavlink), Mavlink).
+
+mavlink_definition(Mavlink, Definition) :-
+    (   mavlink_enum_definition(Mavlink, Definition)
+    ;   mavlink_message_definition(Mavlink, Definition)
+    ).
+
+mavlink_enum_definition(Mavlink, Definition) :-
+    mavlink_enum(Mavlink, EnumName, Options, Enum),
+    (   mavlink_enum(EnumName, Options) = Definition
+    ;   mavlink_enum_entry_definition(Enum, EnumName, Definition)
+    ).
+
+mavlink_enum_entry_definition(Enum, EnumName,
+                              mavlink_enum_entry(EnumName,
+                                                 EntryName,
+                                                 Value,
+                                                 Options)) :-
+    mavlink_enum_entry(Enum, EntryName, Value, Options).
+
+mavlink_message_definition(Mavlink, Definition) :-
+    mavlink_message(Mavlink, MessageName, Id, Options, Message),
+    (   mavlink_message(MessageName, Id, Options) = Definition
+    ;   mavlink_message_field_definition(Message, MessageName, Definition)
+    ).
+
+mavlink_message_field_definition(Message, MessageName,
+                                 mavlink_message_field(MessageName,
+                                                       FieldName,
+                                                       Type,
+                                                       Options)) :-
+    mavlink_message_field(Message, FieldName, Type, Options).
+
+%!  mavlink_enum(+Mavlink, ?EnumName, -Options, -Enum) is nondet.
+
+mavlink_enum(Mavlink, EnumName, Options, Enum) :-
+    xpath(Mavlink, enums/enum(@name=EnumName), Enum),
+    attrs_options(Enum, [name=_], Options).
+
+%!  mavlink_enum_entry(+Enum, ?EntryName, ?Value, -Options) is nondet.
+
+mavlink_enum_entry(Enum, EntryName, Value, Options) :-
+    xpath(Enum, entry(@value(number)=Value,
+                      @name=EntryName), Entry),
+    attrs_options(Entry, [value=_, name=_], Options).
+
+mavlink_message(Mavlink, MessageName, Id, Options, Message) :-
+    xpath(Mavlink, messages/message(@id(number)=Id,
+                                    @name=MessageName), Message),
+    attrs_options(Message, [id=_, name=_], Options).
+
+mavlink_message_field(Message, FieldName, Type, Options) :-
+    xpath(Message, field(@type=Type,
+                         @name=FieldName), Field),
+    attrs_options(Field, [type=_, name=_], Options).
+
+attrs_options(element(_, Attrs, _), Delete, Options) :-
+    subtract(Attrs, Delete, Attrs_),
+    merge_options(Attrs_, [], Options).
