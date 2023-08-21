@@ -28,6 +28,11 @@ crc_16_mcrf4xx(Check0, Data, Check) :-
     Check is (Check0 >> 8) xor (Data__ << 8) xor (Data__ << 3) xor (Data__ >> 4).
 crc_16_mcrf4xx(Check0, Data, Check) :-
     is_list(Data),
+    !,
     foldl(crc_16_mcrf4xx_, Data, Check0, Check).
+crc_16_mcrf4xx(Check0, Data, Check) :-
+    atomic(Data),
+    atom_codes(Data, Data_),
+    crc_16_mcrf4xx(Check0, Data_, Check).
 
 crc_16_mcrf4xx_(Data, Check0, Check) :- crc_16_mcrf4xx(Check0, Data, Check).
