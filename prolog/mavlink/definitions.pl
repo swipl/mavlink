@@ -122,51 +122,51 @@ mavlink_definitions(Base, Mavlink) :-
     xpath_chk(Element, /(mavlink), Mavlink).
 
 mavlink_definition(Mavlink, Definition) :-
-    (   mavlink_enum_definition(Mavlink, Definition)
-    ;   mavlink_message_definition(Mavlink, Definition)
+    (   enum_definition(Mavlink, Definition)
+    ;   message_definition(Mavlink, Definition)
     ).
 
-mavlink_enum_definition(Mavlink, Definition) :-
-    mavlink_enum(Mavlink, EnumName, Options, Enum),
-    (   mavlink_enum(EnumName, Options) = Definition
-    ;   mavlink_enum_entry_definition(Enum, EnumName, Definition)
+enum_definition(Mavlink, Definition) :-
+    enum(Mavlink, EnumName, Options, Enum),
+    (   enum(EnumName, Options) = Definition
+    ;   enum_entry_definition(Enum, EnumName, Definition)
     ).
 
-mavlink_enum_entry_definition(Enum, EnumName,
-                              mavlink_enum_entry(EnumName,
-                                                 EntryName,
-                                                 Value,
-                                                 Options)) :-
-    mavlink_enum_entry(Enum, EntryName, Value, Options).
+enum_entry_definition(Enum, EnumName,
+                      enum_entry(EnumName,
+                                 EntryName,
+                                 Value,
+                                 Options)) :-
+    enum_entry(Enum, EntryName, Value, Options).
 
-mavlink_message_definition(Mavlink, Definition) :-
-    mavlink_message(Mavlink, MessageName, Id, Options, Message),
-    (   mavlink_message(MessageName, Id, Options) = Definition
-    ;   mavlink_message_field_definition(Message, MessageName, Definition)
+message_definition(Mavlink, Definition) :-
+    message(Mavlink, MessageName, Id, Options, Message),
+    (   message(MessageName, Id, Options) = Definition
+    ;   message_field_definition(Message, MessageName, Definition)
     ).
 
-mavlink_message_field_definition(Message, MessageName,
-                                 mavlink_message_field(MessageName,
-                                                       FieldName,
-                                                       Type,
-                                                       Options)) :-
-    mavlink_message_field(Message, FieldName, Type, Options).
+message_field_definition(Message, MessageName,
+                         message_field(MessageName,
+                                       FieldName,
+                                       Type,
+                                       Options)) :-
+    message_field(Message, FieldName, Type, Options).
 
-mavlink_enum(Mavlink, EnumName, Options, Enum) :-
+enum(Mavlink, EnumName, Options, Enum) :-
     xpath(Mavlink, enums/enum(@name=EnumName), Enum),
     attrs_options(Enum, [name=_], Options).
 
-mavlink_enum_entry(Enum, EntryName, Value, Options) :-
+enum_entry(Enum, EntryName, Value, Options) :-
     xpath(Enum, entry(@value(number)=Value,
                       @name=EntryName), Entry),
     attrs_options(Entry, [value=_, name=_], Options).
 
-mavlink_message(Mavlink, MessageName, Id, Options, Message) :-
+message(Mavlink, MessageName, Id, Options, Message) :-
     xpath(Mavlink, messages/message(@id(number)=Id,
                                     @name=MessageName), Message),
     attrs_options(Message, [id=_, name=_], Options).
 
-mavlink_message_field(Message, FieldName, Type, Options) :-
+message_field(Message, FieldName, Type, Options) :-
     xpath(Message, field(@type=Type,
                          @name=FieldName), Field),
     attrs_options(Field, [type=_, name=_], Options).
