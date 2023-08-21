@@ -43,7 +43,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 %!  mavlink_definitions_r(+Base, -Mavlinks:list) is det.
 %
 %   Recursively downloads multiple XML elements containing MAVLink
-%   message definitions.
+%   enumeration and message definitions.
 %
 %   Searches through the included graph of message definitions.
 %   Recursively accumulates base-element pairs for a given base, e.g.
@@ -66,7 +66,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 %       *not* carry duplicates.
 %
 %       * The result is a list of base-element pairs for each set of
-%       `mavlink` message definitions.
+%       `mavlink` enumeration and message definitions.
 
 mavlink_definitions_r(H, Mavlinks) :-
     mavlink_definitions_r_([H], [], Mavlinks_),
@@ -91,7 +91,7 @@ mavlink_include(Mavlink, Base) :-
 
 %!  mavlink_definitions(+Base, -Mavlink) is semidet.
 %
-%   Downloads MAVLink message definitions from GitHub.
+%   Downloads MAVLink enumeration and message definitions from GitHub.
 %
 %   Loads an arbitrary MAVLink message definition structure where the
 %   first `Base` argument specifies `standard` or some other message
