@@ -166,6 +166,15 @@ message(Mavlink, MessageName, Id, Options, Message) :-
                                     @name=MessageName), Message),
     attrs_options(Message, [id=_, name=_], Options).
 
+message_field(Message, FieldName, Type, Options) :-
+    xpath(Message, field(@type=Type,
+                         @name=FieldName), Field),
+    attrs_options(Field, [type=_, name=_], Options).
+
+attrs_options(element(_, Attrs, _), Delete, Options) :-
+    subtract(Attrs, Delete, Attrs_),
+    merge_options(Attrs_, [], Options).
+
 message_element(element(message, _, Elements),
                 element(Name, Attrs, Content)) :-
     member(element(Name, Attrs, Content), Elements).
@@ -190,12 +199,3 @@ message_fields_([element(extensions, _, _)|Elements0], Attrs0,
 message_fields_([_|Elements0], Attrs0,
                 Elements, Attrs) :-
     message_fields_(Elements0, Attrs0, Attrs, Elements).
-
-message_field(Message, FieldName, Type, Options) :-
-    xpath(Message, field(@type=Type,
-                         @name=FieldName), Field),
-    attrs_options(Field, [type=_, name=_], Options).
-
-attrs_options(element(_, Attrs, _), Delete, Options) :-
-    subtract(Attrs, Delete, Attrs_),
-    merge_options(Attrs_, [], Options).
