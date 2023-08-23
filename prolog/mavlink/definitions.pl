@@ -166,6 +166,31 @@ message(Mavlink, MessageName, Id, Options, Message) :-
                                     @name=MessageName), Message),
     attrs_options(Message, [id=_, name=_], Options).
 
+message_element(element(message, _, Elements),
+                element(Name, Attrs, Content)) :-
+    member(element(Name, Attrs, Content), Elements).
+
+message_elements(Message, Elements) :-
+    findall(Element, message_element(Message, Element), Elements).
+
+message_fields(Message, Fields) :-
+    message_elements(Message, Elements0),
+    message_fields_(Elements0, [], Fields, _).
+
+message_fields_([], Attrs, [], Attrs).
+message_fields_([element(field, FieldAttrs0, _)|Elements0], Attrs0,
+                [element(field, FieldAttrs, _)|Elements], Attrs) :-
+    !,
+    append(FieldAttrs0, Attrs0, FieldAttrs),
+    message_fields_(Elements0, Attrs0, Elements, Attrs).
+message_fields_([element(extensions, _, _)|Elements0], Attrs0,
+                Elements, Attrs) :-
+    !,
+    message_fields_(Elements0, [extensions=true|Attrs0], Attrs, Elements).
+message_fields_([_|Elements0], Attrs0,
+                Elements, Attrs) :-
+    message_fields_(Elements0, Attrs0, Attrs, Elements).
+
 message_field(Message, FieldName, Type, Options) :-
     xpath(Message, field(@type=Type,
                          @name=FieldName), Field),
