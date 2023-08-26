@@ -5,9 +5,11 @@
 */
 
 :- module(mavlink_extras,
-          []).
+          [ mavlink_extra/2                     % +MsgId,-Check
+          ]).
 :- autoload(library(apply), [foldl/4]).
 :- autoload(library(sort), [predsort/3]).
+:- use_module(messages).
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -17,6 +19,8 @@ MsgId is the message identifier, not the message name.
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 :- table mavlink_extra/2.
+
+%!  mavlink_extra(+MsgId, -Check) is semidet.
 
 mavlink_extra(MsgId, Check) :-
     crc_16_mcrf4xx(Check0),
