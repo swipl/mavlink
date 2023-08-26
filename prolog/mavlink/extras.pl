@@ -56,10 +56,7 @@ mavlink_extra_(FieldName-Type, Check0, Check) :-
 sorted_fields(MessageName, Fields) :-
     findall(FieldName-Type,
             (   mavlink:message_field(MessageName, FieldName, Type, _),
-                (   mavlink:message_extensions(MessageName, Extensions)
-                ->  \+ memberchk(FieldName, Extensions)
-                ;   true
-                )
+                mavlink_message_field(MessageName, FieldName)
             ), Fields).
 
 pred(Order, _FieldName1-Type1, _FieldName2-Type2) :-
