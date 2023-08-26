@@ -41,6 +41,13 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 :- autoload(library(apply), [maplist/3]).
 :- use_module(library(xpath)).
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Primes a dummy include element in the containing list. Its tag matches
+the include's base name.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
 %!  mavlink_assert_definitions_r(+Include, +M) is semidet.
 
 mavlink_assert_definitions_r(Include, M) :-
