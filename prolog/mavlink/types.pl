@@ -21,6 +21,7 @@ Arity-2 helps to determine the basic type either without or with an
 array length.
 
 Makes use of the "soft cut."
+
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 %!  mavlink_type_atom(?Term, ?Length, ?Atom) is det.
