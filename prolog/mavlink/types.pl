@@ -80,7 +80,7 @@ type(int(Width)) -->
     },
     integer(Width),
     "_t".
-type(uint(Width)) --> "u", uint_t(Width).
+type(uint(Width)) --> "u", uint_type(Width).
 type(char) --> "char".
 type(float) --> "float".
 type(double) --> "double".
@@ -92,7 +92,7 @@ non-deterministically as follows. However, the optional MAVLink version
 integer accepts only the eight-bit integer form, a byte. So the
 following would allow 16, 32- or even 64-bit version integers.
 
-uint_t(Width) -->
+uint_type(Width) -->
     type(int(Width)),
     (   []
     ;   "_mavlink_version"
@@ -100,8 +100,8 @@ uint_t(Width) -->
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-uint_t(Width) --> type(int(Width)).
-uint_t(8) --> type(int(8)), "_mavlink_version".
+uint_type(Width) --> type(int(Width)).
+uint_type(8) --> type(int(8)), "_mavlink_version".
 
 width(8).
 width(16).
