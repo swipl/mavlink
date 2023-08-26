@@ -14,6 +14,8 @@ mavlink_definitions_r(all, A),
                mavlink_definitions:mavlink_definition(C, D)),
            assertz(mavlink:D)).
 
+Predicate ordering matters.
+
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 :- dynamic message/3.
