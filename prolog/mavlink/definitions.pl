@@ -27,18 +27,183 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 :- module(mavlink_definitions,
-          [ mavlink_definitions_r/2,            % +Base,-Mavlinks:list
+          [ mavlink_assert_definitions_r/2,     % +Base,+M
+            mavlink_definitions_r/2,            % +Base,-Mavlinks:list
             mavlink_definitions/2               % +Base,-Mavlink
           ]).
 :- autoload(library(filesex), [directory_file_path/3]).
-:- autoload(library(lists), [reverse/2, subtract/3, append/3]).
+:- autoload(library(lists), [reverse/2, subtract/3, append/3, member/2]).
 :- autoload(library(pairs), [pairs_keys/2]).
 :- autoload(library(sgml), [load_structure/3]).
 :- autoload(library(url), [parse_url/2]).
 :- autoload(library(xpath), [xpath/3, xpath_chk/3]).
-:- autoload(library(option), [merge_options/3]).
-
+:- autoload(library(option), [select_option/3, option/2]).
+:- autoload(library(apply), [maplist/3]).
 :- use_module(library(xpath)).
+
+%!  mavlink_assert_definitions_r(+Base, +M) is semidet.
+
+mavlink_assert_definitions_r(Base, M) :-
+    mavlink_definitions_r(Base, Mavlinks),
+    forall(member(Base_-Mavlink, Mavlinks),
+           element(Mavlink, M, [element(Base_, _, _)])).
+
+element(element(Tag, Attrs, Content), M, Contain) :-
+    !,
+    element(M:element(Tag, Attrs, Content), Contain),
+    content(Content, M, [element(Tag, Attrs, Content)|Contain]).
+element(_, _M, _Contain).
+
+content([], _M, _Contain).
+content([H|T], M, Contain) :-
+    element(H, M, Contain),
+    content(T, M, Contain).
+
+element(M:element(enum, EnumAttrs, _),
+        [ element(enums, _, _),
+          element(mavlink, _, _),
+          element(Base, _, _)
+        ]) :-
+    !,
+    select_option(name(EnumName), EnumAttrs, EnumAttrs1),
+    assertz(M:enum(EnumName, EnumAttrs1)),
+    assertz(M:enum_base(EnumName, Base)).
+element(M:element(entry, EntryAttrs, _),
+        [ element(enum, EnumAttrs, _),
+          element(enums, _, _),
+          element(mavlink, _, _),
+          element(_Base, _, _)
+        ]) :-
+    !,
+    select_option(name(EntryName), EntryAttrs, EntryAttrs1),
+    select_option(value(Value), EntryAttrs1, EntryAttrs2),
+    option(name(EnumName), EnumAttrs),
+    atom_number(Value, Value1),
+    assertz(M:enum_entry(EnumName, EntryName, Value1, EntryAttrs2)).
+element(M:element(param, ParamAttrs, _),
+        [ element(entry, EntryAttrs, _),
+          element(enum, EnumAttrs, _),
+          element(enums, _, _),
+          element(mavlink, _, _),
+          element(_Base, _, _)
+        ]) :-
+    !,
+    select_option(index(Index), ParamAttrs, ParamAttrs1),
+    option(name(EntryName), EntryAttrs),
+    option(name(EnumName), EnumAttrs),
+    atom_number(Index, Index1),
+    assertz(M:enum_entry_param(EnumName, EntryName, Index1, ParamAttrs1)).
+element(M:element(message, MessageAttrs, _),
+        [ element(messages, _, _),
+          element(mavlink, _, _),
+          element(Base, _, _)
+        ]) :-
+    !,
+    select_option(name(MessageName), MessageAttrs, MessageAttrs1),
+    select_option(id(Id), MessageAttrs1, MessageAttrs2),
+    atom_number(Id, Id1),
+    assertz(M:message(MessageName, Id1, MessageAttrs2)),
+    assertz(M:message_base(MessageName, Base)),
+    ignore(retract(M:message_extensions(MessageName, _))).
+element(M:element(field, FieldAttrs, _),
+        [ element(message, MessageAttrs, _),
+          element(messages, _, _),
+          element(mavlink, _, _),
+          element(_Base, _, _)
+        ]) :-
+    !,
+    select_option(name(FieldName), FieldAttrs, FieldAttrs1),
+    select_option(type(Type), FieldAttrs1, FieldAttrs2),
+    option(name(MessageName), MessageAttrs),
+    assertz(M:message_field(MessageName, FieldName, Type, FieldAttrs2)),
+    (   retract(M:message_extensions(MessageName, T))
+    ->  assertz(M:message_extensions(MessageName, [FieldName|T]))
+    ;   true
+    ).
+element(M:element(extensions, _, _),
+        [ element(message, MessageAttrs, _),
+          element(messages, _, _),
+          element(mavlink, _, _),
+          element(_Base, _, _)
+        ]) :-
+    !,
+    option(name(MessageName), MessageAttrs),
+    assertz(M:message_extensions(MessageName, [])).
+element(M:element(description, _, [Description]),
+        [ element(SubTag, SubAttrs, _),
+          element(SuperTag, _, _),
+          element(mavlink, _, _),
+          element(_Base, _, _)
+        ]) :-
+    description(SubTag, SuperTag, Name),
+    !,
+    option(name(SubName), SubAttrs),
+    Term =.. [Name, SubName, Description],
+    assertz(M:Term).
+element(M:element(description, _, [Description]),
+        [ element(SubSubTag, SubSubAttrs, _),
+          element(SubTag, SubAttrs, _),
+          element(SuperTag, _, _),
+          element(mavlink, _, _),
+          element(_Base, _, _)
+        ]) :-
+    description(SubSubTag, SubTag, SuperTag, Name),
+    !,
+    option(name(SubSubName), SubSubAttrs),
+    option(name(SubName), SubAttrs),
+    Term =.. [Name, SubName, SubSubName, Description],
+    assertz(M:Term).
+element(M:element(wip, _, _),
+        [ element(message, MessageAttrs, _),
+          element(messages, _, _),
+          element(mavlink, _, _),
+          element(_Base, _, _)
+        ]) :-
+    !,
+    option(name(MessageName), MessageAttrs),
+    assertz(M:message_wip(MessageName)).
+element(M:element(deprecated, DeprecatedAttrs, _),
+        [ element(SubTag, SubAttrs, _),
+          element(SuperTag, _, _),
+          element(mavlink, _, _),
+          element(_Base, _, _)
+        ]) :-
+    deprecated(SubTag, SuperTag, Deprecated),
+    !,
+    option(name(SubName), SubAttrs),
+    Term =.. [Deprecated, SubName, DeprecatedAttrs],
+    assertz(M:Term).
+element(M:element(deprecated, DeprecatedAttrs, _),
+        [ element(SubSubTag, SubSubAttrs, _),
+          element(SubTag, SubAttrs, _),
+          element(SuperTag, _, _),
+          element(mavlink, _, _),
+          element(_Base, _, _)
+        ]) :-
+    deprecated(SubSubTag, SubTag, SuperTag, Deprecated),
+    !,
+    option(name(SubSubName), SubSubAttrs),
+    option(name(SubName), SubAttrs),
+    Term =.. [Deprecated, SubName, SubSubName, DeprecatedAttrs],
+    assertz(M:Term).
+element(M:element(Tag, Attrs, _Content), Contain) :-
+    maplist(arg(1), Contain, Tags),
+    atomic_list_concat([Tag|Tags], '_', Name),
+    Term =.. [Name|Attrs],
+    writeq(M:Term),
+    nl.
+
+description(enum, enums, enum_description).
+description(message, messages, message_description).
+
+description(entry, enum, enums, enum_entry_description).
+description(field, message, messages, message_field_description).
+
+deprecated(enum, enums, enum_deprecated).
+deprecated(message, messages, message_deprecated).
+
+deprecated(entry, enum, enums, enum_entry_deprecated).
+deprecated(field, message, messages, message_field_deprecated).
 
 %!  mavlink_definitions_r(+Base, -Mavlinks:list) is det.
 %
