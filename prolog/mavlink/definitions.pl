@@ -27,9 +27,9 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 :- module(mavlink_definitions,
-          [ mavlink_assert_definitions_r/2,     % +Base,+M
-            mavlink_definitions_r/2,            % +Base,-Mavlinks:list
-            mavlink_definitions/2               % +Base,-Mavlink
+          [ mavlink_assert_definitions_r/2,     % +Include,+M
+            mavlink_definitions_r/2,            % +Include,-Mavlinks:list
+            mavlink_definitions/2               % +Include,-Mavlink
           ]).
 :- autoload(library(filesex), [directory_file_path/3]).
 :- autoload(library(lists), [reverse/2, subtract/3, append/3, member/2]).
@@ -41,12 +41,12 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 :- autoload(library(apply), [maplist/3]).
 :- use_module(library(xpath)).
 
-%!  mavlink_assert_definitions_r(+Base, +M) is semidet.
+%!  mavlink_assert_definitions_r(+Include, +M) is semidet.
 
-mavlink_assert_definitions_r(Base, M) :-
-    mavlink_definitions_r(Base, Mavlinks),
-    forall(member(Base_-Mavlink, Mavlinks),
-           element(Mavlink, M, [element(Base_, _, _)])).
+mavlink_assert_definitions_r(Include, M) :-
+    mavlink_definitions_r(Include, Mavlinks),
+    forall(member(Include_-Mavlink, Mavlinks),
+           element(Mavlink, M, [element(Include_, _, _)])).
 
 element(element(Tag, Attrs, Content), M, Contain) :-
     !,
@@ -62,17 +62,17 @@ content([H|T], M, Contain) :-
 element(M:element(enum, EnumAttrs, _),
         [ element(enums, _, _),
           element(mavlink, _, _),
-          element(Base, _, _)
+          element(Include, _, _)
         ]) :-
     !,
     select_option(name(EnumName), EnumAttrs, EnumAttrs1),
     assertz(M:enum(EnumName, EnumAttrs1)),
-    assertz(M:enum_base(EnumName, Base)).
+    assertz(M:enum_include(EnumName, Include)).
 element(M:element(entry, EntryAttrs, _),
         [ element(enum, EnumAttrs, _),
           element(enums, _, _),
           element(mavlink, _, _),
-          element(_Base, _, _)
+          element(_Include, _, _)
         ]) :-
     !,
     select_option(name(EntryName), EntryAttrs, EntryAttrs1),
@@ -85,7 +85,7 @@ element(M:element(param, ParamAttrs, _),
           element(enum, EnumAttrs, _),
           element(enums, _, _),
           element(mavlink, _, _),
-          element(_Base, _, _)
+          element(_Include, _, _)
         ]) :-
     !,
     select_option(index(Index), ParamAttrs, ParamAttrs1),
@@ -96,20 +96,20 @@ element(M:element(param, ParamAttrs, _),
 element(M:element(message, MessageAttrs, _),
         [ element(messages, _, _),
           element(mavlink, _, _),
-          element(Base, _, _)
+          element(Include, _, _)
         ]) :-
     !,
     select_option(name(MessageName), MessageAttrs, MessageAttrs1),
     select_option(id(Id), MessageAttrs1, MessageAttrs2),
     atom_number(Id, Id1),
     assertz(M:message(MessageName, Id1, MessageAttrs2)),
-    assertz(M:message_base(MessageName, Base)),
+    assertz(M:message_include(MessageName, Include)),
     ignore(retract(M:message_extensions(MessageName, _))).
 element(M:element(field, FieldAttrs, _),
         [ element(message, MessageAttrs, _),
           element(messages, _, _),
           element(mavlink, _, _),
-          element(_Base, _, _)
+          element(_Include, _, _)
         ]) :-
     !,
     select_option(name(FieldName), FieldAttrs, FieldAttrs1),
@@ -124,7 +124,7 @@ element(M:element(extensions, _, _),
         [ element(message, MessageAttrs, _),
           element(messages, _, _),
           element(mavlink, _, _),
-          element(_Base, _, _)
+          element(_Include, _, _)
         ]) :-
     !,
     option(name(MessageName), MessageAttrs),
@@ -133,7 +133,7 @@ element(M:element(description, _, [Description]),
         [ element(SubTag, SubAttrs, _),
           element(SuperTag, _, _),
           element(mavlink, _, _),
-          element(_Base, _, _)
+          element(_Include, _, _)
         ]) :-
     description(SubTag, SuperTag, Name),
     !,
@@ -145,7 +145,7 @@ element(M:element(description, _, [Description]),
           element(SubTag, SubAttrs, _),
           element(SuperTag, _, _),
           element(mavlink, _, _),
-          element(_Base, _, _)
+          element(_Include, _, _)
         ]) :-
     description(SubSubTag, SubTag, SuperTag, Name),
     !,
@@ -157,7 +157,7 @@ element(M:element(wip, _, _),
         [ element(message, MessageAttrs, _),
           element(messages, _, _),
           element(mavlink, _, _),
-          element(_Base, _, _)
+          element(_Include, _, _)
         ]) :-
     !,
     option(name(MessageName), MessageAttrs),
@@ -166,7 +166,7 @@ element(M:element(deprecated, DeprecatedAttrs, _),
         [ element(SubTag, SubAttrs, _),
           element(SuperTag, _, _),
           element(mavlink, _, _),
-          element(_Base, _, _)
+          element(_Include, _, _)
         ]) :-
     deprecated(SubTag, SuperTag, Deprecated),
     !,
@@ -178,7 +178,7 @@ element(M:element(deprecated, DeprecatedAttrs, _),
           element(SubTag, SubAttrs, _),
           element(SuperTag, _, _),
           element(mavlink, _, _),
-          element(_Base, _, _)
+          element(_Include, _, _)
         ]) :-
     deprecated(SubSubTag, SubTag, SuperTag, Deprecated),
     !,
@@ -205,19 +205,19 @@ deprecated(message, messages, message_deprecated).
 deprecated(entry, enum, enums, enum_entry_deprecated).
 deprecated(field, message, messages, message_field_deprecated).
 
-%!  mavlink_definitions_r(+Base, -Mavlinks:list) is det.
+%!  mavlink_definitions_r(+Include, -Mavlinks:list) is det.
 %
 %   Recursively downloads multiple XML elements containing MAVLink
 %   enumeration and message definitions.
 %
 %   Searches through the included graph of message definitions.
-%   Recursively accumulates base-element pairs for a given base, e.g.
+%   Recursively accumulates include-element pairs for a given include, e.g.
 %   `all`, along with all its included message definitions, eliminating
 %   duplicated includes.
 %
 %   Things to note:
 %
-%       * The inner predicate accumulates the base-element pairs in
+%       * The inner predicate accumulates the include-element pairs in
 %       reverse order by pushing the pairs in reverse order. A new
 %       message definition pushes to the head of the accumulated list.
 %       The outer predicate reverses the accumulator in order to reflect
@@ -225,12 +225,12 @@ deprecated(field, message, messages, message_field_deprecated).
 %       first.
 %
 %       * The accumulator removes definitions already included as well
-%       as self-inclusions if any. For each list of included bases, the
-%       logic subtracts (a) the present and outstanding bases and (b)
-%       the already accumulated bases. It assumes that the includes do
+%       as self-inclusions if any. For each list of included names, the
+%       logic subtracts (a) the present and outstanding includes and (b)
+%       the already accumulated includes. It assumes that the includes do
 %       *not* carry duplicates.
 %
-%       * The result is a list of base-element pairs for each set of
+%       * The result is a list of include-element pairs for each set of
 %       `mavlink` enumeration and message definitions.
 
 mavlink_definitions_r(H, Mavlinks) :-
@@ -240,26 +240,26 @@ mavlink_definitions_r(H, Mavlinks) :-
 mavlink_definitions_r_([], Acc, Acc).
 mavlink_definitions_r_([H|T], Acc0, Acc) :-
     mavlink_definitions(H, Mavlink),
-    mavlink_includes(Mavlink, Bases),
+    mavlink_includes(Mavlink, Includes),
     pairs_keys(Acc0, Keys),
-    subtract(Bases, [H|T], Bases_),
-    subtract(Bases_, Keys, Bases__),
-    append(T, Bases__, T_),
+    subtract(Includes, [H|T], Includes_),
+    subtract(Includes_, Keys, Includes__),
+    append(T, Includes__, T_),
     mavlink_definitions_r_(T_, [H-Mavlink|Acc0], Acc).
 
-mavlink_includes(Mavlink, Bases) :-
-    findall(Base, mavlink_include(Mavlink, Base), Bases).
+mavlink_includes(Mavlink, Includes) :-
+    findall(Include, mavlink_include(Mavlink, Include), Includes).
 
-mavlink_include(Mavlink, Base) :-
-    xpath(Mavlink, include, element(_, _, [Include])),
-    file_name_extension(Base, xml, Include).
+mavlink_include(Mavlink, Include) :-
+    xpath(Mavlink, include, element(_, _, [Include_])),
+    file_name_extension(Include, xml, Include_).
 
-%!  mavlink_definitions(+Base, -Mavlink) is semidet.
+%!  mavlink_definitions(+Include, -Mavlink) is semidet.
 %
 %   Downloads MAVLink enumeration and message definitions from GitHub.
 %
 %   Loads an arbitrary MAVLink message definition structure where the
-%   first `Base` argument specifies `standard` or some other message
+%   first `Include` argument specifies `standard` or some other message
 %   set; the `xml` extension automatically applies. The predicate
 %   requires Internet access to GitHub, naturally. It operates
 %   semi-deterministically, not unifying with _every_ `mavlink` element
@@ -275,8 +275,8 @@ mavlink_include(Mavlink, Base) :-
 %
 %   @see https://github.com/mavlink/mavlink/tree/master/message_definitions/v1.0
 
-mavlink_definitions(Base, Mavlink) :-
-    file_name_extension(Base, xml, File),
+mavlink_definitions(Include, Mavlink) :-
+    file_name_extension(Include, xml, File),
     directory_file_path('/mavlink/mavlink/master/message_definitions/v1.0',
                         File, Path),
     parse_url(URL, [ protocol(https),
@@ -285,82 +285,3 @@ mavlink_definitions(Base, Mavlink) :-
                    ]),
     load_structure(URL, [Element], []),
     xpath_chk(Element, /(mavlink), Mavlink).
-
-mavlink_definition(Mavlink, Definition) :-
-    (   enum_definition(Mavlink, Definition)
-    ;   message_definition(Mavlink, Definition)
-    ).
-
-enum_definition(Mavlink, Definition) :-
-    enum(Mavlink, EnumName, Options, Enum),
-    (   enum(EnumName, Options) = Definition
-    ;   enum_entry_definition(Enum, EnumName, Definition)
-    ).
-
-enum_entry_definition(Enum, EnumName,
-                      enum_entry(EnumName,
-                                 EntryName,
-                                 Value,
-                                 Options)) :-
-    enum_entry(Enum, EntryName, Value, Options).
-
-message_definition(Mavlink, Definition) :-
-    message(Mavlink, MessageName, Id, Options, Message),
-    (   message(MessageName, Id, Options) = Definition
-    ;   message_field_definition(Message, MessageName, Definition)
-    ).
-
-message_field_definition(Message, MessageName,
-                         message_field(MessageName,
-                                       FieldName,
-                                       Type,
-                                       Options)) :-
-    message_field(Message, FieldName, Type, Options).
-
-enum(Mavlink, EnumName, Options, Enum) :-
-    xpath(Mavlink, enums/enum(@name=EnumName), Enum),
-    attrs_options(Enum, [name=_], Options).
-
-enum_entry(Enum, EntryName, Value, Options) :-
-    xpath(Enum, entry(@value(number)=Value,
-                      @name=EntryName), Entry),
-    attrs_options(Entry, [value=_, name=_], Options).
-
-message(Mavlink, MessageName, Id, Options, Message) :-
-    xpath(Mavlink, messages/message(@id(number)=Id,
-                                    @name=MessageName), Message),
-    attrs_options(Message, [id=_, name=_], Options).
-
-message_field(Message, FieldName, Type, Options) :-
-    xpath(Message, field(@type=Type,
-                         @name=FieldName), Field),
-    attrs_options(Field, [type=_, name=_], Options).
-
-attrs_options(element(_, Attrs, _), Delete, Options) :-
-    subtract(Attrs, Delete, Attrs_),
-    merge_options(Attrs_, [], Options).
-
-message_element(element(message, _, Elements),
-                element(Name, Attrs, Content)) :-
-    member(element(Name, Attrs, Content), Elements).
-
-message_elements(Message, Elements) :-
-    findall(Element, message_element(Message, Element), Elements).
-
-message_fields(Message, Fields) :-
-    message_elements(Message, Elements0),
-    message_fields_(Elements0, [], Fields, _).
-
-message_fields_([], Attrs, [], Attrs).
-message_fields_([element(field, FieldAttrs0, _)|Elements0], Attrs0,
-                [element(field, FieldAttrs, _)|Elements], Attrs) :-
-    !,
-    append(FieldAttrs0, Attrs0, FieldAttrs),
-    message_fields_(Elements0, Attrs0, Elements, Attrs).
-message_fields_([element(extensions, _, _)|Elements0], Attrs0,
-                Elements, Attrs) :-
-    !,
-    message_fields_(Elements0, [extensions=true|Attrs0], Attrs, Elements).
-message_fields_([_|Elements0], Attrs0,
-                Elements, Attrs) :-
-    message_fields_(Elements0, Attrs0, Attrs, Elements).
