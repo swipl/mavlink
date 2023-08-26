@@ -5,7 +5,7 @@
 */
 
 :- module(mavlink_extras,
-          [ mavlink_extra/2                     % +MsgId,-Check
+          [ mavlink_extra/2                     % +MsgId,-Extra
           ]).
 :- autoload(library(apply), [foldl/4]).
 :- autoload(library(sort), [predsort/3]).
@@ -13,16 +13,16 @@
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-Computes the extra Check byte for a given MsgId. The first argument
+Computes the Extra byte for a given MsgId. The first argument
 MsgId is the message identifier, not the message name.
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 :- table mavlink_extra/2.
 
-%!  mavlink_extra(+MsgId, -Check) is semidet.
+%!  mavlink_extra(+MsgId, -Extra) is semidet.
 
-mavlink_extra(MsgId, Check) :-
+mavlink_extra(MsgId, Extra) :-
     crc_16_mcrf4xx(Check0),
     mavlink:message(MessageName, MsgId, _),
     crc_16_mcrf4xx(Check0, MessageName, Check1),
@@ -30,7 +30,7 @@ mavlink_extra(MsgId, Check) :-
     sorted_fields(MessageName, SortedFields0),
     predsort(pred, SortedFields0, SortedFields),
     foldl(mavlink_extra_, SortedFields, Check2, Check3),
-    Check is (Check3 /\ 16'FF) xor (Check3 >> 8).
+    Extra is (Check3 /\ 16'FF) xor (Check3 >> 8).
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
