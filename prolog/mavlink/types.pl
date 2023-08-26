@@ -33,22 +33,19 @@ mavlink_type_atom(Term, 1, Atom) :- mavlink_type_atom(Term, Atom).
 type(Type, Length) --> type_length(Type, Length), !.
 type(Type, 1) --> type(Type).
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-True when array Type and Length match Codes.
-
-The length of an array must lie between 1 and 255 inclusively. The CRC
-extra accumulation folds the array length as eight bit data. A length of
-zero makes no sense.
-
-Fails for non-atomic Type. Operates non-determistically for variable
-Type but semi-deterministically for atomic Type.
-
-@arg Atom is the atomic representation of the type Term and its Length.
-
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-
 %!  mavlink_type_length_atom(?Term, ?Length, ?Atom) is nondet.
+%
+%   True when array type Term and Length match Atom.
+%
+%   The length of an array must lie between 1 and 255 inclusively. The
+%   CRC extra accumulation folds the array length as eight-bit data. A
+%   length of zero makes no sense.
+%
+%   Fails for non-atomic type Atom. Operates non-determistically for
+%   variable Type but semi-deterministically for atomic type Atom.
+%
+%   @arg Atom is the atomic representation of the type Term and its
+%   Length.
 
 mavlink_type_length_atom(Term, Length, Atom), var(Atom) =>
     phrase(type_length(Term, Length), Codes),
