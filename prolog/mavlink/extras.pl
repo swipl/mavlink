@@ -5,7 +5,7 @@
 */
 
 :- module(mavlink_extras,
-          [ mavlink_extra/2                     % ?MsgId,?Extra
+          [ mavlink_extra/2                     % ?Msg,?Extra
           ]).
 :- autoload(library(apply), [foldl/4]).
 :- autoload(library(sort), [predsort/3]).
@@ -13,8 +13,8 @@
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-Computes the Extra byte for a given MsgId. The first argument
-MsgId is the message identifier, not the message name.
+Computes the Extra byte for a given Msg. The first argument
+Msg is the message identifier, not the message name.
 
 The predicate is tabled. Abolish the table if the underlying `mavlink`
 module predicates change field names or types on which extra CRC byte
@@ -24,11 +24,11 @@ calculations depend.
 
 :- table mavlink_extra/2.
 
-%!  mavlink_extra(?MsgId, ?Extra) is nondet.
+%!  mavlink_extra(?Msg, ?Extra) is nondet.
 
-mavlink_extra(MsgId, Extra) :-
+mavlink_extra(Msg, Extra) :-
     crc_16_mcrf4xx(Check0),
-    mavlink:message(MessageName, MsgId, _),
+    mavlink:message(MessageName, Msg, _),
     crc(Check0, MessageName, Check1),
     findall(FieldName-Type,
             (   mavlink:message_field(MessageName, FieldName, Type, _),
