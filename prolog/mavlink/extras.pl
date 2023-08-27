@@ -50,7 +50,7 @@ mavlink_extra_(FieldName-Type, Check0, Check) :-
     crc_16_mcrf4xx(Check3, 0' , Check4),
     (   mavlink_type_length_atom(_, Length, Type)
     ->  crc_16_mcrf4xx(Check4, Length, Check)
-    ;   Check4 = Check
+    ;   Check = Check4
     ).
 
 sorted_fields(MessageName, Fields) :-
