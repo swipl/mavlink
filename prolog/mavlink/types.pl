@@ -14,8 +14,8 @@
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-The predicate operates entirely non-deterministically both forwards
-_and_ backwards.
+Converts between Term-Length and Atom. The predicate operates entirely
+non-deterministically both forwards _and_ backwards.
 
 Arity-2 helps to determine the basic type either without or with an
 array length.

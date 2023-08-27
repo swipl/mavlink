@@ -5,7 +5,7 @@
 */
 
 :- module(mavlink_extras,
-          [ mavlink_extra/2                     % +MsgId,-Extra
+          [ mavlink_extra/2                     % ?MsgId,?Extra
           ]).
 :- autoload(library(apply), [foldl/4]).
 :- autoload(library(sort), [predsort/3]).
@@ -16,21 +16,27 @@
 Computes the Extra byte for a given MsgId. The first argument
 MsgId is the message identifier, not the message name.
 
+The predicate is tabled. Abolish the table if the underlying `mavlink`
+module predicates change field names or types on which extra CRC byte
+calculations depend.
+
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 :- table mavlink_extra/2.
 
-%!  mavlink_extra(+MsgId, -Extra) is semidet.
+%!  mavlink_extra(?MsgId, ?Extra) is nondet.
 
 mavlink_extra(MsgId, Extra) :-
     crc_16_mcrf4xx(Check0),
     mavlink:message(MessageName, MsgId, _),
-    crc_16_mcrf4xx(Check0, MessageName, Check1),
-    crc_16_mcrf4xx(Check1, 0' , Check2),
-    sorted_fields(MessageName, SortedFields0),
-    predsort(pred, SortedFields0, SortedFields),
-    foldl(mavlink_extra_, SortedFields, Check2, Check3),
-    Extra is (Check3 /\ 16'FF) xor (Check3 >> 8).
+    crc(Check0, MessageName, Check1),
+    findall(FieldName-Type,
+            (   mavlink:message_field(MessageName, FieldName, Type, _),
+                mavlink_message_field(MessageName, FieldName)
+            ), Fields),
+    predsort(compare_fields, Fields, SortedFields),
+    foldl(mavlink_extra_, SortedFields, Check1, Check2),
+    Extra is (Check2 >> 8) xor (Check2 /\ 16'FF).
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -44,22 +50,26 @@ mavlink_extra(MsgId, Extra) :-
 mavlink_extra_(FieldName-Type, Check0, Check) :-
     once(mavlink_type_atom(Term, _, Type)),
     once(mavlink_type_atom(Term, Atom)),
-    crc_16_mcrf4xx(Check0, Atom, Check1),
-    crc_16_mcrf4xx(Check1, 0' , Check2),
-    crc_16_mcrf4xx(Check2, FieldName, Check3),
-    crc_16_mcrf4xx(Check3, 0' , Check4),
+    crc(Check0, Atom, Check1),
+    crc(Check1, FieldName, Check2),
     (   mavlink_type_length_atom(_, Length, Type)
-    ->  crc_16_mcrf4xx(Check4, Length, Check)
-    ;   Check = Check4
+    ->  crc_16_mcrf4xx(Check2, Length, Check)
+    ;   Check = Check2
     ).
 
-sorted_fields(MessageName, Fields) :-
-    findall(FieldName-Type,
-            (   mavlink:message_field(MessageName, FieldName, Type, _),
-                mavlink_message_field(MessageName, FieldName)
-            ), Fields).
+crc(Check0, Atom, Check) :-
+    crc_16_mcrf4xx(Check0, Atom, Check1),
+    crc_16_mcrf4xx(Check1, 0' , Check).
 
-pred(Order, _FieldName1-Type1, _FieldName2-Type2) :-
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    Sort the field name-type pairs by their basic type size but what
+    happens when two fields have equal type size? Preserve the order in
+    that case.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+compare_fields(Order, _FieldName1-Type1, _FieldName2-Type2) :-
     type_size(Type1, Size1),
     type_size(Type2, Size2),
     compare(Order_, Size2, Size1),
@@ -72,15 +82,15 @@ pred(Order, _FieldName1-Type1, _FieldName2-Type2) :-
 
     Size of type by Atom.
 
-    Type_ unifies with the base type _without_ its length when Type
-    specifies an array type.
+    The type unifies with the fundamental type _without_ its length when
+    the type specifies an array.
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 type_size(Atom, Size) :-
     mavlink_type_length_atom(Type, _, Atom),
     !,
-    mavlink_types:mavlink_type_size(Type, Size).
+    mavlink_type_size(Type, Size).
 type_size(Atom, Size) :-
     mavlink_type_atom(Type, Atom),
-    mavlink_types:mavlink_type_size(Type, Size).
+    mavlink_type_size(Type, Size).
