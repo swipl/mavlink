@@ -16,7 +16,7 @@
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-%!  mavlink_frame(Frame)// is semidet.
+%!  mavlink_frame(Msg, Payload, Options)// is semidet.
 
 mavlink_frame(Msg, Payload,
               [ ver(1),
