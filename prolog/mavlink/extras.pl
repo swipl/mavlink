@@ -8,8 +8,7 @@
           [ mavlink_extra/2                     % ?Msg,?Extra
           ]).
 :- autoload(library(apply), [foldl/4]).
-:- autoload(library(sort), [predsort/3]).
-:- autoload(library(mavlink/messages), [mavlink_message_field/2]).
+:- autoload(library(mavlink/messages), [mavlink_sorted_fields/2]).
 :- autoload(library(mavlink/crc_16_mcrf4xx),
             [crc_16_mcrf4xx/1, crc_16_mcrf4xx/3]).
 
@@ -32,11 +31,7 @@ mavlink_extra(Msg, Extra) :-
     crc_16_mcrf4xx(Check0),
     mavlink:message(MessageName, Msg, _),
     crc(Check0, MessageName, Check1),
-    findall(FieldName-Type,
-            (   mavlink:message_field(MessageName, FieldName, Type, _),
-                mavlink_message_field(MessageName, FieldName)
-            ), Fields),
-    predsort(compare_fields, Fields, SortedFields),
+    mavlink_sorted_fields(MessageName, SortedFields),
     foldl(mavlink_extra_, SortedFields, Check1, Check2),
     Extra is (Check2 >> 8) xor (Check2 /\ 16'FF).
 
@@ -66,37 +61,3 @@ mavlink_extra_(FieldName-Type, Check0, Check) :-
 crc(Check0, Atom, Check) :-
     crc_16_mcrf4xx(Check0, Atom, Check1),
     crc_16_mcrf4xx(Check1, 0' , Check).
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-    Sort the field name-type pairs by their basic type size but what
-    happens when two fields have equal type size? Preserve the order in
-    that case.
-
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-
-compare_fields(Order, _FieldName1-Type1, _FieldName2-Type2) :-
-    type_size(Type1, Size1),
-    type_size(Type2, Size2),
-    compare(Order_, Size2, Size1),
-    (   Order_ == (=)
-    ->  Order = (<)
-    ;   Order = Order_
-    ).
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-    Size of type by Atom.
-
-    The type unifies with the fundamental type _without_ its length when
-    the type specifies an array.
-
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-
-type_size(Atom, Size) :-
-    mavlink_type_len_atom(Type, _, Atom),
-    !,
-    mavlink_type_size(Type, Size).
-type_size(Atom, Size) :-
-    mavlink_type_atom(Type, Atom),
-    mavlink_type_size(Type, Size).

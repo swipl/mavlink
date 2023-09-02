@@ -28,8 +28,12 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 :- module(mavlink_messages,
           [ mavlink_message_field/2,            % ?MessageName,?FieldName
-            mavlink_ext_message_field/2         % ?MessageName,?FieldName
+            mavlink_ext_message_field/2,        % ?MessageName,?FieldName
+            mavlink_sorted_fields/2             % +MessageName,-SortedFields
           ]).
+:- autoload(library(sort), [predsort/3]).
+:- autoload(library(mavlink/types), [mavlink_type_size_atom/2]).
+
 :- ensure_loaded(library(mavlink)).
 
 %!  mavlink_message_field(?MessageName, ?FieldName) is nondet.
@@ -53,3 +57,29 @@ mavlink_ext_message_field(MessageName, FieldName) :-
     mavlink:message_field(MessageName, FieldName, _, _),
     mavlink:message_extensions(MessageName, Extensions),
     memberchk(FieldName, Extensions).
+
+%!  mavlink_sorted_fields(+MessageName, -SortedFields) is semidet.
+
+mavlink_sorted_fields(MessageName, SortedFields) :-
+    findall(FieldName-Type,
+            (   mavlink:message_field(MessageName, FieldName, Type, _),
+                mavlink_message_field(MessageName, FieldName)
+            ), Fields),
+    predsort(compare_fields, Fields, SortedFields).
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    Sort the field name-type pairs by their basic type size but what
+    happens when two fields have equal type size? Preserve the order in
+    that case.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+compare_fields(Order, _FieldName1-Type1, _FieldName2-Type2) :-
+    mavlink_type_size_atom(Size1, Type1),
+    mavlink_type_size_atom(Size2, Type2),
+    compare(Order_, Size2, Size1),
+    (   Order_ == (=)
+    ->  Order = (<)
+    ;   Order = Order_
+    ).
