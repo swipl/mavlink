@@ -5,16 +5,16 @@
 */
 
 :- module(mavlink_types,
-          [ mavlink_type_length_atom/3,         % ?Term,?Length,?Atom
+          [ mavlink_type_len_atom/3,            % ?Term,?Len,?Atom
             mavlink_type_atom/2,                % ?Term,?Atom
-            mavlink_type_atom/3,                % ?Term,?Length,?Atom
+            mavlink_type_atom/3,                % ?Term,?Len,?Atom
             mavlink_type_size/2                 % ?Term,?Size
           ]).
 :- autoload(library(dcg/basics), [integer//1]).
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-Converts between Term-Length and Atom. The predicate operates entirely
+Converts between Term-Len and Atom. The predicate operates entirely
 non-deterministically both forwards _and_ backwards.
 
 Arity-2 helps to determine the basic type either without or with an
@@ -24,18 +24,18 @@ Makes use of the "soft cut."
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-%!  mavlink_type_atom(?Term, ?Length, ?Atom) is det.
+%!  mavlink_type_atom(?Term, ?Len, ?Atom) is det.
 
-mavlink_type_atom(Term, Length, Atom) :-
-    mavlink_type_length_atom(Term, Length, Atom) *-> true.
+mavlink_type_atom(Term, Len, Atom) :-
+    mavlink_type_len_atom(Term, Len, Atom) *-> true.
 mavlink_type_atom(Term, 1, Atom) :- mavlink_type_atom(Term, Atom).
 
-type(Type, Length) --> type_length(Type, Length), !.
+type(Type, Len) --> type_len(Type, Len), !.
 type(Type, 1) --> type(Type).
 
-%!  mavlink_type_length_atom(?Term, ?Length, ?Atom) is nondet.
+%!  mavlink_type_len_atom(?Term, ?Len, ?Atom) is nondet.
 %
-%   True when array type Term and Length match Atom.
+%   True when array type Term and Len match Atom.
 %
 %   The length of an array must lie between 1 and 255 inclusively. The
 %   CRC extra accumulation folds the array length as eight-bit data. A
@@ -45,21 +45,21 @@ type(Type, 1) --> type(Type).
 %   variable Type but semi-deterministically for atomic type Atom.
 %
 %   @arg Atom is the atomic representation of the type Term and its
-%   Length.
+%   Len.
 
-mavlink_type_length_atom(Term, Length, Atom), var(Atom) =>
-    phrase(type_length(Term, Length), Codes),
+mavlink_type_len_atom(Term, Len, Atom), var(Atom) =>
+    phrase(type_len(Term, Len), Codes),
     atom_codes(Atom, Codes).
-mavlink_type_length_atom(Term, Length, Atom), atomic(Atom) =>
+mavlink_type_len_atom(Term, Len, Atom), atomic(Atom) =>
     atom_codes(Atom, Codes),
-    once(phrase(type_length(Term, Length), Codes)).
+    once(phrase(type_len(Term, Len), Codes)).
 
-type_length(Type, Length) -->
+type_len(Type, Len) -->
     type(Type),
     "[",
-    { between(1, 255, Length)
+    { between(1, 255, Len)
     },
-    integer(Length),
+    integer(Len),
     "]".
 
 %!  mavlink_type_atom(?Term, ?Atom) is nondet.
@@ -84,16 +84,16 @@ type(double) --> "double".
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-Another way to implement this predicate would be to match the Width
-non-deterministically as follows. However, the optional MAVLink version
-integer accepts only the eight-bit integer form, a byte. So the
-following would allow 16, 32- or even 64-bit version integers.
+    Another way to implement this predicate would be to match the Width
+    non-deterministically as follows. However, the optional MAVLink version
+    integer accepts only the eight-bit integer form, a byte. So the
+    following would allow 16, 32- or even 64-bit version integers.
 
-uint_type(Width) -->
-    type(int(Width)),
-    (   []
-    ;   "_mavlink_version"
-    ).
+        uint_type(Width) -->
+            type(int(Width)),
+            (   []
+            ;   "_mavlink_version"
+            ).
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
@@ -104,6 +104,12 @@ width(8).
 width(16).
 width(32).
 width(64).
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Unifies a type's Term and Size.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 %!  mavlink_type_size(?Term, ?Size) is nondet.
 

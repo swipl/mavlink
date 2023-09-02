@@ -7,8 +7,8 @@
 :- module(mavlink_frames,
           [ mavlink_frame//1
           ]).
-:- use_module(extras).
-:- use_module(crc_16_mcrf4xx).
+:- use_module(library(mavlink/crc_16_mcrf4xx)).
+:- use_module(library(mavlink/extras)).
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

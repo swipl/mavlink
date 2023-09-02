@@ -9,7 +9,7 @@
           ]).
 :- autoload(library(apply), [foldl/4]).
 :- autoload(library(sort), [predsort/3]).
-:- use_module(messages).
+:- autoload(library(mavlink/messages), [mavlink_message_field/2]).
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -45,6 +45,10 @@ mavlink_extra(Msg, Extra) :-
     message. Ignore the latter alternative for unsigned 8-bit integers.
     Otherwise a choice point appears. Hence the two once/1 calls.
 
+The Type is an atom. Convert this to its fundamental type Term without any
+length component. Next, convert the fundamental Term back to an Atom. These two
+steps strip away any array specification.
+
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 mavlink_extra_(FieldName-Type, Check0, Check) :-
@@ -52,8 +56,8 @@ mavlink_extra_(FieldName-Type, Check0, Check) :-
     once(mavlink_type_atom(Term, Atom)),
     crc(Check0, Atom, Check1),
     crc(Check1, FieldName, Check2),
-    (   mavlink_type_length_atom(_, Length, Type)
-    ->  crc_16_mcrf4xx(Check2, Length, Check)
+    (   mavlink_type_len_atom(_, Len, Type)
+    ->  crc_16_mcrf4xx(Check2, Len, Check)
     ;   Check = Check2
     ).
 
@@ -88,7 +92,7 @@ compare_fields(Order, _FieldName1-Type1, _FieldName2-Type2) :-
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 type_size(Atom, Size) :-
-    mavlink_type_length_atom(Type, _, Atom),
+    mavlink_type_len_atom(Type, _, Atom),
     !,
     mavlink_type_size(Type, Size).
 type_size(Atom, Size) :-
