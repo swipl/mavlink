@@ -5,7 +5,7 @@
 */
 
 :- module(mavlink_frames,
-          [ mavlink_frame//1
+          [ mavlink_frame//3
           ]).
 :- use_module(library(mavlink/crc_16_mcrf4xx)).
 :- use_module(library(mavlink/extras)).
@@ -18,13 +18,13 @@
 
 %!  mavlink_frame(Frame)// is semidet.
 
-mavlink_frame(mavlink(Msg, Payload,
-                      [ ver(1),
-                        len(Len),
-                        seq(Seq),
-                        sys(Sys),
-                        comp(Comp)
-                      ])) -->
+mavlink_frame(Msg, Payload,
+              [ ver(1),
+                len(Len),
+                seq(Seq),
+                sys(Sys),
+                comp(Comp)
+              ]) -->
     [STX],
     { ver_stx(1, STX),
       crc_16_mcrf4xx(Check0)
