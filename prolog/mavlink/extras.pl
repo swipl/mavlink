@@ -10,6 +10,8 @@
 :- autoload(library(apply), [foldl/4]).
 :- autoload(library(sort), [predsort/3]).
 :- autoload(library(mavlink/messages), [mavlink_message_field/2]).
+:- autoload(library(mavlink/crc_16_mcrf4xx),
+            [crc_16_mcrf4xx/1, crc_16_mcrf4xx/3]).
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
