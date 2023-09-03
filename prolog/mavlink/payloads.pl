@@ -10,7 +10,7 @@
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-Decode a heartbeat phrase using:
+Decode a heartbeat payload phrase using:
 
     phrase(mavlink_payload(0, Terms), [0, 0, 0, 0, 6, 8, 192, 4, 3]).
 
