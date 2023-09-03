@@ -129,9 +129,11 @@ mavlink_type_size(double, 8).
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-%!  mavlink_type_atom_size(?Atom, ?Size) is semidet.
+%!  mavlink_type_atom_size(+Atom, ?Size) is semidet.
+%!  mavlink_type_atom_size(-Atom, ?Size) is nondet.
 
 mavlink_type_atom_size(Atom, Size) :-
+    nonvar(Atom),
     mavlink_type_len_atom(Type, _, Atom),
     !,
     mavlink_type_size(Type, Size).
