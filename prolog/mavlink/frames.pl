@@ -16,11 +16,13 @@
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-%!  mavlink_frame(?Msg, ?Payload, -Options)// is semidet.
+%!  mavlink_frame(?Msg, ?Payload, -Attrs)// is semidet.
 %
-%   @arg Options is a list of frame option terms including the version
+%   @arg Attrs is a list of frame attribute terms including the version
 %   number, frame length, sequence number, system and component
-%   identifiers.
+%   identifiers. You *cannot* use the argument to pre-filter frames
+%   matching particular required attributes; post-filter if necessary
+%   by decoding the frame first then select on attributes.
 
 mavlink_frame(Msg, Payload,
               [ ver(1),
