@@ -120,17 +120,13 @@ mavlink_type_size(char, 1).
 mavlink_type_size(float, 4).
 mavlink_type_size(double, 8).
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-    Size of type by Atom.
-
-    The type unifies with the fundamental type _without_ its length when
-    the type specifies an array.
-
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-
 %!  mavlink_type_atom_size(+Atom, ?Size) is semidet.
 %!  mavlink_type_atom_size(-Atom, ?Size) is nondet.
+%
+%   Size of type by Atom.
+%
+%   The type unifies with the fundamental type _without_ its length when
+%   the type specifies an array.
 
 mavlink_type_atom_size(Atom, Size) :-
     nonvar(Atom),
