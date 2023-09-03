@@ -10,8 +10,35 @@
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-Given a $Msg identifier and a $Payload, the following unifies the
-little-endian payload octets with sorted fields by type.
+Decode a heartbeat phrase using:
+
+    phrase(mavlink_payload(0, Terms), [0, 0, 0, 0, 6, 8, 192, 4, 3]).
+
+It gives the terms:
+
+    Terms = [ custom_mode(0),
+              type(6),
+              autopilot(8),
+              base_mode(192),
+              system_status(4),
+              mavlink_version(3)
+            ]
+
+The phrasing operates in reverse, of course.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+mavlink_payload(Msg, Terms) -->
+    { mavlink:message(MessageName, Msg, _),
+      mavlink_sorted_ext_fields(MessageName, Fields)
+    },
+    payload(Fields, [], Terms).
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Given a $Msg identifier and a $Payload from a decoded MAVLink frame, the
+following unifies the little-endian payload octets with sorted fields by
+type.
 
 mavlink:message(MessageName, $Msg, _),
     mavlink_sorted_ext_fields(MessageName, Fields),
@@ -25,10 +52,9 @@ payload([H|T], Terms, [Term|Terms_]) -->
     payload(T, Terms, Terms_).
 
 field(FieldName-AtomicType, Term) -->
-    { mavlink_type_atom(Type, AtomicType),
+    { Term =.. [FieldName, Int],
+      mavlink_type_atom(Type, AtomicType),
       mavlink_type_size(Type, Size),
       Width is Size << 3
     },
-    endian(little, Width, Int),
-    { Term =.. [FieldName, Int]
-    }.
+    endian(little, Width, Int).
