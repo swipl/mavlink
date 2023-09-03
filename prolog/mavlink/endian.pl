@@ -1,7 +1,7 @@
-/*  File:    dcg/endian.pl
+/*  File:    mavlink/endian.pl
     Author:  Roy Ratcliffe
     Created: Aug 28 2023
-    Purpose: Big- and Little-Endian Grammars
+    Purpose: Big- and Little-Endian Grammars for MAVLink
 
 Copyright (c) 2023, Roy Ratcliffe, Northumberland, United Kingdom
 
@@ -26,7 +26,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
 
-:- module(dcg_endian,
+:- module(mavlink_endian,
           [ endian//3,
             big_endian//2,
             little_endian//2
