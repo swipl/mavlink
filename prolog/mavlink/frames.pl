@@ -16,7 +16,11 @@
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-%!  mavlink_frame(Msg, Payload, Options)// is semidet.
+%!  mavlink_frame(?Msg, ?Payload, -Options)// is semidet.
+%
+%   @arg Options is a list of frame option terms including the version
+%   number, frame length, sequence number, system and component
+%   identifiers.
 
 mavlink_frame(Msg, Payload,
               [ ver(1),
