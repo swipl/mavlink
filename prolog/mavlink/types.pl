@@ -126,7 +126,9 @@ mavlink_type_size(double, 8).
 %   Size of type by Atom.
 %
 %   The type unifies with the fundamental type _without_ its length when
-%   the type specifies an array.
+%   the type specifies an array. The predicate fails however if the
+%   array length exceeds 255; hence the logic does not entirely
+%   ignore length but Size becomes the size of the elements.
 
 mavlink_type_atom_size(Atom, Size) :-
     nonvar(Atom),
