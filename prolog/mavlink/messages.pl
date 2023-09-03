@@ -29,10 +29,11 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 :- module(mavlink_messages,
           [ mavlink_message_field/2,            % ?MessageName,?FieldName
             mavlink_ext_message_field/2,        % ?MessageName,?FieldName
-            mavlink_sorted_fields/2             % +MessageName,-SortedFields
+            mavlink_sorted_fields/2,            % +MessageName,-SortedFields
+            mavlink_sorted_ext_fields/2         % +MessageName,-SortedFields
           ]).
 :- autoload(library(sort), [predsort/3]).
-:- autoload(library(mavlink/types), [mavlink_type_size_atom/2]).
+:- autoload(library(mavlink/types), [mavlink_type_atom_size/2]).
 
 :- ensure_loaded(library(mavlink)).
 
@@ -58,7 +59,18 @@ mavlink_ext_message_field(MessageName, FieldName) :-
     mavlink:message_extensions(MessageName, Extensions),
     memberchk(FieldName, Extensions).
 
-%!  mavlink_sorted_fields(+MessageName, -SortedFields) is semidet.
+%!  mavlink_sorted_fields(+MessageName, -SortedFields) is det.
+%
+%   Sorts the field name-type pairs by their basic type size but what
+%   happens when two fields have equal type size? Preserve the order in
+%   that case. Hence mavlink:message_field/4 order matters.
+%
+%   @arg MessageName is the name of a message.
+%
+%   @arg SortedFields is a list of field   names and atomic types sorted
+%   by basic type. The  list  excludes   extensions  and  useful for CRC
+%   'extra' calculations. Results in an empty  list for unknown messages
+%   by MessageName.
 
 mavlink_sorted_fields(MessageName, SortedFields) :-
     findall(FieldName-Type,
@@ -67,19 +79,21 @@ mavlink_sorted_fields(MessageName, SortedFields) :-
             ), Fields),
     predsort(compare_fields, Fields, SortedFields).
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-    Sort the field name-type pairs by their basic type size but what
-    happens when two fields have equal type size? Preserve the order in
-    that case.
-
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-
 compare_fields(Order, _FieldName1-Type1, _FieldName2-Type2) :-
-    mavlink_type_size_atom(Size1, Type1),
-    mavlink_type_size_atom(Size2, Type2),
+    mavlink_type_atom_size(Type1, Size1),
+    mavlink_type_atom_size(Type2, Size2),
     compare(Order_, Size2, Size1),
     (   Order_ == (=)
     ->  Order = (<)
     ;   Order = Order_
     ).
+
+%!  mavlink_sorted_ext_fields(+MessageName, -SortedFields) is det.
+%
+%   Sorts field names by their basic types _including_ extensions.
+
+mavlink_sorted_ext_fields(MessageName, SortedFields) :-
+    findall(FieldName-Type,
+            mavlink:message_field(MessageName, FieldName, Type, _),
+            Fields),
+    predsort(compare_fields, Fields, SortedFields).

@@ -9,7 +9,7 @@
             mavlink_type_atom/2,                % ?Term,?Atom
             mavlink_type_atom/3,                % ?Term,?Len,?Atom
             mavlink_type_size/2,                % ?Term,?Size
-            mavlink_type_size_atom/2            % ?Size,?Atom
+            mavlink_type_atom_size/2            % ?Atom,?Size
           ]).
 :- autoload(library(dcg/basics), [integer//1]).
 
@@ -129,12 +129,12 @@ mavlink_type_size(double, 8).
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-%!  mavlink_type_size_atom(?Size, ?Atom) is semidet.
+%!  mavlink_type_atom_size(?Atom, ?Size) is semidet.
 
-mavlink_type_size_atom(Size, Atom) :-
+mavlink_type_atom_size(Atom, Size) :-
     mavlink_type_len_atom(Type, _, Atom),
     !,
     mavlink_type_size(Type, Size).
-mavlink_type_size_atom(Size, Atom) :-
+mavlink_type_atom_size(Atom, Size) :-
     mavlink_type_atom(Type, Atom),
     mavlink_type_size(Type, Size).
