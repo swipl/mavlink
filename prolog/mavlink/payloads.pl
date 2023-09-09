@@ -7,6 +7,7 @@
 :- module(mavlink_payloads,
           []).
 :- use_module(endian).
+:- use_module(types).
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
