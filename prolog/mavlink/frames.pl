@@ -9,6 +9,7 @@
           ]).
 :- use_module(library(mavlink/crc_16_mcrf4xx)).
 :- use_module(library(mavlink/extras)).
+:- use_module(endian).
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -49,6 +50,54 @@ mavlink_frame(Msg, Payload,
     },
     [Msg],
     { crc_16_mcrf4xx(Check4, Msg, Check5),
+      length(Payload, Len)
+    },
+    Payload,
+    { crc_16_mcrf4xx(Check5, Payload, Check6),
+      mavlink_extra(Msg, Extra),
+      crc_16_mcrf4xx(Check6, Extra, Check7),
+      CheckLo is Check7 /\ 16'FF
+    },
+    [CheckLo],
+    { CheckHi is Check7 >> 8
+    },
+    [CheckHi].
+mavlink_frame(Msg, Payload,
+              [ ver(2),
+                len(Len),
+                incompat(Incompat),
+                compat(Compat),
+                seq(Seq),
+                sys(Sys),
+                comp(Comp)
+              ]) -->
+    [STX],
+    { ver_stx(2, STX),
+      crc_16_mcrf4xx(Check0)
+    },
+    [Len],
+    { crc_16_mcrf4xx(Check0, Len, Check1)
+    },
+    [Incompat],
+    { crc_16_mcrf4xx(Check1, Incompat, Check1A)
+    },
+    [Compat],
+    { crc_16_mcrf4xx(Check1A, Compat, Check1B)
+    },
+    [Seq],
+    { crc_16_mcrf4xx(Check1B, Seq, Check2)
+    },
+    [Sys],
+    { crc_16_mcrf4xx(Check2, Sys, Check3)
+    },
+    [Comp],
+    { crc_16_mcrf4xx(Check3, Comp, Check4)
+    },
+    endian(little, 24, Msg),
+    { Msg0 is Msg /\ 16'FF,
+      Msg1 is (Msg >> 8) /\ 16'FF,
+      Msg2 is Msg >> 16,
+      crc_16_mcrf4xx(Check4, [Msg0, Msg1, Msg2], Check5),
       length(Payload, Len)
     },
     Payload,
