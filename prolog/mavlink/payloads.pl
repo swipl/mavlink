@@ -76,7 +76,9 @@ field(FieldName-AtomicType, Term, H, T) :-
     number of zeros when ZerosLen is unbound albeit more expensively by
     non-deterministic search; take the first solution only.
 
+@arg Terms0 are the terms to append.
 @arg ZerosLen is the number of zeros appended.
+@arg Terms are the zero-appended terms.
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
