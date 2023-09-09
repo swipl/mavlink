@@ -5,7 +5,8 @@
 */
 
 :- module(mavlink_payloads,
-          []).
+          [ mavlink_payload//2
+          ]).
 :- use_module(endian).
 :- use_module(types).
 
@@ -28,6 +29,8 @@ It gives the terms:
 The phrasing operates in reverse, of course.
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+%!  mavlink_payload(Msg, Terms)// is semidet.
 
 mavlink_payload(Msg, Terms) -->
     { mavlink:message(MessageName, Msg, _),
