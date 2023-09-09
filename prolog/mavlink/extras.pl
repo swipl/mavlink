@@ -11,6 +11,7 @@
 :- autoload(library(mavlink/messages), [mavlink_sorted_fields/2]).
 :- autoload(library(mavlink/crc_16_mcrf4xx),
             [crc_16_mcrf4xx/1, crc_16_mcrf4xx/3]).
+:- use_module(types).
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
