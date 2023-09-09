@@ -45,6 +45,8 @@ mavlink:message(MessageName, $Msg, _),
     mavlink_sorted_ext_fields(MessageName, Fields),
     phrase(mavlink_payloads:payload(Fields, [], Terms), $Payload).
 
+Zero extends the payload octets automatically.
+
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 payload([], Terms, Terms) --> [].
@@ -52,10 +54,15 @@ payload([H|T], Terms, [Term|Terms_]) -->
     field(H, Term),
     payload(T, Terms, Terms_).
 
-field(FieldName-AtomicType, Term) -->
-    { Term =.. [FieldName, Int],
-      mavlink_type_atom(Type, AtomicType),
-      mavlink_type_size(Type, Size),
-      Width is Size << 3
-    },
-    endian(little, Width, Int).
+field(FieldName-AtomicType, Term, H, T) :-
+    Term =.. [FieldName, Int],
+    mavlink_type_atom(Type, AtomicType),
+    mavlink_type_size(Type, Size),
+    (   nonvar(H),
+        length(H, Len),
+        Len < Size
+    ->  Size_ = Len
+    ;   Size_ = Size
+    ),
+    Width is Size_ << 3,
+    endian(little, Width, Int, H, T).
