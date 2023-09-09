@@ -50,6 +50,9 @@ type.
 
 Zero extends the payload octets automatically.
 
+Arrays become list terms. Note, this occurs even for single-item arrays.
+The specification allows for this, even though not used in practice.
+
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 payload([], Terms, Terms) --> [].
@@ -95,7 +98,7 @@ append_zeros(Terms0, ZerosLen, Terms), integer(ZerosLen) =>
 
 Counts the number of trailing zeros in a list of octets.
 
-@arg Octets is a list of 8-bit bytes.
+@arg Terms is a list of 8-bit bytes, typically but not necessarily.
 
 Given a list of integers at A, the following snippet counts the zeros
 then unifies D with the initial sub-list *without* the trailing zeros.
