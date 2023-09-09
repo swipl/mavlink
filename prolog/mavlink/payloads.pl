@@ -44,9 +44,9 @@ Given a $Msg identifier and a $Payload from a decoded MAVLink frame, the
 following unifies the little-endian payload octets with sorted fields by
 type.
 
-mavlink:message(MessageName, $Msg, _),
-    mavlink_sorted_ext_fields(MessageName, Fields),
-    phrase(mavlink_payloads:payload(Fields, [], Terms), $Payload).
+    mavlink:message(MessageName, $Msg, _),
+        mavlink_sorted_ext_fields(MessageName, Fields),
+        phrase(mavlink_payloads:payload(Fields, [], Terms), $Payload).
 
 Zero extends the payload octets automatically.
 
