@@ -69,3 +69,37 @@ field(FieldName-AtomicType, Term, H, T) :-
     ),
     Width is Size_ << 3,
     endian(little, Width, Int, H, T).
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    Splits up a list of octets.
+
+Counts the number of trailing zeros in a list of octets.
+
+@arg Octets is a list of 8-bit bytes.
+
+Given a list of integers at A, the following snippet counts the zeros
+then unifies D with the initial sub-list *without* the trailing zeros.
+
+?- A = [1, 0, 2, 0, 3, 0, 0, 0],
+    mavlink_payloads:trailing_zeros(A, B),
+    length(C, B),
+    once(append(D, C, A)).
+A = [1, 0, 2, 0, 3, 0, 0, 0],
+B = 3,
+C = [0, 0, 0],
+D = [1, 0, 2, 0, 3].
+
+The final append/3 requires a once/1 in order to cut the final choice
+because D is an unbound variable.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+trailing_zeros(Octets, Zeros) :- trailing_zeros(Octets, 0, Zeros).
+
+trailing_zeros([], Zeros, Zeros).
+trailing_zeros([0|T], Zeros0, Zeros) :-
+    !,
+    succ(Zeros0, Zeros_),
+    trailing_zeros(T, Zeros_, Zeros).
+trailing_zeros([_|T], _, Zeros) :- trailing_zeros(T, 0, Zeros).
