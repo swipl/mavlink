@@ -82,14 +82,14 @@ field(FieldName-AtomicType, Term, H, T) :-
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-append_zeros(Terms0, ZerosLen, Terms), nonvar(ZerosLen) =>
-    length(Zeros, ZerosLen),
-    maplist(=(0), Zeros),
-    append(Terms0, Zeros, Terms).
-append_zeros(Terms0, ZerosLen, Terms) =>
+append_zeros(Terms0, ZerosLen, Terms), var(ZerosLen) =>
     append(Terms0, Zeros, Terms),
     length(Zeros, ZerosLen),
     maplist(=(0), Zeros).
+append_zeros(Terms0, ZerosLen, Terms), integer(ZerosLen) =>
+    length(Zeros, ZerosLen),
+    maplist(=(0), Zeros),
+    append(Terms0, Zeros, Terms).
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
