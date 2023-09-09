@@ -117,11 +117,11 @@ because D is an unbound variable.
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-trailing_zeros(Octets, Zeros) :- trailing_zeros(Octets, 0, Zeros).
+trailing_zeros(Terms, ZerosLen) :- trailing_zeros(Terms, 0, ZerosLen).
 
-trailing_zeros([], Zeros, Zeros).
-trailing_zeros([0|T], Zeros0, Zeros) :-
+trailing_zeros([], ZerosLen, ZerosLen).
+trailing_zeros([0|T], ZerosLen0, ZerosLen) :-
     !,
-    succ(Zeros0, Zeros_),
-    trailing_zeros(T, Zeros_, Zeros).
-trailing_zeros([_|T], _, Zeros) :- trailing_zeros(T, 0, Zeros).
+    succ(ZerosLen0, ZerosLen_),
+    trailing_zeros(T, ZerosLen_, ZerosLen).
+trailing_zeros([_|T], _, ZerosLen) :- trailing_zeros(T, 0, ZerosLen).
