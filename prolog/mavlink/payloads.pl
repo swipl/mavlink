@@ -72,7 +72,24 @@ field(FieldName-AtomicType, Term, H, T) :-
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    Splits up a list of octets.
+    Appends zeros to Terms0, giving Terms. Can be used to count the
+    number of zeros when ZerosLen is unbound albeit more expensively by
+    non-deterministic search; take the first solution only.
+
+@arg ZerosLen is the number of zeros appended.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+append_zeros(Terms0, ZerosLen, Terms), nonvar(ZerosLen) =>
+    length(Zeros, ZerosLen),
+    maplist(=(0), Zeros),
+    append(Terms0, Zeros, Terms).
+append_zeros(Terms0, ZerosLen, Terms) =>
+    append(Terms0, Zeros, Terms),
+    length(Zeros, ZerosLen),
+    maplist(=(0), Zeros).
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 Counts the number of trailing zeros in a list of octets.
 
