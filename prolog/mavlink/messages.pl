@@ -97,3 +97,41 @@ mavlink_sorted_ext_fields(MessageName, SortedFields) :-
             mavlink:message_field(MessageName, FieldName, Type, _),
             Fields),
     predsort(compare_fields, Fields, SortedFields).
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    Selects Options from Opts with variable defaults by unification.
+    Preserves the order of Opts0 at Opts.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+select_opts([], Opts, Opts).
+select_opts([H|T], Opts0, Opts) :-
+    select_option(H, Opts0, Opts_, _),
+    select_opts(T, Opts_, Opts).
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    Operates semi-deterministically. Fails if an option in Opts0 fails
+    to unify with its matching term in Opts but *only* if present in
+    both. Ignores terms in Opts0 that are *not* present in Opts. The
+    logic considers them redundant.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+opts([], _).
+opts([H|T], Opts) :- option(H, Opts, _), opts(T, Opts).
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    Finds field Terms for Msg identifier, including all fields and in
+    their serialisation order.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+msg_terms(Msg, Terms) :-
+    mavlink:message(MessageName, Msg, _),
+    mavlink_sorted_ext_fields(MessageName, Fields),
+    maplist(field_term, Fields, Terms).
+
+field_term(FieldName-_, Term) :- Term =.. [FieldName, _].
