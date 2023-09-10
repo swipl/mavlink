@@ -46,6 +46,9 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 Primes a dummy include element in the containing list. Its tag matches
 the include's base name.
 
+Appends the dynamic fact base with the message field types and type
+lengths. Only arrays have field lengths.
+
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 %!  mavlink_assert_definitions_r(+Include, +M) is semidet.
@@ -53,7 +56,14 @@ the include's base name.
 mavlink_assert_definitions_r(Include, M) :-
     mavlink_definitions_r(Include, Mavlinks),
     forall(member(Include_-Mavlink, Mavlinks),
-           element(Mavlink, M, [element(Include_, _, _)])).
+           element(Mavlink, M, [element(Include_, _, _)])),
+    forall(M:message_field(MessageName, FieldName, AtomicType, []),
+           (   (   mavlink_type_len_atom(Type, Len, AtomicType)
+               ->  assertz(M:message_field_len(MessageName, FieldName, Len))
+               ;   mavlink_type_atom(Type, AtomicType)
+               ),
+               assertz(M:message_field_type(MessageName, FieldName, Type))
+           )).
 
 element(element(Tag, Attrs, Content), M, Contain) :-
     !,
