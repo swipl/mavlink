@@ -302,3 +302,29 @@ mavlink_definitions(Include, Mavlink) :-
                    ]),
     load_structure(URL, [Element], []),
     xpath_chk(Element, /(mavlink), Mavlink).
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Useful helper predicates for retracting and listing dynamic predicates
+and their clauses based on module name.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+retractall_dynamic(M) :-
+    forall(predicate_property(M:Term, dynamic), retractall(M:Term)).
+
+listing_dynamic(M) :-
+    findall(Term, dynamic_predicate(M, Term), Terms),
+    predsort(compare_functors, Terms, Terms1),
+    listing(M:Terms1).
+
+dynamic_predicate(M, Term) :- predicate_property(M:Term, dynamic).
+
+compare_functors(Order, Term1, Term2) :-
+    functor(Term1, Name1, Arity1),
+    functor(Term2, Name2, Arity2),
+    compare(Order_, Name1, Name2),
+    (   Order_ == (=)
+    ->  compare(Order, Arity1, Arity2)
+    ;   Order = Order_
+    ).
