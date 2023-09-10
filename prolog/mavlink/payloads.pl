@@ -50,6 +50,9 @@ type.
 
 Zero extends the payload octets automatically.
 
+Arrays become list terms. Note, this occurs even for single-item arrays.
+The specification allows for this, even though not used in practice.
+
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 payload([], Terms, Terms) --> [].
@@ -69,3 +72,56 @@ field(FieldName-AtomicType, Term, H, T) :-
     ),
     Width is Size_ << 3,
     endian(little, Width, Int, H, T).
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    Appends zeros to Terms0, giving Terms. Can be used to count the
+    number of zeros when ZerosLen is unbound albeit more expensively by
+    non-deterministic search; take the first solution only.
+
+@arg Terms0 are the terms to append.
+@arg ZerosLen is the number of zeros appended.
+@arg Terms are the zero-appended terms.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+append_zeros(Terms0, ZerosLen, Terms), var(ZerosLen) =>
+    append(Terms0, Zeros, Terms),
+    length(Zeros, ZerosLen),
+    maplist(=(0), Zeros).
+append_zeros(Terms0, ZerosLen, Terms), integer(ZerosLen) =>
+    length(Zeros, ZerosLen),
+    maplist(=(0), Zeros),
+    append(Terms0, Zeros, Terms).
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Counts the number of trailing zeros in a list of octets.
+
+@arg Terms is a list of 8-bit bytes, typically but not necessarily.
+
+Given a list of integers at A, the following snippet counts the zeros
+then unifies D with the initial sub-list *without* the trailing zeros.
+
+?- A = [1, 0, 2, 0, 3, 0, 0, 0],
+    mavlink_payloads:trailing_zeros(A, B),
+    length(C, B),
+    once(append(D, C, A)).
+A = [1, 0, 2, 0, 3, 0, 0, 0],
+B = 3,
+C = [0, 0, 0],
+D = [1, 0, 2, 0, 3].
+
+The final append/3 requires a once/1 in order to cut the final choice
+because D is an unbound variable.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+trailing_zeros(Terms, ZerosLen) :- trailing_zeros(Terms, 0, ZerosLen).
+
+trailing_zeros([], ZerosLen, ZerosLen).
+trailing_zeros([0|T], ZerosLen0, ZerosLen) :-
+    !,
+    succ(ZerosLen0, ZerosLen_),
+    trailing_zeros(T, ZerosLen_, ZerosLen).
+trailing_zeros([_|T], _, ZerosLen) :- trailing_zeros(T, 0, ZerosLen).
