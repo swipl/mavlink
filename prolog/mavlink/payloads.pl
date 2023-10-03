@@ -7,8 +7,11 @@
 :- module(mavlink_payloads,
           [ mavlink_payload//2
           ]).
-:- use_module(endian).
-:- use_module(types).
+:- use_module(library(apply)).
+:- use_module(library(lists)).
+:- use_module(library(mavlink/endian)).
+:- use_module(library(mavlink/ieee)).
+:- use_module(library(mavlink/types)).
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -61,7 +64,7 @@ payload([H|T], Terms, [Term|Terms_]) -->
     payload(T, Terms, Terms_).
 
 field(FieldName-AtomicType, Term, H, T) :-
-    Term =.. [FieldName, Int],
+    Term =.. [FieldName, Value],
     mavlink_type_atom(Type, AtomicType),
     mavlink_type_size(Type, Size),
     (   nonvar(H),
@@ -71,7 +74,29 @@ field(FieldName-AtomicType, Term, H, T) :-
     ;   Size_ = Size
     ),
     Width is Size_ << 3,
-    endian(little, Width, Int, H, T).
+    field(Type, Width, Value, H, T).
+
+field(float, Width, Value) --> float(Width, Value).
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Conversion from Int to float may deliver an integer value if a whole
+number. This disregards the type, however. Cast the Float result to
+floating-point representation therefore regardless using is/2's float/1.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+float(Width, Value) -->
+    { var(Value), !
+    },
+    endian(little, Width, Int),
+    { ieee_754_float(Width, Int, Float),
+      Value is float(Float)
+    }.
+float(Width, Value) -->
+    { ieee_754_float(Width, Int, Value)
+    },
+    endian(little, Width, Int).
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
