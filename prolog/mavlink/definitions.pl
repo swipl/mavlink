@@ -56,14 +56,7 @@ lengths. Only arrays have field lengths.
 mavlink_assert_definitions_r(Include, M) :-
     mavlink_definitions_r(Include, Mavlinks),
     forall(member(Include_-Mavlink, Mavlinks),
-           element(Mavlink, M, [element(Include_, _, _)])),
-    forall(M:message_field(MessageName, FieldName, AtomicType, []),
-           (   (   mavlink_type_len_atom(Type, Len, AtomicType)
-               ->  assertz(M:message_field_len(MessageName, FieldName, Len))
-               ;   mavlink_type_atom(Type, AtomicType)
-               ),
-               assertz(M:message_field_type(MessageName, FieldName, Type))
-           )).
+           element(Mavlink, M, [element(Include_, _, _)])).
 
 element(element(Tag, Attrs, Content), M, Contain) :-
     !,
@@ -130,8 +123,12 @@ element(M:element(field, FieldAttrs, _),
         ]) :-
     !,
     select_option(name(FieldName), FieldAttrs, FieldAttrs1),
-    select_option(type(Type), FieldAttrs1, FieldAttrs2),
+    select_option(type(Type0), FieldAttrs1, FieldAttrs2),
     option(name(MessageName), MessageAttrs),
+    (   mavlink_type_len_atom(Type, Len, Type0)
+    ->  assertz(M:message_field_len(MessageName, FieldName, Len))
+    ;   mavlink_type_atom(Type, Type0)
+    ),
     assertz(M:message_field(MessageName, FieldName, Type, FieldAttrs2)),
     (   retract(M:message_extensions(MessageName, T))
     ->  assertz(M:message_extensions(MessageName, [FieldName|T]))
