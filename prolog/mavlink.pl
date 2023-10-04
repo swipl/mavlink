@@ -22,7 +22,6 @@ Predicate ordering matters.
 
 enum('ACCELCAL_VEHICLE_POS', []).
 enum('HEADING_TYPE', []).
-enum('SPEED_TYPE', []).
 enum('MAV_CMD', []).
 enum('SCRIPTING_CMD', []).
 enum('LIMITS_STATE', []).
@@ -134,6 +133,7 @@ enum('ADSB_ALTITUDE_TYPE', []).
 enum('ADSB_EMITTER_TYPE', []).
 enum('ADSB_FLAGS', [bitmask=true]).
 enum('MAV_DO_REPOSITION_FLAGS', [bitmask=true]).
+enum('SPEED_TYPE', []).
 enum('ESTIMATOR_STATUS_FLAGS', [bitmask=true]).
 enum('MOTOR_TEST_ORDER', []).
 enum('MOTOR_TEST_THROTTLE_TYPE', []).
@@ -330,6 +330,7 @@ enum_description('ADSB_ALTITUDE_TYPE', 'Enumeration of the ADSB altimeter types'
 enum_description('ADSB_EMITTER_TYPE', 'ADSB classification for the type of vehicle emitting the transponder signal').
 enum_description('ADSB_FLAGS', 'These flags indicate status such as data validity of each data source. Set = data valid').
 enum_description('MAV_DO_REPOSITION_FLAGS', 'Bitmap of options for the MAV_CMD_DO_REPOSITION').
+enum_description('SPEED_TYPE', 'Speed setpoint types used in MAV_CMD_DO_CHANGE_SPEED').
 enum_description('ESTIMATOR_STATUS_FLAGS', 'Flags in ESTIMATOR_STATUS message').
 enum_description('MOTOR_TEST_ORDER', 'Sequence that motors are tested when using MAV_CMD_DO_MOTOR_TEST.').
 enum_description('MOTOR_TEST_THROTTLE_TYPE', 'Defines how throttle value is represented in MAV_CMD_DO_MOTOR_TEST.').
@@ -422,8 +423,6 @@ enum_entry('ACCELCAL_VEHICLE_POS', 'ACCELCAL_VEHICLE_POS_SUCCESS', 16777215, [])
 enum_entry('ACCELCAL_VEHICLE_POS', 'ACCELCAL_VEHICLE_POS_FAILED', 16777216, []).
 enum_entry('HEADING_TYPE', 'HEADING_TYPE_COURSE_OVER_GROUND', 0, []).
 enum_entry('HEADING_TYPE', 'HEADING_TYPE_HEADING', 1, []).
-enum_entry('SPEED_TYPE', 'SPEED_TYPE_AIRSPEED', 0, []).
-enum_entry('SPEED_TYPE', 'SPEED_TYPE_GROUNDSPEED', 1, []).
 enum_entry('MAV_CMD', 'MAV_CMD_DO_SET_RESUME_REPEAT_DIST', 215, [hasLocation=false, isDestination=false]).
 enum_entry('MAV_CMD', 'MAV_CMD_DO_SPRAYER', 216, [hasLocation=false, isDestination=false]).
 enum_entry('MAV_CMD', 'MAV_CMD_DO_SEND_SCRIPT_MESSAGE', 217, [hasLocation=false, isDestination=false]).
@@ -1488,6 +1487,10 @@ enum_entry('ADSB_FLAGS', 'ADSB_FLAGS_VERTICAL_VELOCITY_VALID', 128, []).
 enum_entry('ADSB_FLAGS', 'ADSB_FLAGS_BARO_VALID', 256, []).
 enum_entry('ADSB_FLAGS', 'ADSB_FLAGS_SOURCE_UAT', 32768, []).
 enum_entry('MAV_DO_REPOSITION_FLAGS', 'MAV_DO_REPOSITION_FLAGS_CHANGE_MODE', 1, []).
+enum_entry('SPEED_TYPE', 'SPEED_TYPE_AIRSPEED', 0, []).
+enum_entry('SPEED_TYPE', 'SPEED_TYPE_GROUNDSPEED', 1, []).
+enum_entry('SPEED_TYPE', 'SPEED_TYPE_CLIMB_SPEED', 2, []).
+enum_entry('SPEED_TYPE', 'SPEED_TYPE_DESCENT_SPEED', 3, []).
 enum_entry('ESTIMATOR_STATUS_FLAGS', 'ESTIMATOR_ATTITUDE', 1, []).
 enum_entry('ESTIMATOR_STATUS_FLAGS', 'ESTIMATOR_VELOCITY_HORIZ', 2, []).
 enum_entry('ESTIMATOR_STATUS_FLAGS', 'ESTIMATOR_VELOCITY_VERT', 4, []).
@@ -3077,7 +3080,7 @@ enum_entry_description('MAV_CMD', 'MAV_CMD_CONDITION_YAW', 'Reach a certain targ
 enum_entry_description('MAV_CMD', 'MAV_CMD_CONDITION_LAST', 'NOP - This command is only used to mark the upper limit of the CONDITION commands in the enumeration').
 enum_entry_description('MAV_CMD', 'MAV_CMD_DO_SET_MODE', 'Set system mode.').
 enum_entry_description('MAV_CMD', 'MAV_CMD_DO_JUMP', 'Jump to the desired command in the mission list.  Repeat this action only the specified number of times').
-enum_entry_description('MAV_CMD', 'MAV_CMD_DO_CHANGE_SPEED', 'Change speed and/or throttle set points. The value persists until it is overridden or there is a mode change.').
+enum_entry_description('MAV_CMD', 'MAV_CMD_DO_CHANGE_SPEED', 'Change speed and/or throttle set points. The value persists until it is overridden or there is a mode change').
 enum_entry_description('MAV_CMD', 'MAV_CMD_DO_SET_HOME', '\n          Sets the home position to either to the current position or a specified position.\n          The home position is the default position that the system will return to and land on.\n          The position is set automatically by the system during the takeoff (and may also be set using this command).\n          Note: the current home position may be emitted in a HOME_POSITION message on request (using MAV_CMD_REQUEST_MESSAGE with param1=242).\n        ').
 enum_entry_description('MAV_CMD', 'MAV_CMD_DO_SET_PARAMETER', 'Set a system parameter.  Caution!  Use of this command requires knowledge of the numeric enumeration value of the parameter.').
 enum_entry_description('MAV_CMD', 'MAV_CMD_DO_SET_RELAY', 'Set a relay to a condition.').
@@ -3154,8 +3157,8 @@ enum_entry_description('MAV_CMD', 'MAV_CMD_JUMP_TAG', 'Tagged jump target. Can b
 enum_entry_description('MAV_CMD', 'MAV_CMD_DO_JUMP_TAG', 'Jump to the matching tag in the mission list. Repeat this action for the specified number of times. A mission should contain a single matching tag for each jump. If this is not the case then a jump to a missing tag should complete the mission, and a jump where there are multiple matching tags should always select the one with the lowest mission sequence number.').
 enum_entry_description('MAV_CMD', 'MAV_CMD_DO_GIMBAL_MANAGER_PITCHYAW', 'Set gimbal manager pitch/yaw setpoints (low rate command). It is possible to set combinations of the values below. E.g. an angle as well as a desired angular rate can be used to get to this angle at a certain angular rate, or an angular rate only will result in continuous turning. NaN is to be used to signal unset. Note: only the gimbal manager will react to this command - it will be ignored by a gimbal device. Use GIMBAL_MANAGER_SET_PITCHYAW if you need to stream pitch/yaw setpoints at higher rate. ').
 enum_entry_description('MAV_CMD', 'MAV_CMD_DO_GIMBAL_MANAGER_CONFIGURE', 'Gimbal configuration to set which sysid/compid is in primary and secondary control.').
-enum_entry_description('MAV_CMD', 'MAV_CMD_IMAGE_START_CAPTURE', 'Start image capture sequence. Sends CAMERA_IMAGE_CAPTURED after each capture. Use NaN for reserved values.').
-enum_entry_description('MAV_CMD', 'MAV_CMD_IMAGE_STOP_CAPTURE', 'Stop image capture sequence Use NaN for reserved values.').
+enum_entry_description('MAV_CMD', 'MAV_CMD_IMAGE_START_CAPTURE', 'Start image capture sequence. CAMERA_IMAGE_CAPTURED must be emitted after each capture.\n\n          Param1 (id) may be used to specify the target camera: 0: all cameras, 1 to 6: autopilot-connected cameras, 7-255: MAVLink camera component ID.\n          It is needed in order to target specific cameras connected to the autopilot, or specific sensors in a multi-sensor camera (neither of which have a distinct MAVLink component ID).\n          It is also needed to specify the target camera in missions.\n\n          When used in a mission, an autopilot should execute the MAV_CMD for a specified local camera (param1 = 1-6), or resend it as a command if it is intended for a MAVLink camera (param1 = 7 - 255), setting the command\'s target_component as the param1 value (and setting param1 in the command to zero).\n          If the param1 is 0 the autopilot should do both.\n          \n          When sent in a command the target MAVLink address is set using target_component.\n          If addressed specifically to an autopilot: param1 should be used in the same way as it is for missions (though command should NACK with MAV_RESULT_DENIED if a specified local camera does not exist).\n          If addressed to a MAVLink camera, param 1 can be used to address all cameras (0), or to separately address 1 to 7 individual sensors. Other values should be NACKed with MAV_RESULT_DENIED.\n          If the command is broadcast (target_component is 0) then param 1 should be set to 0 (any other value should be NACKED with MAV_RESULT_DENIED). An autopilot would trigger any local cameras and forward the command to all channels.\n        ').
+enum_entry_description('MAV_CMD', 'MAV_CMD_IMAGE_STOP_CAPTURE', 'Stop image capture sequence.\n        \n          Param1 (id) may be used to specify the target camera: 0: all cameras, 1 to 6: autopilot-connected cameras, 7-255: MAVLink camera component ID.\n          It is needed in order to target specific cameras connected to the autopilot, or specific sensors in a multi-sensor camera (neither of which have a distinct MAVLink component ID).\n          It is also needed to specify the target camera in missions.\n\n          When used in a mission, an autopilot should execute the MAV_CMD for a specified local camera (param1 = 1-6), or resend it as a command if it is intended for a MAVLink camera (param1 = 7 - 255), setting the command\'s target_component as the param1 value (and setting param1 in the command to zero).\n          If the param1 is 0 the autopilot should do both.\n\n          When sent in a command the target MAVLink address is set using target_component.\n          If addressed specifically to an autopilot: param1 should be used in the same way as it is for missions (though command should NACK with MAV_RESULT_DENIED if a specified local camera does not exist).\n          If addressed to a MAVLink camera, param1 can be used to address all cameras (0), or to separately address 1 to 7 individual sensors. Other values should be NACKed with MAV_RESULT_DENIED.\n          If the command is broadcast (target_component is 0) then param 1 should be set to 0 (any other value should be NACKED with MAV_RESULT_DENIED). An autopilot would trigger any local cameras and forward the command to all channels.\n        ').
 enum_entry_description('MAV_CMD', 'MAV_CMD_REQUEST_CAMERA_IMAGE_CAPTURE', 'Re-request a CAMERA_IMAGE_CAPTURED message.').
 enum_entry_description('MAV_CMD', 'MAV_CMD_DO_TRIGGER_CONTROL', 'Enable or disable on-board camera triggering system.').
 enum_entry_description('MAV_CMD', 'MAV_CMD_CAMERA_TRACK_POINT', 'If the camera supports point visual tracking (CAMERA_CAP_FLAGS_HAS_TRACKING_POINT is set), this command allows to initiate the tracking.').
@@ -3443,6 +3446,10 @@ enum_entry_description('MAV_LANDED_STATE', 'MAV_LANDED_STATE_LANDING', 'MAV curr
 enum_entry_description('ADSB_ALTITUDE_TYPE', 'ADSB_ALTITUDE_TYPE_PRESSURE_QNH', 'Altitude reported from a Baro source using QNH reference').
 enum_entry_description('ADSB_ALTITUDE_TYPE', 'ADSB_ALTITUDE_TYPE_GEOMETRIC', 'Altitude reported from a GNSS source').
 enum_entry_description('MAV_DO_REPOSITION_FLAGS', 'MAV_DO_REPOSITION_FLAGS_CHANGE_MODE', 'The aircraft should immediately transition into guided. This should not be set for follow me applications').
+enum_entry_description('SPEED_TYPE', 'SPEED_TYPE_AIRSPEED', 'Airspeed').
+enum_entry_description('SPEED_TYPE', 'SPEED_TYPE_GROUNDSPEED', 'Groundspeed').
+enum_entry_description('SPEED_TYPE', 'SPEED_TYPE_CLIMB_SPEED', 'Climb speed').
+enum_entry_description('SPEED_TYPE', 'SPEED_TYPE_DESCENT_SPEED', 'Descent speed').
 enum_entry_description('ESTIMATOR_STATUS_FLAGS', 'ESTIMATOR_ATTITUDE', 'True if the attitude estimate is good').
 enum_entry_description('ESTIMATOR_STATUS_FLAGS', 'ESTIMATOR_VELOCITY_HORIZ', 'True if the horizontal velocity estimate is good').
 enum_entry_description('ESTIMATOR_STATUS_FLAGS', 'ESTIMATOR_VELOCITY_VERT', 'True if the  vertical velocity estimate is good').
@@ -3865,8 +3872,8 @@ enum_entry_description('MAV_BATTERY_STATUS_FLAGS', 'MAV_BATTERY_STATUS_FLAGS_CHA
 enum_entry_description('MAV_BATTERY_STATUS_FLAGS', 'MAV_BATTERY_STATUS_FLAGS_CELL_BALANCING', '\n          Battery is cell balancing (during charging).\n          Not ready to use (MAV_BATTERY_STATUS_FLAGS_NOT_READY_TO_USE may be set).\n        ').
 enum_entry_description('MAV_BATTERY_STATUS_FLAGS', 'MAV_BATTERY_STATUS_FLAGS_FAULT_CELL_IMBALANCE', '\n          Battery cells are not balanced.\n          Not ready to use.\n        ').
 enum_entry_description('MAV_BATTERY_STATUS_FLAGS', 'MAV_BATTERY_STATUS_FLAGS_AUTO_DISCHARGING', '\n          Battery is auto discharging (towards storage level).\n          Not ready to use (MAV_BATTERY_STATUS_FLAGS_NOT_READY_TO_USE would be set).\n        ').
-enum_entry_description('MAV_BATTERY_STATUS_FLAGS', 'MAV_BATTERY_STATUS_FLAGS_REQUIRES_SERVICE', '\n          Battery requires service (not safe to fly). \n          This is set at vendor discretion.\n          It is likely to be set for most faults, and may also be set according to a maintenance schedule (such as age, or number of recharge cycles, etc.).\n        ').
-enum_entry_description('MAV_BATTERY_STATUS_FLAGS', 'MAV_BATTERY_STATUS_FLAGS_BAD_BATTERY', '\n          Battery is faulty and cannot be repaired (not safe to fly). \n          This is set at vendor discretion.\n          The battery should be disposed of safely.\n        ').
+enum_entry_description('MAV_BATTERY_STATUS_FLAGS', 'MAV_BATTERY_STATUS_FLAGS_REQUIRES_SERVICE', '\n          Battery requires service (not safe to fly).\n          This is set at vendor discretion.\n          It is likely to be set for most faults, and may also be set according to a maintenance schedule (such as age, or number of recharge cycles, etc.).\n        ').
+enum_entry_description('MAV_BATTERY_STATUS_FLAGS', 'MAV_BATTERY_STATUS_FLAGS_BAD_BATTERY', '\n          Battery is faulty and cannot be repaired (not safe to fly).\n          This is set at vendor discretion.\n          The battery should be disposed of safely.\n        ').
 enum_entry_description('MAV_BATTERY_STATUS_FLAGS', 'MAV_BATTERY_STATUS_FLAGS_PROTECTIONS_ENABLED', '\n          Automatic battery protection monitoring is enabled.\n          When enabled, the system will monitor for certain kinds of faults, such as cells being over-voltage.\n          If a fault is triggered then and protections are enabled then a safety fault (MAV_BATTERY_STATUS_FLAGS_FAULT_PROTECTION_SYSTEM) will be set and power from the battery will be stopped.\n          Note that battery protection monitoring should only be enabled when the vehicle is landed. Once the vehicle is armed, or starts moving, the protections should be disabled to prevent false positives from disabling the output.\n        ').
 enum_entry_description('MAV_BATTERY_STATUS_FLAGS', 'MAV_BATTERY_STATUS_FLAGS_FAULT_PROTECTION_SYSTEM', '\n          The battery fault protection system had detected a fault and cut all power from the battery.\n          This will only trigger if MAV_BATTERY_STATUS_FLAGS_PROTECTIONS_ENABLED is set.\n          Other faults like MAV_BATTERY_STATUS_FLAGS_FAULT_OVER_VOLT may also be set, indicating the cause of the protection fault.\n        ').
 enum_entry_description('MAV_BATTERY_STATUS_FLAGS', 'MAV_BATTERY_STATUS_FLAGS_FAULT_OVER_VOLT', 'One or more cells are above their maximum voltage rating.').
@@ -4662,7 +4669,7 @@ enum_entry_param('MAV_CMD', 'MAV_CMD_DO_JUMP', 4, []).
 enum_entry_param('MAV_CMD', 'MAV_CMD_DO_JUMP', 5, []).
 enum_entry_param('MAV_CMD', 'MAV_CMD_DO_JUMP', 6, []).
 enum_entry_param('MAV_CMD', 'MAV_CMD_DO_JUMP', 7, []).
-enum_entry_param('MAV_CMD', 'MAV_CMD_DO_CHANGE_SPEED', 1, [label='Speed Type', minValue='0', maxValue='3', increment='1']).
+enum_entry_param('MAV_CMD', 'MAV_CMD_DO_CHANGE_SPEED', 1, [label='Speed Type', enum='SPEED_TYPE']).
 enum_entry_param('MAV_CMD', 'MAV_CMD_DO_CHANGE_SPEED', 2, [label='Speed', units='m/s', minValue='-2']).
 enum_entry_param('MAV_CMD', 'MAV_CMD_DO_CHANGE_SPEED', 3, [label='Throttle', units='%', minValue='-2']).
 enum_entry_param('MAV_CMD', 'MAV_CMD_DO_CHANGE_SPEED', 4, [reserved=true, default='0']).
@@ -5087,14 +5094,14 @@ enum_entry_param('MAV_CMD', 'MAV_CMD_DO_GIMBAL_MANAGER_CONFIGURE', 2, [label='co
 enum_entry_param('MAV_CMD', 'MAV_CMD_DO_GIMBAL_MANAGER_CONFIGURE', 3, [label='sysid secondary control']).
 enum_entry_param('MAV_CMD', 'MAV_CMD_DO_GIMBAL_MANAGER_CONFIGURE', 4, [label='compid secondary control']).
 enum_entry_param('MAV_CMD', 'MAV_CMD_DO_GIMBAL_MANAGER_CONFIGURE', 7, [label='Gimbal device ID']).
-enum_entry_param('MAV_CMD', 'MAV_CMD_IMAGE_START_CAPTURE', 1, []).
+enum_entry_param('MAV_CMD', 'MAV_CMD_IMAGE_START_CAPTURE', 1, [label=id, minValue='0', maxValue='255', increment='1']).
 enum_entry_param('MAV_CMD', 'MAV_CMD_IMAGE_START_CAPTURE', 2, [label='Interval', units=s, minValue='0']).
 enum_entry_param('MAV_CMD', 'MAV_CMD_IMAGE_START_CAPTURE', 3, [label='Total Images', minValue='0', increment='1']).
 enum_entry_param('MAV_CMD', 'MAV_CMD_IMAGE_START_CAPTURE', 4, [label='Sequence Number', minValue='1', increment='1']).
 enum_entry_param('MAV_CMD', 'MAV_CMD_IMAGE_START_CAPTURE', 5, [reserved=true]).
 enum_entry_param('MAV_CMD', 'MAV_CMD_IMAGE_START_CAPTURE', 6, [reserved=true]).
 enum_entry_param('MAV_CMD', 'MAV_CMD_IMAGE_START_CAPTURE', 7, [reserved=true, default='NaN']).
-enum_entry_param('MAV_CMD', 'MAV_CMD_IMAGE_STOP_CAPTURE', 1, []).
+enum_entry_param('MAV_CMD', 'MAV_CMD_IMAGE_STOP_CAPTURE', 1, [label=id, minValue='0', maxValue='255', increment='1']).
 enum_entry_param('MAV_CMD', 'MAV_CMD_IMAGE_STOP_CAPTURE', 2, [reserved=true, default='NaN']).
 enum_entry_param('MAV_CMD', 'MAV_CMD_IMAGE_STOP_CAPTURE', 3, [reserved=true, default='NaN']).
 enum_entry_param('MAV_CMD', 'MAV_CMD_IMAGE_STOP_CAPTURE', 4, [reserved=true, default='NaN']).
@@ -5479,7 +5486,6 @@ enum_entry_param('MAV_CMD', 'MAV_CMD_PRS_SHUTDOWN', 7, []).
 
 enum_include('ACCELCAL_VEHICLE_POS', ardupilotmega).
 enum_include('HEADING_TYPE', ardupilotmega).
-enum_include('SPEED_TYPE', ardupilotmega).
 enum_include('MAV_CMD', ardupilotmega).
 enum_include('SCRIPTING_CMD', ardupilotmega).
 enum_include('LIMITS_STATE', ardupilotmega).
@@ -5591,6 +5597,7 @@ enum_include('ADSB_ALTITUDE_TYPE', common).
 enum_include('ADSB_EMITTER_TYPE', common).
 enum_include('ADSB_FLAGS', common).
 enum_include('MAV_DO_REPOSITION_FLAGS', common).
+enum_include('SPEED_TYPE', common).
 enum_include('ESTIMATOR_STATUS_FLAGS', common).
 enum_include('MOTOR_TEST_ORDER', common).
 enum_include('MOTOR_TEST_THROTTLE_TYPE', common).
@@ -6010,6 +6017,8 @@ message('HYGROMETER_SENSOR', 12920, []).
 message('PARAM_ACK_TRANSACTION', 19, []).
 message('AIRSPEED', 295, []).
 message('WIFI_NETWORK_INFO', 298, []).
+message('SET_VELOCITY_LIMITS', 354, []).
+message('VELOCITY_LIMITS', 355, []).
 message('FIGURE_EIGHT_EXECUTION_STATUS', 361, []).
 message('BATTERY_STATUS_V2', 369, []).
 message('COMPONENT_INFORMATION_BASIC', 396, []).
@@ -6386,6 +6395,8 @@ message_description('HYGROMETER_SENSOR', 'Temperature and humidity from hygromet
 message_description('PARAM_ACK_TRANSACTION', 'Response from a PARAM_SET message when it is used in a transaction.').
 message_description('AIRSPEED', 'Airspeed information from a sensor.').
 message_description('WIFI_NETWORK_INFO', 'Detected WiFi network status information. This message is sent per each WiFi network detected in range with known SSID and general status parameters.').
+message_description('SET_VELOCITY_LIMITS', 'Set temporary maximum limits for horizontal speed, vertical speed and yaw rate.\n        The consumer must stream the current limits in VELOCITY_LIMITS at 1 Hz or more (when limits are being set).\n        The consumer should latch the limits until a new limit is received or the mode is changed.\n      ').
+message_description('VELOCITY_LIMITS', 'Current limits for horizontal speed, vertical speed and yaw rate, as set by SET_VELOCITY_LIMITS.').
 message_description('FIGURE_EIGHT_EXECUTION_STATUS', '\n        Vehicle status report that is sent out while figure eight execution is in progress (see MAV_CMD_DO_FIGURE_EIGHT).\n        This may typically send at low rates: of the order of 2Hz.\n      ').
 message_description('BATTERY_STATUS_V2', 'Battery dynamic information.\n        This should be streamed (nominally at 1Hz).\n        Static/invariant battery information is sent in SMART_BATTERY_INFO.\n        Note that smart batteries should set the MAV_BATTERY_STATUS_FLAGS_CAPACITY_RELATIVE_TO_FULL bit to indicate that supplied capacity values are relative to a battery that is known to be full.\n        Power monitors would not set this bit, indicating that capacity_consumed is relative to drone power-on, and that other values are estimated based on the assumption that the battery was full on power-on.\n      ').
 message_description('COMPONENT_INFORMATION_BASIC', 'Basic component information data. Should be requested using MAV_CMD_REQUEST_MESSAGE on startup, or when required.').
@@ -6517,80 +6528,80 @@ message_extensions('RADIO_RC_CHANNELS', [channels]).
 
 :- dynamic message_field/4.
 
-message_field('SENSOR_OFFSETS', mag_ofs_x, int16_t, []).
-message_field('SENSOR_OFFSETS', mag_ofs_y, int16_t, []).
-message_field('SENSOR_OFFSETS', mag_ofs_z, int16_t, []).
+message_field('SENSOR_OFFSETS', mag_ofs_x, int(16), []).
+message_field('SENSOR_OFFSETS', mag_ofs_y, int(16), []).
+message_field('SENSOR_OFFSETS', mag_ofs_z, int(16), []).
 message_field('SENSOR_OFFSETS', mag_declination, float, [units=rad]).
-message_field('SENSOR_OFFSETS', raw_press, int32_t, []).
-message_field('SENSOR_OFFSETS', raw_temp, int32_t, []).
+message_field('SENSOR_OFFSETS', raw_press, int(32), []).
+message_field('SENSOR_OFFSETS', raw_temp, int(32), []).
 message_field('SENSOR_OFFSETS', gyro_cal_x, float, []).
 message_field('SENSOR_OFFSETS', gyro_cal_y, float, []).
 message_field('SENSOR_OFFSETS', gyro_cal_z, float, []).
 message_field('SENSOR_OFFSETS', accel_cal_x, float, []).
 message_field('SENSOR_OFFSETS', accel_cal_y, float, []).
 message_field('SENSOR_OFFSETS', accel_cal_z, float, []).
-message_field('SET_MAG_OFFSETS', target_system, uint8_t, []).
-message_field('SET_MAG_OFFSETS', target_component, uint8_t, []).
-message_field('SET_MAG_OFFSETS', mag_ofs_x, int16_t, []).
-message_field('SET_MAG_OFFSETS', mag_ofs_y, int16_t, []).
-message_field('SET_MAG_OFFSETS', mag_ofs_z, int16_t, []).
-message_field('MEMINFO', brkval, uint16_t, []).
-message_field('MEMINFO', freemem, uint16_t, [units=bytes]).
-message_field('MEMINFO', freemem32, uint32_t, [units=bytes]).
-message_field('AP_ADC', adc1, uint16_t, []).
-message_field('AP_ADC', adc2, uint16_t, []).
-message_field('AP_ADC', adc3, uint16_t, []).
-message_field('AP_ADC', adc4, uint16_t, []).
-message_field('AP_ADC', adc5, uint16_t, []).
-message_field('AP_ADC', adc6, uint16_t, []).
-message_field('DIGICAM_CONFIGURE', target_system, uint8_t, []).
-message_field('DIGICAM_CONFIGURE', target_component, uint8_t, []).
-message_field('DIGICAM_CONFIGURE', mode, uint8_t, []).
-message_field('DIGICAM_CONFIGURE', shutter_speed, uint16_t, []).
-message_field('DIGICAM_CONFIGURE', aperture, uint8_t, []).
-message_field('DIGICAM_CONFIGURE', iso, uint8_t, []).
-message_field('DIGICAM_CONFIGURE', exposure_type, uint8_t, []).
-message_field('DIGICAM_CONFIGURE', command_id, uint8_t, []).
-message_field('DIGICAM_CONFIGURE', engine_cut_off, uint8_t, [units=ds]).
-message_field('DIGICAM_CONFIGURE', extra_param, uint8_t, []).
+message_field('SET_MAG_OFFSETS', target_system, uint(8), []).
+message_field('SET_MAG_OFFSETS', target_component, uint(8), []).
+message_field('SET_MAG_OFFSETS', mag_ofs_x, int(16), []).
+message_field('SET_MAG_OFFSETS', mag_ofs_y, int(16), []).
+message_field('SET_MAG_OFFSETS', mag_ofs_z, int(16), []).
+message_field('MEMINFO', brkval, uint(16), []).
+message_field('MEMINFO', freemem, uint(16), [units=bytes]).
+message_field('MEMINFO', freemem32, uint(32), [units=bytes]).
+message_field('AP_ADC', adc1, uint(16), []).
+message_field('AP_ADC', adc2, uint(16), []).
+message_field('AP_ADC', adc3, uint(16), []).
+message_field('AP_ADC', adc4, uint(16), []).
+message_field('AP_ADC', adc5, uint(16), []).
+message_field('AP_ADC', adc6, uint(16), []).
+message_field('DIGICAM_CONFIGURE', target_system, uint(8), []).
+message_field('DIGICAM_CONFIGURE', target_component, uint(8), []).
+message_field('DIGICAM_CONFIGURE', mode, uint(8), []).
+message_field('DIGICAM_CONFIGURE', shutter_speed, uint(16), []).
+message_field('DIGICAM_CONFIGURE', aperture, uint(8), []).
+message_field('DIGICAM_CONFIGURE', iso, uint(8), []).
+message_field('DIGICAM_CONFIGURE', exposure_type, uint(8), []).
+message_field('DIGICAM_CONFIGURE', command_id, uint(8), []).
+message_field('DIGICAM_CONFIGURE', engine_cut_off, uint(8), [units=ds]).
+message_field('DIGICAM_CONFIGURE', extra_param, uint(8), []).
 message_field('DIGICAM_CONFIGURE', extra_value, float, []).
-message_field('DIGICAM_CONTROL', target_system, uint8_t, []).
-message_field('DIGICAM_CONTROL', target_component, uint8_t, []).
-message_field('DIGICAM_CONTROL', session, uint8_t, []).
-message_field('DIGICAM_CONTROL', zoom_pos, uint8_t, []).
-message_field('DIGICAM_CONTROL', zoom_step, int8_t, []).
-message_field('DIGICAM_CONTROL', focus_lock, uint8_t, []).
-message_field('DIGICAM_CONTROL', shot, uint8_t, []).
-message_field('DIGICAM_CONTROL', command_id, uint8_t, []).
-message_field('DIGICAM_CONTROL', extra_param, uint8_t, []).
+message_field('DIGICAM_CONTROL', target_system, uint(8), []).
+message_field('DIGICAM_CONTROL', target_component, uint(8), []).
+message_field('DIGICAM_CONTROL', session, uint(8), []).
+message_field('DIGICAM_CONTROL', zoom_pos, uint(8), []).
+message_field('DIGICAM_CONTROL', zoom_step, int(8), []).
+message_field('DIGICAM_CONTROL', focus_lock, uint(8), []).
+message_field('DIGICAM_CONTROL', shot, uint(8), []).
+message_field('DIGICAM_CONTROL', command_id, uint(8), []).
+message_field('DIGICAM_CONTROL', extra_param, uint(8), []).
 message_field('DIGICAM_CONTROL', extra_value, float, []).
-message_field('MOUNT_CONFIGURE', target_system, uint8_t, []).
-message_field('MOUNT_CONFIGURE', target_component, uint8_t, []).
-message_field('MOUNT_CONFIGURE', mount_mode, uint8_t, [enum='MAV_MOUNT_MODE']).
-message_field('MOUNT_CONFIGURE', stab_roll, uint8_t, []).
-message_field('MOUNT_CONFIGURE', stab_pitch, uint8_t, []).
-message_field('MOUNT_CONFIGURE', stab_yaw, uint8_t, []).
-message_field('MOUNT_CONTROL', target_system, uint8_t, []).
-message_field('MOUNT_CONTROL', target_component, uint8_t, []).
-message_field('MOUNT_CONTROL', input_a, int32_t, []).
-message_field('MOUNT_CONTROL', input_b, int32_t, []).
-message_field('MOUNT_CONTROL', input_c, int32_t, []).
-message_field('MOUNT_CONTROL', save_position, uint8_t, []).
-message_field('MOUNT_STATUS', target_system, uint8_t, []).
-message_field('MOUNT_STATUS', target_component, uint8_t, []).
-message_field('MOUNT_STATUS', pointing_a, int32_t, [units=cdeg]).
-message_field('MOUNT_STATUS', pointing_b, int32_t, [units=cdeg]).
-message_field('MOUNT_STATUS', pointing_c, int32_t, [units=cdeg]).
-message_field('MOUNT_STATUS', mount_mode, uint8_t, [enum='MAV_MOUNT_MODE']).
-message_field('FENCE_POINT', target_system, uint8_t, []).
-message_field('FENCE_POINT', target_component, uint8_t, []).
-message_field('FENCE_POINT', idx, uint8_t, []).
-message_field('FENCE_POINT', count, uint8_t, []).
+message_field('MOUNT_CONFIGURE', target_system, uint(8), []).
+message_field('MOUNT_CONFIGURE', target_component, uint(8), []).
+message_field('MOUNT_CONFIGURE', mount_mode, uint(8), [enum='MAV_MOUNT_MODE']).
+message_field('MOUNT_CONFIGURE', stab_roll, uint(8), []).
+message_field('MOUNT_CONFIGURE', stab_pitch, uint(8), []).
+message_field('MOUNT_CONFIGURE', stab_yaw, uint(8), []).
+message_field('MOUNT_CONTROL', target_system, uint(8), []).
+message_field('MOUNT_CONTROL', target_component, uint(8), []).
+message_field('MOUNT_CONTROL', input_a, int(32), []).
+message_field('MOUNT_CONTROL', input_b, int(32), []).
+message_field('MOUNT_CONTROL', input_c, int(32), []).
+message_field('MOUNT_CONTROL', save_position, uint(8), []).
+message_field('MOUNT_STATUS', target_system, uint(8), []).
+message_field('MOUNT_STATUS', target_component, uint(8), []).
+message_field('MOUNT_STATUS', pointing_a, int(32), [units=cdeg]).
+message_field('MOUNT_STATUS', pointing_b, int(32), [units=cdeg]).
+message_field('MOUNT_STATUS', pointing_c, int(32), [units=cdeg]).
+message_field('MOUNT_STATUS', mount_mode, uint(8), [enum='MAV_MOUNT_MODE']).
+message_field('FENCE_POINT', target_system, uint(8), []).
+message_field('FENCE_POINT', target_component, uint(8), []).
+message_field('FENCE_POINT', idx, uint(8), []).
+message_field('FENCE_POINT', count, uint(8), []).
 message_field('FENCE_POINT', lat, float, [units=deg]).
 message_field('FENCE_POINT', lng, float, [units=deg]).
-message_field('FENCE_FETCH_POINT', target_system, uint8_t, []).
-message_field('FENCE_FETCH_POINT', target_component, uint8_t, []).
-message_field('FENCE_FETCH_POINT', idx, uint8_t, []).
+message_field('FENCE_FETCH_POINT', target_system, uint(8), []).
+message_field('FENCE_FETCH_POINT', target_component, uint(8), []).
+message_field('FENCE_FETCH_POINT', idx, uint(8), []).
 message_field('AHRS', omegaIx, float, [units='rad/s']).
 message_field('AHRS', omegaIy, float, [units='rad/s']).
 message_field('AHRS', omegaIz, float, [units='rad/s']).
@@ -6607,41 +6618,41 @@ message_field('SIMSTATE', zacc, float, [units='m/s/s']).
 message_field('SIMSTATE', xgyro, float, [units='rad/s']).
 message_field('SIMSTATE', ygyro, float, [units='rad/s']).
 message_field('SIMSTATE', zgyro, float, [units='rad/s']).
-message_field('SIMSTATE', lat, int32_t, [units=degE7]).
-message_field('SIMSTATE', lng, int32_t, [units=degE7]).
-message_field('HWSTATUS', 'Vcc', uint16_t, [units=mV]).
-message_field('HWSTATUS', 'I2Cerr', uint8_t, []).
-message_field('RADIO', rssi, uint8_t, []).
-message_field('RADIO', remrssi, uint8_t, []).
-message_field('RADIO', txbuf, uint8_t, [units='%']).
-message_field('RADIO', noise, uint8_t, []).
-message_field('RADIO', remnoise, uint8_t, []).
-message_field('RADIO', rxerrors, uint16_t, []).
-message_field('RADIO', fixed, uint16_t, []).
-message_field('LIMITS_STATUS', limits_state, uint8_t, [enum='LIMITS_STATE']).
-message_field('LIMITS_STATUS', last_trigger, uint32_t, [units=ms]).
-message_field('LIMITS_STATUS', last_action, uint32_t, [units=ms]).
-message_field('LIMITS_STATUS', last_recovery, uint32_t, [units=ms]).
-message_field('LIMITS_STATUS', last_clear, uint32_t, [units=ms]).
-message_field('LIMITS_STATUS', breach_count, uint16_t, []).
-message_field('LIMITS_STATUS', mods_enabled, uint8_t, [enum='LIMIT_MODULE', display=bitmask]).
-message_field('LIMITS_STATUS', mods_required, uint8_t, [enum='LIMIT_MODULE', display=bitmask]).
-message_field('LIMITS_STATUS', mods_triggered, uint8_t, [enum='LIMIT_MODULE', display=bitmask]).
+message_field('SIMSTATE', lat, int(32), [units=degE7]).
+message_field('SIMSTATE', lng, int(32), [units=degE7]).
+message_field('HWSTATUS', 'Vcc', uint(16), [units=mV]).
+message_field('HWSTATUS', 'I2Cerr', uint(8), []).
+message_field('RADIO', rssi, uint(8), []).
+message_field('RADIO', remrssi, uint(8), []).
+message_field('RADIO', txbuf, uint(8), [units='%']).
+message_field('RADIO', noise, uint(8), []).
+message_field('RADIO', remnoise, uint(8), []).
+message_field('RADIO', rxerrors, uint(16), []).
+message_field('RADIO', fixed, uint(16), []).
+message_field('LIMITS_STATUS', limits_state, uint(8), [enum='LIMITS_STATE']).
+message_field('LIMITS_STATUS', last_trigger, uint(32), [units=ms]).
+message_field('LIMITS_STATUS', last_action, uint(32), [units=ms]).
+message_field('LIMITS_STATUS', last_recovery, uint(32), [units=ms]).
+message_field('LIMITS_STATUS', last_clear, uint(32), [units=ms]).
+message_field('LIMITS_STATUS', breach_count, uint(16), []).
+message_field('LIMITS_STATUS', mods_enabled, uint(8), [enum='LIMIT_MODULE', display=bitmask]).
+message_field('LIMITS_STATUS', mods_required, uint(8), [enum='LIMIT_MODULE', display=bitmask]).
+message_field('LIMITS_STATUS', mods_triggered, uint(8), [enum='LIMIT_MODULE', display=bitmask]).
 message_field('WIND', direction, float, [units=deg]).
 message_field('WIND', speed, float, [units='m/s']).
 message_field('WIND', speed_z, float, [units='m/s']).
-message_field('DATA16', type, uint8_t, []).
-message_field('DATA16', len, uint8_t, [units=bytes]).
-message_field('DATA16', data, 'uint8_t[16]', []).
-message_field('DATA32', type, uint8_t, []).
-message_field('DATA32', len, uint8_t, [units=bytes]).
-message_field('DATA32', data, 'uint8_t[32]', []).
-message_field('DATA64', type, uint8_t, []).
-message_field('DATA64', len, uint8_t, [units=bytes]).
-message_field('DATA64', data, 'uint8_t[64]', []).
-message_field('DATA96', type, uint8_t, []).
-message_field('DATA96', len, uint8_t, [units=bytes]).
-message_field('DATA96', data, 'uint8_t[96]', []).
+message_field('DATA16', type, uint(8), []).
+message_field('DATA16', len, uint(8), [units=bytes]).
+message_field('DATA16', data, uint(8), []).
+message_field('DATA32', type, uint(8), []).
+message_field('DATA32', len, uint(8), [units=bytes]).
+message_field('DATA32', data, uint(8), []).
+message_field('DATA64', type, uint(8), []).
+message_field('DATA64', len, uint(8), [units=bytes]).
+message_field('DATA64', data, uint(8), []).
+message_field('DATA96', type, uint(8), []).
+message_field('DATA96', len, uint(8), [units=bytes]).
+message_field('DATA96', data, uint(8), []).
 message_field('RANGEFINDER', distance, float, [units=m]).
 message_field('RANGEFINDER', voltage, float, [units='V']).
 message_field('AIRSPEED_AUTOCAL', vx, float, [units='m/s']).
@@ -6656,22 +6667,22 @@ message_field('AIRSPEED_AUTOCAL', state_z, float, []).
 message_field('AIRSPEED_AUTOCAL', 'Pax', float, []).
 message_field('AIRSPEED_AUTOCAL', 'Pby', float, []).
 message_field('AIRSPEED_AUTOCAL', 'Pcz', float, []).
-message_field('RALLY_POINT', target_system, uint8_t, []).
-message_field('RALLY_POINT', target_component, uint8_t, []).
-message_field('RALLY_POINT', idx, uint8_t, []).
-message_field('RALLY_POINT', count, uint8_t, []).
-message_field('RALLY_POINT', lat, int32_t, [units=degE7]).
-message_field('RALLY_POINT', lng, int32_t, [units=degE7]).
-message_field('RALLY_POINT', alt, int16_t, [units=m]).
-message_field('RALLY_POINT', break_alt, int16_t, [units=m]).
-message_field('RALLY_POINT', land_dir, uint16_t, [units=cdeg]).
-message_field('RALLY_POINT', flags, uint8_t, [enum='RALLY_FLAGS', display=bitmask]).
-message_field('RALLY_FETCH_POINT', target_system, uint8_t, []).
-message_field('RALLY_FETCH_POINT', target_component, uint8_t, []).
-message_field('RALLY_FETCH_POINT', idx, uint8_t, []).
-message_field('COMPASSMOT_STATUS', throttle, uint16_t, [units='d%']).
+message_field('RALLY_POINT', target_system, uint(8), []).
+message_field('RALLY_POINT', target_component, uint(8), []).
+message_field('RALLY_POINT', idx, uint(8), []).
+message_field('RALLY_POINT', count, uint(8), []).
+message_field('RALLY_POINT', lat, int(32), [units=degE7]).
+message_field('RALLY_POINT', lng, int(32), [units=degE7]).
+message_field('RALLY_POINT', alt, int(16), [units=m]).
+message_field('RALLY_POINT', break_alt, int(16), [units=m]).
+message_field('RALLY_POINT', land_dir, uint(16), [units=cdeg]).
+message_field('RALLY_POINT', flags, uint(8), [enum='RALLY_FLAGS', display=bitmask]).
+message_field('RALLY_FETCH_POINT', target_system, uint(8), []).
+message_field('RALLY_FETCH_POINT', target_component, uint(8), []).
+message_field('RALLY_FETCH_POINT', idx, uint(8), []).
+message_field('COMPASSMOT_STATUS', throttle, uint(16), [units='d%']).
 message_field('COMPASSMOT_STATUS', current, float, [units='A']).
-message_field('COMPASSMOT_STATUS', interference, uint16_t, [units='%']).
+message_field('COMPASSMOT_STATUS', interference, uint(16), [units='%']).
 message_field('COMPASSMOT_STATUS', 'CompensationX', float, []).
 message_field('COMPASSMOT_STATUS', 'CompensationY', float, []).
 message_field('COMPASSMOT_STATUS', 'CompensationZ', float, []).
@@ -6679,76 +6690,76 @@ message_field('AHRS2', roll, float, [units=rad]).
 message_field('AHRS2', pitch, float, [units=rad]).
 message_field('AHRS2', yaw, float, [units=rad]).
 message_field('AHRS2', altitude, float, [units=m]).
-message_field('AHRS2', lat, int32_t, [units=degE7]).
-message_field('AHRS2', lng, int32_t, [units=degE7]).
-message_field('CAMERA_STATUS', time_usec, uint64_t, [units=us]).
-message_field('CAMERA_STATUS', target_system, uint8_t, []).
-message_field('CAMERA_STATUS', cam_idx, uint8_t, []).
-message_field('CAMERA_STATUS', img_idx, uint16_t, []).
-message_field('CAMERA_STATUS', event_id, uint8_t, [enum='CAMERA_STATUS_TYPES']).
+message_field('AHRS2', lat, int(32), [units=degE7]).
+message_field('AHRS2', lng, int(32), [units=degE7]).
+message_field('CAMERA_STATUS', time_usec, uint(64), [units=us]).
+message_field('CAMERA_STATUS', target_system, uint(8), []).
+message_field('CAMERA_STATUS', cam_idx, uint(8), []).
+message_field('CAMERA_STATUS', img_idx, uint(16), []).
+message_field('CAMERA_STATUS', event_id, uint(8), [enum='CAMERA_STATUS_TYPES']).
 message_field('CAMERA_STATUS', p1, float, []).
 message_field('CAMERA_STATUS', p2, float, []).
 message_field('CAMERA_STATUS', p3, float, []).
 message_field('CAMERA_STATUS', p4, float, []).
-message_field('CAMERA_FEEDBACK', time_usec, uint64_t, [units=us]).
-message_field('CAMERA_FEEDBACK', target_system, uint8_t, []).
-message_field('CAMERA_FEEDBACK', cam_idx, uint8_t, []).
-message_field('CAMERA_FEEDBACK', img_idx, uint16_t, []).
-message_field('CAMERA_FEEDBACK', lat, int32_t, [units=degE7]).
-message_field('CAMERA_FEEDBACK', lng, int32_t, [units=degE7]).
+message_field('CAMERA_FEEDBACK', time_usec, uint(64), [units=us]).
+message_field('CAMERA_FEEDBACK', target_system, uint(8), []).
+message_field('CAMERA_FEEDBACK', cam_idx, uint(8), []).
+message_field('CAMERA_FEEDBACK', img_idx, uint(16), []).
+message_field('CAMERA_FEEDBACK', lat, int(32), [units=degE7]).
+message_field('CAMERA_FEEDBACK', lng, int(32), [units=degE7]).
 message_field('CAMERA_FEEDBACK', alt_msl, float, [units=m]).
 message_field('CAMERA_FEEDBACK', alt_rel, float, [units=m]).
 message_field('CAMERA_FEEDBACK', roll, float, [units=deg]).
 message_field('CAMERA_FEEDBACK', pitch, float, [units=deg]).
 message_field('CAMERA_FEEDBACK', yaw, float, [units=deg]).
 message_field('CAMERA_FEEDBACK', foc_len, float, [units=mm]).
-message_field('CAMERA_FEEDBACK', flags, uint8_t, [enum='CAMERA_FEEDBACK_FLAGS']).
-message_field('CAMERA_FEEDBACK', completed_captures, uint16_t, []).
-message_field('BATTERY2', voltage, uint16_t, [units=mV]).
-message_field('BATTERY2', current_battery, int16_t, [units=cA]).
+message_field('CAMERA_FEEDBACK', flags, uint(8), [enum='CAMERA_FEEDBACK_FLAGS']).
+message_field('CAMERA_FEEDBACK', completed_captures, uint(16), []).
+message_field('BATTERY2', voltage, uint(16), [units=mV]).
+message_field('BATTERY2', current_battery, int(16), [units=cA]).
 message_field('AHRS3', roll, float, [units=rad]).
 message_field('AHRS3', pitch, float, [units=rad]).
 message_field('AHRS3', yaw, float, [units=rad]).
 message_field('AHRS3', altitude, float, [units=m]).
-message_field('AHRS3', lat, int32_t, [units=degE7]).
-message_field('AHRS3', lng, int32_t, [units=degE7]).
+message_field('AHRS3', lat, int(32), [units=degE7]).
+message_field('AHRS3', lng, int(32), [units=degE7]).
 message_field('AHRS3', v1, float, []).
 message_field('AHRS3', v2, float, []).
 message_field('AHRS3', v3, float, []).
 message_field('AHRS3', v4, float, []).
-message_field('AUTOPILOT_VERSION_REQUEST', target_system, uint8_t, []).
-message_field('AUTOPILOT_VERSION_REQUEST', target_component, uint8_t, []).
-message_field('REMOTE_LOG_DATA_BLOCK', target_system, uint8_t, []).
-message_field('REMOTE_LOG_DATA_BLOCK', target_component, uint8_t, []).
-message_field('REMOTE_LOG_DATA_BLOCK', seqno, uint32_t, [enum='MAV_REMOTE_LOG_DATA_BLOCK_COMMANDS']).
-message_field('REMOTE_LOG_DATA_BLOCK', data, 'uint8_t[200]', []).
-message_field('REMOTE_LOG_BLOCK_STATUS', target_system, uint8_t, []).
-message_field('REMOTE_LOG_BLOCK_STATUS', target_component, uint8_t, []).
-message_field('REMOTE_LOG_BLOCK_STATUS', seqno, uint32_t, []).
-message_field('REMOTE_LOG_BLOCK_STATUS', status, uint8_t, [enum='MAV_REMOTE_LOG_DATA_BLOCK_STATUSES']).
-message_field('LED_CONTROL', target_system, uint8_t, []).
-message_field('LED_CONTROL', target_component, uint8_t, []).
-message_field('LED_CONTROL', instance, uint8_t, []).
-message_field('LED_CONTROL', pattern, uint8_t, []).
-message_field('LED_CONTROL', custom_len, uint8_t, []).
-message_field('LED_CONTROL', custom_bytes, 'uint8_t[24]', []).
-message_field('MAG_CAL_PROGRESS', compass_id, uint8_t, [instance=true]).
-message_field('MAG_CAL_PROGRESS', cal_mask, uint8_t, [display=bitmask]).
-message_field('MAG_CAL_PROGRESS', cal_status, uint8_t, [enum='MAG_CAL_STATUS']).
-message_field('MAG_CAL_PROGRESS', attempt, uint8_t, []).
-message_field('MAG_CAL_PROGRESS', completion_pct, uint8_t, [units='%']).
-message_field('MAG_CAL_PROGRESS', completion_mask, 'uint8_t[10]', []).
+message_field('AUTOPILOT_VERSION_REQUEST', target_system, uint(8), []).
+message_field('AUTOPILOT_VERSION_REQUEST', target_component, uint(8), []).
+message_field('REMOTE_LOG_DATA_BLOCK', target_system, uint(8), []).
+message_field('REMOTE_LOG_DATA_BLOCK', target_component, uint(8), []).
+message_field('REMOTE_LOG_DATA_BLOCK', seqno, uint(32), [enum='MAV_REMOTE_LOG_DATA_BLOCK_COMMANDS']).
+message_field('REMOTE_LOG_DATA_BLOCK', data, uint(8), []).
+message_field('REMOTE_LOG_BLOCK_STATUS', target_system, uint(8), []).
+message_field('REMOTE_LOG_BLOCK_STATUS', target_component, uint(8), []).
+message_field('REMOTE_LOG_BLOCK_STATUS', seqno, uint(32), []).
+message_field('REMOTE_LOG_BLOCK_STATUS', status, uint(8), [enum='MAV_REMOTE_LOG_DATA_BLOCK_STATUSES']).
+message_field('LED_CONTROL', target_system, uint(8), []).
+message_field('LED_CONTROL', target_component, uint(8), []).
+message_field('LED_CONTROL', instance, uint(8), []).
+message_field('LED_CONTROL', pattern, uint(8), []).
+message_field('LED_CONTROL', custom_len, uint(8), []).
+message_field('LED_CONTROL', custom_bytes, uint(8), []).
+message_field('MAG_CAL_PROGRESS', compass_id, uint(8), [instance=true]).
+message_field('MAG_CAL_PROGRESS', cal_mask, uint(8), [display=bitmask]).
+message_field('MAG_CAL_PROGRESS', cal_status, uint(8), [enum='MAG_CAL_STATUS']).
+message_field('MAG_CAL_PROGRESS', attempt, uint(8), []).
+message_field('MAG_CAL_PROGRESS', completion_pct, uint(8), [units='%']).
+message_field('MAG_CAL_PROGRESS', completion_mask, uint(8), []).
 message_field('MAG_CAL_PROGRESS', direction_x, float, []).
 message_field('MAG_CAL_PROGRESS', direction_y, float, []).
 message_field('MAG_CAL_PROGRESS', direction_z, float, []).
-message_field('EKF_STATUS_REPORT', flags, uint16_t, [enum='EKF_STATUS_FLAGS', display=bitmask]).
+message_field('EKF_STATUS_REPORT', flags, uint(16), [enum='EKF_STATUS_FLAGS', display=bitmask]).
 message_field('EKF_STATUS_REPORT', velocity_variance, float, []).
 message_field('EKF_STATUS_REPORT', pos_horiz_variance, float, []).
 message_field('EKF_STATUS_REPORT', pos_vert_variance, float, []).
 message_field('EKF_STATUS_REPORT', compass_variance, float, []).
 message_field('EKF_STATUS_REPORT', terrain_alt_variance, float, []).
 message_field('EKF_STATUS_REPORT', airspeed_variance, float, []).
-message_field('PID_TUNING', axis, uint8_t, [enum='PID_TUNING_AXIS', instance=true]).
+message_field('PID_TUNING', axis, uint(8), [enum='PID_TUNING_AXIS', instance=true]).
 message_field('PID_TUNING', desired, float, []).
 message_field('PID_TUNING', achieved, float, []).
 message_field('PID_TUNING', 'FF', float, []).
@@ -6757,18 +6768,18 @@ message_field('PID_TUNING', 'I', float, []).
 message_field('PID_TUNING', 'D', float, []).
 message_field('PID_TUNING', 'SRate', float, []).
 message_field('PID_TUNING', 'PDmod', float, []).
-message_field('DEEPSTALL', landing_lat, int32_t, [units=degE7]).
-message_field('DEEPSTALL', landing_lon, int32_t, [units=degE7]).
-message_field('DEEPSTALL', path_lat, int32_t, [units=degE7]).
-message_field('DEEPSTALL', path_lon, int32_t, [units=degE7]).
-message_field('DEEPSTALL', arc_entry_lat, int32_t, [units=degE7]).
-message_field('DEEPSTALL', arc_entry_lon, int32_t, [units=degE7]).
+message_field('DEEPSTALL', landing_lat, int(32), [units=degE7]).
+message_field('DEEPSTALL', landing_lon, int(32), [units=degE7]).
+message_field('DEEPSTALL', path_lat, int(32), [units=degE7]).
+message_field('DEEPSTALL', path_lon, int(32), [units=degE7]).
+message_field('DEEPSTALL', arc_entry_lat, int(32), [units=degE7]).
+message_field('DEEPSTALL', arc_entry_lon, int(32), [units=degE7]).
 message_field('DEEPSTALL', altitude, float, [units=m]).
 message_field('DEEPSTALL', expected_travel_distance, float, [units=m]).
 message_field('DEEPSTALL', cross_track_error, float, [units=m]).
-message_field('DEEPSTALL', stage, uint8_t, [enum='DEEPSTALL_STAGE']).
-message_field('GIMBAL_REPORT', target_system, uint8_t, []).
-message_field('GIMBAL_REPORT', target_component, uint8_t, []).
+message_field('DEEPSTALL', stage, uint(8), [enum='DEEPSTALL_STAGE']).
+message_field('GIMBAL_REPORT', target_system, uint(8), []).
+message_field('GIMBAL_REPORT', target_component, uint(8), []).
 message_field('GIMBAL_REPORT', delta_time, float, [units=s]).
 message_field('GIMBAL_REPORT', delta_angle_x, float, [units=rad]).
 message_field('GIMBAL_REPORT', delta_angle_y, float, [units=rad]).
@@ -6779,63 +6790,63 @@ message_field('GIMBAL_REPORT', delta_velocity_z, float, [units='m/s']).
 message_field('GIMBAL_REPORT', joint_roll, float, [units=rad]).
 message_field('GIMBAL_REPORT', joint_el, float, [units=rad]).
 message_field('GIMBAL_REPORT', joint_az, float, [units=rad]).
-message_field('GIMBAL_CONTROL', target_system, uint8_t, []).
-message_field('GIMBAL_CONTROL', target_component, uint8_t, []).
+message_field('GIMBAL_CONTROL', target_system, uint(8), []).
+message_field('GIMBAL_CONTROL', target_component, uint(8), []).
 message_field('GIMBAL_CONTROL', demanded_rate_x, float, [units='rad/s']).
 message_field('GIMBAL_CONTROL', demanded_rate_y, float, [units='rad/s']).
 message_field('GIMBAL_CONTROL', demanded_rate_z, float, [units='rad/s']).
-message_field('GIMBAL_TORQUE_CMD_REPORT', target_system, uint8_t, []).
-message_field('GIMBAL_TORQUE_CMD_REPORT', target_component, uint8_t, []).
-message_field('GIMBAL_TORQUE_CMD_REPORT', rl_torque_cmd, int16_t, []).
-message_field('GIMBAL_TORQUE_CMD_REPORT', el_torque_cmd, int16_t, []).
-message_field('GIMBAL_TORQUE_CMD_REPORT', az_torque_cmd, int16_t, []).
-message_field('GOPRO_HEARTBEAT', status, uint8_t, [enum='GOPRO_HEARTBEAT_STATUS']).
-message_field('GOPRO_HEARTBEAT', capture_mode, uint8_t, [enum='GOPRO_CAPTURE_MODE']).
-message_field('GOPRO_HEARTBEAT', flags, uint8_t, [enum='GOPRO_HEARTBEAT_FLAGS', display=bitmask]).
-message_field('GOPRO_GET_REQUEST', target_system, uint8_t, []).
-message_field('GOPRO_GET_REQUEST', target_component, uint8_t, []).
-message_field('GOPRO_GET_REQUEST', cmd_id, uint8_t, [enum='GOPRO_COMMAND']).
-message_field('GOPRO_GET_RESPONSE', cmd_id, uint8_t, [enum='GOPRO_COMMAND']).
-message_field('GOPRO_GET_RESPONSE', status, uint8_t, [enum='GOPRO_REQUEST_STATUS']).
-message_field('GOPRO_GET_RESPONSE', value, 'uint8_t[4]', []).
-message_field('GOPRO_SET_REQUEST', target_system, uint8_t, []).
-message_field('GOPRO_SET_REQUEST', target_component, uint8_t, []).
-message_field('GOPRO_SET_REQUEST', cmd_id, uint8_t, [enum='GOPRO_COMMAND']).
-message_field('GOPRO_SET_REQUEST', value, 'uint8_t[4]', []).
-message_field('GOPRO_SET_RESPONSE', cmd_id, uint8_t, [enum='GOPRO_COMMAND']).
-message_field('GOPRO_SET_RESPONSE', status, uint8_t, [enum='GOPRO_REQUEST_STATUS']).
+message_field('GIMBAL_TORQUE_CMD_REPORT', target_system, uint(8), []).
+message_field('GIMBAL_TORQUE_CMD_REPORT', target_component, uint(8), []).
+message_field('GIMBAL_TORQUE_CMD_REPORT', rl_torque_cmd, int(16), []).
+message_field('GIMBAL_TORQUE_CMD_REPORT', el_torque_cmd, int(16), []).
+message_field('GIMBAL_TORQUE_CMD_REPORT', az_torque_cmd, int(16), []).
+message_field('GOPRO_HEARTBEAT', status, uint(8), [enum='GOPRO_HEARTBEAT_STATUS']).
+message_field('GOPRO_HEARTBEAT', capture_mode, uint(8), [enum='GOPRO_CAPTURE_MODE']).
+message_field('GOPRO_HEARTBEAT', flags, uint(8), [enum='GOPRO_HEARTBEAT_FLAGS', display=bitmask]).
+message_field('GOPRO_GET_REQUEST', target_system, uint(8), []).
+message_field('GOPRO_GET_REQUEST', target_component, uint(8), []).
+message_field('GOPRO_GET_REQUEST', cmd_id, uint(8), [enum='GOPRO_COMMAND']).
+message_field('GOPRO_GET_RESPONSE', cmd_id, uint(8), [enum='GOPRO_COMMAND']).
+message_field('GOPRO_GET_RESPONSE', status, uint(8), [enum='GOPRO_REQUEST_STATUS']).
+message_field('GOPRO_GET_RESPONSE', value, uint(8), []).
+message_field('GOPRO_SET_REQUEST', target_system, uint(8), []).
+message_field('GOPRO_SET_REQUEST', target_component, uint(8), []).
+message_field('GOPRO_SET_REQUEST', cmd_id, uint(8), [enum='GOPRO_COMMAND']).
+message_field('GOPRO_SET_REQUEST', value, uint(8), []).
+message_field('GOPRO_SET_RESPONSE', cmd_id, uint(8), [enum='GOPRO_COMMAND']).
+message_field('GOPRO_SET_RESPONSE', status, uint(8), [enum='GOPRO_REQUEST_STATUS']).
 message_field('RPM', rpm1, float, []).
 message_field('RPM', rpm2, float, []).
-message_field('DEVICE_OP_READ', target_system, uint8_t, []).
-message_field('DEVICE_OP_READ', target_component, uint8_t, []).
-message_field('DEVICE_OP_READ', request_id, uint32_t, []).
-message_field('DEVICE_OP_READ', bustype, uint8_t, [enum='DEVICE_OP_BUSTYPE']).
-message_field('DEVICE_OP_READ', bus, uint8_t, []).
-message_field('DEVICE_OP_READ', address, uint8_t, []).
-message_field('DEVICE_OP_READ', busname, 'char[40]', []).
-message_field('DEVICE_OP_READ', regstart, uint8_t, []).
-message_field('DEVICE_OP_READ', count, uint8_t, []).
-message_field('DEVICE_OP_READ', bank, uint8_t, []).
-message_field('DEVICE_OP_READ_REPLY', request_id, uint32_t, []).
-message_field('DEVICE_OP_READ_REPLY', result, uint8_t, []).
-message_field('DEVICE_OP_READ_REPLY', regstart, uint8_t, []).
-message_field('DEVICE_OP_READ_REPLY', count, uint8_t, []).
-message_field('DEVICE_OP_READ_REPLY', data, 'uint8_t[128]', []).
-message_field('DEVICE_OP_READ_REPLY', bank, uint8_t, []).
-message_field('DEVICE_OP_WRITE', target_system, uint8_t, []).
-message_field('DEVICE_OP_WRITE', target_component, uint8_t, []).
-message_field('DEVICE_OP_WRITE', request_id, uint32_t, []).
-message_field('DEVICE_OP_WRITE', bustype, uint8_t, [enum='DEVICE_OP_BUSTYPE']).
-message_field('DEVICE_OP_WRITE', bus, uint8_t, []).
-message_field('DEVICE_OP_WRITE', address, uint8_t, []).
-message_field('DEVICE_OP_WRITE', busname, 'char[40]', []).
-message_field('DEVICE_OP_WRITE', regstart, uint8_t, []).
-message_field('DEVICE_OP_WRITE', count, uint8_t, []).
-message_field('DEVICE_OP_WRITE', data, 'uint8_t[128]', []).
-message_field('DEVICE_OP_WRITE', bank, uint8_t, []).
-message_field('DEVICE_OP_WRITE_REPLY', request_id, uint32_t, []).
-message_field('DEVICE_OP_WRITE_REPLY', result, uint8_t, []).
-message_field('ADAP_TUNING', axis, uint8_t, [enum='PID_TUNING_AXIS', instance=true]).
+message_field('DEVICE_OP_READ', target_system, uint(8), []).
+message_field('DEVICE_OP_READ', target_component, uint(8), []).
+message_field('DEVICE_OP_READ', request_id, uint(32), []).
+message_field('DEVICE_OP_READ', bustype, uint(8), [enum='DEVICE_OP_BUSTYPE']).
+message_field('DEVICE_OP_READ', bus, uint(8), []).
+message_field('DEVICE_OP_READ', address, uint(8), []).
+message_field('DEVICE_OP_READ', busname, char, []).
+message_field('DEVICE_OP_READ', regstart, uint(8), []).
+message_field('DEVICE_OP_READ', count, uint(8), []).
+message_field('DEVICE_OP_READ', bank, uint(8), []).
+message_field('DEVICE_OP_READ_REPLY', request_id, uint(32), []).
+message_field('DEVICE_OP_READ_REPLY', result, uint(8), []).
+message_field('DEVICE_OP_READ_REPLY', regstart, uint(8), []).
+message_field('DEVICE_OP_READ_REPLY', count, uint(8), []).
+message_field('DEVICE_OP_READ_REPLY', data, uint(8), []).
+message_field('DEVICE_OP_READ_REPLY', bank, uint(8), []).
+message_field('DEVICE_OP_WRITE', target_system, uint(8), []).
+message_field('DEVICE_OP_WRITE', target_component, uint(8), []).
+message_field('DEVICE_OP_WRITE', request_id, uint(32), []).
+message_field('DEVICE_OP_WRITE', bustype, uint(8), [enum='DEVICE_OP_BUSTYPE']).
+message_field('DEVICE_OP_WRITE', bus, uint(8), []).
+message_field('DEVICE_OP_WRITE', address, uint(8), []).
+message_field('DEVICE_OP_WRITE', busname, char, []).
+message_field('DEVICE_OP_WRITE', regstart, uint(8), []).
+message_field('DEVICE_OP_WRITE', count, uint(8), []).
+message_field('DEVICE_OP_WRITE', data, uint(8), []).
+message_field('DEVICE_OP_WRITE', bank, uint(8), []).
+message_field('DEVICE_OP_WRITE_REPLY', request_id, uint(32), []).
+message_field('DEVICE_OP_WRITE_REPLY', result, uint(8), []).
+message_field('ADAP_TUNING', axis, uint(8), [enum='PID_TUNING_AXIS', instance=true]).
 message_field('ADAP_TUNING', desired, float, [units='deg/s']).
 message_field('ADAP_TUNING', achieved, float, [units='deg/s']).
 message_field('ADAP_TUNING', error, float, []).
@@ -6848,102 +6859,102 @@ message_field('ADAP_TUNING', sigma_dot, float, []).
 message_field('ADAP_TUNING', f, float, []).
 message_field('ADAP_TUNING', f_dot, float, []).
 message_field('ADAP_TUNING', u, float, []).
-message_field('VISION_POSITION_DELTA', time_usec, uint64_t, [units=us]).
-message_field('VISION_POSITION_DELTA', time_delta_usec, uint64_t, [units=us]).
-message_field('VISION_POSITION_DELTA', angle_delta, 'float[3]', [units=rad]).
-message_field('VISION_POSITION_DELTA', position_delta, 'float[3]', [units=m]).
+message_field('VISION_POSITION_DELTA', time_usec, uint(64), [units=us]).
+message_field('VISION_POSITION_DELTA', time_delta_usec, uint(64), [units=us]).
+message_field('VISION_POSITION_DELTA', angle_delta, float, [units=rad]).
+message_field('VISION_POSITION_DELTA', position_delta, float, [units=m]).
 message_field('VISION_POSITION_DELTA', confidence, float, [units='%']).
-message_field('AOA_SSA', time_usec, uint64_t, [units=us]).
+message_field('AOA_SSA', time_usec, uint(64), [units=us]).
 message_field('AOA_SSA', 'AOA', float, [units=deg]).
 message_field('AOA_SSA', 'SSA', float, [units=deg]).
-message_field('ESC_TELEMETRY_1_TO_4', temperature, 'uint8_t[4]', [units=degC]).
-message_field('ESC_TELEMETRY_1_TO_4', voltage, 'uint16_t[4]', [units=cV]).
-message_field('ESC_TELEMETRY_1_TO_4', current, 'uint16_t[4]', [units=cA]).
-message_field('ESC_TELEMETRY_1_TO_4', totalcurrent, 'uint16_t[4]', [units=mAh]).
-message_field('ESC_TELEMETRY_1_TO_4', rpm, 'uint16_t[4]', [units=rpm]).
-message_field('ESC_TELEMETRY_1_TO_4', count, 'uint16_t[4]', []).
-message_field('ESC_TELEMETRY_5_TO_8', temperature, 'uint8_t[4]', [units=degC]).
-message_field('ESC_TELEMETRY_5_TO_8', voltage, 'uint16_t[4]', [units=cV]).
-message_field('ESC_TELEMETRY_5_TO_8', current, 'uint16_t[4]', [units=cA]).
-message_field('ESC_TELEMETRY_5_TO_8', totalcurrent, 'uint16_t[4]', [units=mAh]).
-message_field('ESC_TELEMETRY_5_TO_8', rpm, 'uint16_t[4]', [units=rpm]).
-message_field('ESC_TELEMETRY_5_TO_8', count, 'uint16_t[4]', []).
-message_field('ESC_TELEMETRY_9_TO_12', temperature, 'uint8_t[4]', [units=degC]).
-message_field('ESC_TELEMETRY_9_TO_12', voltage, 'uint16_t[4]', [units=cV]).
-message_field('ESC_TELEMETRY_9_TO_12', current, 'uint16_t[4]', [units=cA]).
-message_field('ESC_TELEMETRY_9_TO_12', totalcurrent, 'uint16_t[4]', [units=mAh]).
-message_field('ESC_TELEMETRY_9_TO_12', rpm, 'uint16_t[4]', [units=rpm]).
-message_field('ESC_TELEMETRY_9_TO_12', count, 'uint16_t[4]', []).
-message_field('OSD_PARAM_CONFIG', target_system, uint8_t, []).
-message_field('OSD_PARAM_CONFIG', target_component, uint8_t, []).
-message_field('OSD_PARAM_CONFIG', request_id, uint32_t, []).
-message_field('OSD_PARAM_CONFIG', osd_screen, uint8_t, []).
-message_field('OSD_PARAM_CONFIG', osd_index, uint8_t, []).
-message_field('OSD_PARAM_CONFIG', param_id, 'char[16]', []).
-message_field('OSD_PARAM_CONFIG', config_type, uint8_t, [enum='OSD_PARAM_CONFIG_TYPE']).
+message_field('ESC_TELEMETRY_1_TO_4', temperature, uint(8), [units=degC]).
+message_field('ESC_TELEMETRY_1_TO_4', voltage, uint(16), [units=cV]).
+message_field('ESC_TELEMETRY_1_TO_4', current, uint(16), [units=cA]).
+message_field('ESC_TELEMETRY_1_TO_4', totalcurrent, uint(16), [units=mAh]).
+message_field('ESC_TELEMETRY_1_TO_4', rpm, uint(16), [units=rpm]).
+message_field('ESC_TELEMETRY_1_TO_4', count, uint(16), []).
+message_field('ESC_TELEMETRY_5_TO_8', temperature, uint(8), [units=degC]).
+message_field('ESC_TELEMETRY_5_TO_8', voltage, uint(16), [units=cV]).
+message_field('ESC_TELEMETRY_5_TO_8', current, uint(16), [units=cA]).
+message_field('ESC_TELEMETRY_5_TO_8', totalcurrent, uint(16), [units=mAh]).
+message_field('ESC_TELEMETRY_5_TO_8', rpm, uint(16), [units=rpm]).
+message_field('ESC_TELEMETRY_5_TO_8', count, uint(16), []).
+message_field('ESC_TELEMETRY_9_TO_12', temperature, uint(8), [units=degC]).
+message_field('ESC_TELEMETRY_9_TO_12', voltage, uint(16), [units=cV]).
+message_field('ESC_TELEMETRY_9_TO_12', current, uint(16), [units=cA]).
+message_field('ESC_TELEMETRY_9_TO_12', totalcurrent, uint(16), [units=mAh]).
+message_field('ESC_TELEMETRY_9_TO_12', rpm, uint(16), [units=rpm]).
+message_field('ESC_TELEMETRY_9_TO_12', count, uint(16), []).
+message_field('OSD_PARAM_CONFIG', target_system, uint(8), []).
+message_field('OSD_PARAM_CONFIG', target_component, uint(8), []).
+message_field('OSD_PARAM_CONFIG', request_id, uint(32), []).
+message_field('OSD_PARAM_CONFIG', osd_screen, uint(8), []).
+message_field('OSD_PARAM_CONFIG', osd_index, uint(8), []).
+message_field('OSD_PARAM_CONFIG', param_id, char, []).
+message_field('OSD_PARAM_CONFIG', config_type, uint(8), [enum='OSD_PARAM_CONFIG_TYPE']).
 message_field('OSD_PARAM_CONFIG', min_value, float, []).
 message_field('OSD_PARAM_CONFIG', max_value, float, []).
 message_field('OSD_PARAM_CONFIG', increment, float, []).
-message_field('OSD_PARAM_CONFIG_REPLY', request_id, uint32_t, []).
-message_field('OSD_PARAM_CONFIG_REPLY', result, uint8_t, [enum='OSD_PARAM_CONFIG_ERROR']).
-message_field('OSD_PARAM_SHOW_CONFIG', target_system, uint8_t, []).
-message_field('OSD_PARAM_SHOW_CONFIG', target_component, uint8_t, []).
-message_field('OSD_PARAM_SHOW_CONFIG', request_id, uint32_t, []).
-message_field('OSD_PARAM_SHOW_CONFIG', osd_screen, uint8_t, []).
-message_field('OSD_PARAM_SHOW_CONFIG', osd_index, uint8_t, []).
-message_field('OSD_PARAM_SHOW_CONFIG_REPLY', request_id, uint32_t, []).
-message_field('OSD_PARAM_SHOW_CONFIG_REPLY', result, uint8_t, [enum='OSD_PARAM_CONFIG_ERROR']).
-message_field('OSD_PARAM_SHOW_CONFIG_REPLY', param_id, 'char[16]', []).
-message_field('OSD_PARAM_SHOW_CONFIG_REPLY', config_type, uint8_t, [enum='OSD_PARAM_CONFIG_TYPE']).
+message_field('OSD_PARAM_CONFIG_REPLY', request_id, uint(32), []).
+message_field('OSD_PARAM_CONFIG_REPLY', result, uint(8), [enum='OSD_PARAM_CONFIG_ERROR']).
+message_field('OSD_PARAM_SHOW_CONFIG', target_system, uint(8), []).
+message_field('OSD_PARAM_SHOW_CONFIG', target_component, uint(8), []).
+message_field('OSD_PARAM_SHOW_CONFIG', request_id, uint(32), []).
+message_field('OSD_PARAM_SHOW_CONFIG', osd_screen, uint(8), []).
+message_field('OSD_PARAM_SHOW_CONFIG', osd_index, uint(8), []).
+message_field('OSD_PARAM_SHOW_CONFIG_REPLY', request_id, uint(32), []).
+message_field('OSD_PARAM_SHOW_CONFIG_REPLY', result, uint(8), [enum='OSD_PARAM_CONFIG_ERROR']).
+message_field('OSD_PARAM_SHOW_CONFIG_REPLY', param_id, char, []).
+message_field('OSD_PARAM_SHOW_CONFIG_REPLY', config_type, uint(8), [enum='OSD_PARAM_CONFIG_TYPE']).
 message_field('OSD_PARAM_SHOW_CONFIG_REPLY', min_value, float, []).
 message_field('OSD_PARAM_SHOW_CONFIG_REPLY', max_value, float, []).
 message_field('OSD_PARAM_SHOW_CONFIG_REPLY', increment, float, []).
-message_field('OBSTACLE_DISTANCE_3D', time_boot_ms, uint32_t, [units=ms]).
-message_field('OBSTACLE_DISTANCE_3D', sensor_type, uint8_t, [enum='MAV_DISTANCE_SENSOR']).
-message_field('OBSTACLE_DISTANCE_3D', frame, uint8_t, [enum='MAV_FRAME']).
-message_field('OBSTACLE_DISTANCE_3D', obstacle_id, uint16_t, [instance=true]).
+message_field('OBSTACLE_DISTANCE_3D', time_boot_ms, uint(32), [units=ms]).
+message_field('OBSTACLE_DISTANCE_3D', sensor_type, uint(8), [enum='MAV_DISTANCE_SENSOR']).
+message_field('OBSTACLE_DISTANCE_3D', frame, uint(8), [enum='MAV_FRAME']).
+message_field('OBSTACLE_DISTANCE_3D', obstacle_id, uint(16), [instance=true]).
 message_field('OBSTACLE_DISTANCE_3D', x, float, [units=m]).
 message_field('OBSTACLE_DISTANCE_3D', y, float, [units=m]).
 message_field('OBSTACLE_DISTANCE_3D', z, float, [units=m]).
 message_field('OBSTACLE_DISTANCE_3D', min_distance, float, [units=m]).
 message_field('OBSTACLE_DISTANCE_3D', max_distance, float, [units=m]).
-message_field('WATER_DEPTH', time_boot_ms, uint32_t, [units=ms]).
-message_field('WATER_DEPTH', id, uint8_t, [instance=true]).
-message_field('WATER_DEPTH', healthy, uint8_t, []).
-message_field('WATER_DEPTH', lat, int32_t, [units=degE7]).
-message_field('WATER_DEPTH', lng, int32_t, [units=degE7]).
+message_field('WATER_DEPTH', time_boot_ms, uint(32), [units=ms]).
+message_field('WATER_DEPTH', id, uint(8), [instance=true]).
+message_field('WATER_DEPTH', healthy, uint(8), []).
+message_field('WATER_DEPTH', lat, int(32), [units=degE7]).
+message_field('WATER_DEPTH', lng, int(32), [units=degE7]).
 message_field('WATER_DEPTH', alt, float, [units=m]).
 message_field('WATER_DEPTH', roll, float, [units=rad]).
 message_field('WATER_DEPTH', pitch, float, [units=rad]).
 message_field('WATER_DEPTH', yaw, float, [units=rad]).
 message_field('WATER_DEPTH', distance, float, [units=m]).
 message_field('WATER_DEPTH', temperature, float, [units=degC]).
-message_field('MCU_STATUS', id, uint8_t, [instance=true]).
-message_field('MCU_STATUS', 'MCU_temperature', int16_t, [units=cdegC]).
-message_field('MCU_STATUS', 'MCU_voltage', uint16_t, [units=mV]).
-message_field('MCU_STATUS', 'MCU_voltage_min', uint16_t, [units=mV]).
-message_field('MCU_STATUS', 'MCU_voltage_max', uint16_t, [units=mV]).
-message_field('COMMAND_INT_STAMPED', utc_time, uint32_t, []).
-message_field('COMMAND_INT_STAMPED', vehicle_timestamp, uint64_t, []).
-message_field('COMMAND_INT_STAMPED', target_system, uint8_t, []).
-message_field('COMMAND_INT_STAMPED', target_component, uint8_t, []).
-message_field('COMMAND_INT_STAMPED', frame, uint8_t, [enum='MAV_FRAME']).
-message_field('COMMAND_INT_STAMPED', command, uint16_t, [enum='MAV_CMD']).
-message_field('COMMAND_INT_STAMPED', current, uint8_t, []).
-message_field('COMMAND_INT_STAMPED', autocontinue, uint8_t, []).
+message_field('MCU_STATUS', id, uint(8), [instance=true]).
+message_field('MCU_STATUS', 'MCU_temperature', int(16), [units=cdegC]).
+message_field('MCU_STATUS', 'MCU_voltage', uint(16), [units=mV]).
+message_field('MCU_STATUS', 'MCU_voltage_min', uint(16), [units=mV]).
+message_field('MCU_STATUS', 'MCU_voltage_max', uint(16), [units=mV]).
+message_field('COMMAND_INT_STAMPED', utc_time, uint(32), []).
+message_field('COMMAND_INT_STAMPED', vehicle_timestamp, uint(64), []).
+message_field('COMMAND_INT_STAMPED', target_system, uint(8), []).
+message_field('COMMAND_INT_STAMPED', target_component, uint(8), []).
+message_field('COMMAND_INT_STAMPED', frame, uint(8), [enum='MAV_FRAME']).
+message_field('COMMAND_INT_STAMPED', command, uint(16), [enum='MAV_CMD']).
+message_field('COMMAND_INT_STAMPED', current, uint(8), []).
+message_field('COMMAND_INT_STAMPED', autocontinue, uint(8), []).
 message_field('COMMAND_INT_STAMPED', param1, float, []).
 message_field('COMMAND_INT_STAMPED', param2, float, []).
 message_field('COMMAND_INT_STAMPED', param3, float, []).
 message_field('COMMAND_INT_STAMPED', param4, float, []).
-message_field('COMMAND_INT_STAMPED', x, int32_t, []).
-message_field('COMMAND_INT_STAMPED', y, int32_t, []).
+message_field('COMMAND_INT_STAMPED', x, int(32), []).
+message_field('COMMAND_INT_STAMPED', y, int(32), []).
 message_field('COMMAND_INT_STAMPED', z, float, []).
-message_field('COMMAND_LONG_STAMPED', utc_time, uint32_t, []).
-message_field('COMMAND_LONG_STAMPED', vehicle_timestamp, uint64_t, []).
-message_field('COMMAND_LONG_STAMPED', target_system, uint8_t, []).
-message_field('COMMAND_LONG_STAMPED', target_component, uint8_t, []).
-message_field('COMMAND_LONG_STAMPED', command, uint16_t, [enum='MAV_CMD']).
-message_field('COMMAND_LONG_STAMPED', confirmation, uint8_t, []).
+message_field('COMMAND_LONG_STAMPED', utc_time, uint(32), []).
+message_field('COMMAND_LONG_STAMPED', vehicle_timestamp, uint(64), []).
+message_field('COMMAND_LONG_STAMPED', target_system, uint(8), []).
+message_field('COMMAND_LONG_STAMPED', target_component, uint(8), []).
+message_field('COMMAND_LONG_STAMPED', command, uint(16), [enum='MAV_CMD']).
+message_field('COMMAND_LONG_STAMPED', confirmation, uint(8), []).
 message_field('COMMAND_LONG_STAMPED', param1, float, []).
 message_field('COMMAND_LONG_STAMPED', param2, float, []).
 message_field('COMMAND_LONG_STAMPED', param3, float, []).
@@ -6955,21 +6966,21 @@ message_field('SENS_POWER', adc121_vspb_volt, float, [units='V']).
 message_field('SENS_POWER', adc121_cspb_amp, float, [units='A']).
 message_field('SENS_POWER', adc121_cs1_amp, float, [units='A']).
 message_field('SENS_POWER', adc121_cs2_amp, float, [units='A']).
-message_field('SENS_MPPT', mppt_timestamp, uint64_t, [units=us]).
+message_field('SENS_MPPT', mppt_timestamp, uint(64), [units=us]).
 message_field('SENS_MPPT', mppt1_volt, float, [units='V']).
 message_field('SENS_MPPT', mppt1_amp, float, [units='A']).
-message_field('SENS_MPPT', mppt1_pwm, uint16_t, [units=us]).
-message_field('SENS_MPPT', mppt1_status, uint8_t, []).
+message_field('SENS_MPPT', mppt1_pwm, uint(16), [units=us]).
+message_field('SENS_MPPT', mppt1_status, uint(8), []).
 message_field('SENS_MPPT', mppt2_volt, float, [units='V']).
 message_field('SENS_MPPT', mppt2_amp, float, [units='A']).
-message_field('SENS_MPPT', mppt2_pwm, uint16_t, [units=us]).
-message_field('SENS_MPPT', mppt2_status, uint8_t, []).
+message_field('SENS_MPPT', mppt2_pwm, uint(16), [units=us]).
+message_field('SENS_MPPT', mppt2_status, uint(8), []).
 message_field('SENS_MPPT', mppt3_volt, float, [units='V']).
 message_field('SENS_MPPT', mppt3_amp, float, [units='A']).
-message_field('SENS_MPPT', mppt3_pwm, uint16_t, [units=us]).
-message_field('SENS_MPPT', mppt3_status, uint8_t, []).
-message_field('ASLCTRL_DATA', timestamp, uint64_t, [units=us]).
-message_field('ASLCTRL_DATA', aslctrl_mode, uint8_t, []).
+message_field('SENS_MPPT', mppt3_pwm, uint(16), [units=us]).
+message_field('SENS_MPPT', mppt3_status, uint(8), []).
+message_field('ASLCTRL_DATA', timestamp, uint(64), [units=us]).
+message_field('ASLCTRL_DATA', aslctrl_mode, uint(8), []).
 message_field('ASLCTRL_DATA', h, float, []).
 message_field('ASLCTRL_DATA', hRef, float, []).
 message_field('ASLCTRL_DATA', hRef_t, float, []).
@@ -6982,7 +6993,7 @@ message_field('ASLCTRL_DATA', uThrot, float, []).
 message_field('ASLCTRL_DATA', uThrot2, float, []).
 message_field('ASLCTRL_DATA', nZ, float, []).
 message_field('ASLCTRL_DATA', 'AirspeedRef', float, [units='m/s']).
-message_field('ASLCTRL_DATA', 'SpoilersEngaged', uint8_t, []).
+message_field('ASLCTRL_DATA', 'SpoilersEngaged', uint(8), []).
 message_field('ASLCTRL_DATA', 'YawAngle', float, [units=deg]).
 message_field('ASLCTRL_DATA', 'YawAngleRef', float, [units=deg]).
 message_field('ASLCTRL_DATA', 'RollAngle', float, [units=deg]).
@@ -6993,9 +7004,9 @@ message_field('ASLCTRL_DATA', r, float, []).
 message_field('ASLCTRL_DATA', rRef, float, []).
 message_field('ASLCTRL_DATA', uAil, float, []).
 message_field('ASLCTRL_DATA', uRud, float, []).
-message_field('ASLCTRL_DEBUG', i32_1, uint32_t, []).
-message_field('ASLCTRL_DEBUG', i8_1, uint8_t, []).
-message_field('ASLCTRL_DEBUG', i8_2, uint8_t, []).
+message_field('ASLCTRL_DEBUG', i32_1, uint(32), []).
+message_field('ASLCTRL_DEBUG', i8_1, uint(8), []).
+message_field('ASLCTRL_DEBUG', i8_2, uint(8), []).
 message_field('ASLCTRL_DEBUG', f_1, float, []).
 message_field('ASLCTRL_DEBUG', f_2, float, []).
 message_field('ASLCTRL_DEBUG', f_3, float, []).
@@ -7004,45 +7015,45 @@ message_field('ASLCTRL_DEBUG', f_5, float, []).
 message_field('ASLCTRL_DEBUG', f_6, float, []).
 message_field('ASLCTRL_DEBUG', f_7, float, []).
 message_field('ASLCTRL_DEBUG', f_8, float, []).
-message_field('ASLUAV_STATUS', 'LED_status', uint8_t, []).
-message_field('ASLUAV_STATUS', 'SATCOM_status', uint8_t, []).
-message_field('ASLUAV_STATUS', 'Servo_status', 'uint8_t[8]', []).
+message_field('ASLUAV_STATUS', 'LED_status', uint(8), []).
+message_field('ASLUAV_STATUS', 'SATCOM_status', uint(8), []).
+message_field('ASLUAV_STATUS', 'Servo_status', uint(8), []).
 message_field('ASLUAV_STATUS', 'Motor_rpm', float, []).
-message_field('EKF_EXT', timestamp, uint64_t, [units=us]).
+message_field('EKF_EXT', timestamp, uint(64), [units=us]).
 message_field('EKF_EXT', 'Windspeed', float, [units='m/s']).
 message_field('EKF_EXT', 'WindDir', float, [units=rad]).
 message_field('EKF_EXT', 'WindZ', float, [units='m/s']).
 message_field('EKF_EXT', 'Airspeed', float, [units='m/s']).
 message_field('EKF_EXT', beta, float, [units=rad]).
 message_field('EKF_EXT', alpha, float, [units=rad]).
-message_field('ASL_OBCTRL', timestamp, uint64_t, [units=us]).
+message_field('ASL_OBCTRL', timestamp, uint(64), [units=us]).
 message_field('ASL_OBCTRL', uElev, float, []).
 message_field('ASL_OBCTRL', uThrot, float, []).
 message_field('ASL_OBCTRL', uThrot2, float, []).
 message_field('ASL_OBCTRL', uAilL, float, []).
 message_field('ASL_OBCTRL', uAilR, float, []).
 message_field('ASL_OBCTRL', uRud, float, []).
-message_field('ASL_OBCTRL', obctrl_status, uint8_t, []).
-message_field('SENS_ATMOS', timestamp, uint64_t, [units=us]).
+message_field('ASL_OBCTRL', obctrl_status, uint(8), []).
+message_field('SENS_ATMOS', timestamp, uint(64), [units=us]).
 message_field('SENS_ATMOS', 'TempAmbient', float, [units=degC]).
 message_field('SENS_ATMOS', 'Humidity', float, [units='%']).
-message_field('SENS_BATMON', batmon_timestamp, uint64_t, [units=us]).
+message_field('SENS_BATMON', batmon_timestamp, uint(64), [units=us]).
 message_field('SENS_BATMON', temperature, float, [units=degC]).
-message_field('SENS_BATMON', voltage, uint16_t, [units=mV]).
-message_field('SENS_BATMON', current, int16_t, [units=mA]).
-message_field('SENS_BATMON', 'SoC', uint8_t, []).
-message_field('SENS_BATMON', batterystatus, uint16_t, []).
-message_field('SENS_BATMON', serialnumber, uint16_t, []).
-message_field('SENS_BATMON', safetystatus, uint32_t, []).
-message_field('SENS_BATMON', operationstatus, uint32_t, []).
-message_field('SENS_BATMON', cellvoltage1, uint16_t, [units=mV]).
-message_field('SENS_BATMON', cellvoltage2, uint16_t, [units=mV]).
-message_field('SENS_BATMON', cellvoltage3, uint16_t, [units=mV]).
-message_field('SENS_BATMON', cellvoltage4, uint16_t, [units=mV]).
-message_field('SENS_BATMON', cellvoltage5, uint16_t, [units=mV]).
-message_field('SENS_BATMON', cellvoltage6, uint16_t, [units=mV]).
-message_field('FW_SOARING_DATA', timestamp, uint64_t, [units=ms]).
-message_field('FW_SOARING_DATA', timestampModeChanged, uint64_t, [units=ms]).
+message_field('SENS_BATMON', voltage, uint(16), [units=mV]).
+message_field('SENS_BATMON', current, int(16), [units=mA]).
+message_field('SENS_BATMON', 'SoC', uint(8), []).
+message_field('SENS_BATMON', batterystatus, uint(16), []).
+message_field('SENS_BATMON', serialnumber, uint(16), []).
+message_field('SENS_BATMON', safetystatus, uint(32), []).
+message_field('SENS_BATMON', operationstatus, uint(32), []).
+message_field('SENS_BATMON', cellvoltage1, uint(16), [units=mV]).
+message_field('SENS_BATMON', cellvoltage2, uint(16), [units=mV]).
+message_field('SENS_BATMON', cellvoltage3, uint(16), [units=mV]).
+message_field('SENS_BATMON', cellvoltage4, uint(16), [units=mV]).
+message_field('SENS_BATMON', cellvoltage5, uint(16), [units=mV]).
+message_field('SENS_BATMON', cellvoltage6, uint(16), [units=mV]).
+message_field('FW_SOARING_DATA', timestamp, uint(64), [units=ms]).
+message_field('FW_SOARING_DATA', timestampModeChanged, uint(64), [units=ms]).
 message_field('FW_SOARING_DATA', xW, float, [units='m/s']).
 message_field('FW_SOARING_DATA', xR, float, [units=m]).
 message_field('FW_SOARING_DATA', xLat, float, [units=deg]).
@@ -7064,19 +7075,19 @@ message_field('FW_SOARING_DATA', 'ThermalGSEast', float, [units='m/s']).
 message_field('FW_SOARING_DATA', 'TSE_dot', float, [units='m/s']).
 message_field('FW_SOARING_DATA', 'DebugVar1', float, []).
 message_field('FW_SOARING_DATA', 'DebugVar2', float, []).
-message_field('FW_SOARING_DATA', 'ControlMode', uint8_t, []).
-message_field('FW_SOARING_DATA', valid, uint8_t, []).
-message_field('SENSORPOD_STATUS', timestamp, uint64_t, [units=ms]).
-message_field('SENSORPOD_STATUS', visensor_rate_1, uint8_t, []).
-message_field('SENSORPOD_STATUS', visensor_rate_2, uint8_t, []).
-message_field('SENSORPOD_STATUS', visensor_rate_3, uint8_t, []).
-message_field('SENSORPOD_STATUS', visensor_rate_4, uint8_t, []).
-message_field('SENSORPOD_STATUS', recording_nodes_count, uint8_t, []).
-message_field('SENSORPOD_STATUS', cpu_temp, uint8_t, [units=degC]).
-message_field('SENSORPOD_STATUS', free_space, uint16_t, []).
-message_field('SENS_POWER_BOARD', timestamp, uint64_t, [units=us]).
-message_field('SENS_POWER_BOARD', pwr_brd_status, uint8_t, []).
-message_field('SENS_POWER_BOARD', pwr_brd_led_status, uint8_t, []).
+message_field('FW_SOARING_DATA', 'ControlMode', uint(8), []).
+message_field('FW_SOARING_DATA', valid, uint(8), []).
+message_field('SENSORPOD_STATUS', timestamp, uint(64), [units=ms]).
+message_field('SENSORPOD_STATUS', visensor_rate_1, uint(8), []).
+message_field('SENSORPOD_STATUS', visensor_rate_2, uint(8), []).
+message_field('SENSORPOD_STATUS', visensor_rate_3, uint(8), []).
+message_field('SENSORPOD_STATUS', visensor_rate_4, uint(8), []).
+message_field('SENSORPOD_STATUS', recording_nodes_count, uint(8), []).
+message_field('SENSORPOD_STATUS', cpu_temp, uint(8), [units=degC]).
+message_field('SENSORPOD_STATUS', free_space, uint(16), []).
+message_field('SENS_POWER_BOARD', timestamp, uint(64), [units=us]).
+message_field('SENS_POWER_BOARD', pwr_brd_status, uint(8), []).
+message_field('SENS_POWER_BOARD', pwr_brd_led_status, uint(8), []).
 message_field('SENS_POWER_BOARD', pwr_brd_system_volt, float, [units='V']).
 message_field('SENS_POWER_BOARD', pwr_brd_servo_volt, float, [units='V']).
 message_field('SENS_POWER_BOARD', pwr_brd_digital_volt, float, [units='V']).
@@ -7086,149 +7097,149 @@ message_field('SENS_POWER_BOARD', pwr_brd_analog_amp, float, [units='A']).
 message_field('SENS_POWER_BOARD', pwr_brd_digital_amp, float, [units='A']).
 message_field('SENS_POWER_BOARD', pwr_brd_ext_amp, float, [units='A']).
 message_field('SENS_POWER_BOARD', pwr_brd_aux_amp, float, [units='A']).
-message_field('GSM_LINK_STATUS', timestamp, uint64_t, [units=us]).
-message_field('GSM_LINK_STATUS', gsm_modem_type, uint8_t, [enum='GSM_MODEM_TYPE']).
-message_field('GSM_LINK_STATUS', gsm_link_type, uint8_t, [enum='GSM_LINK_TYPE']).
-message_field('GSM_LINK_STATUS', rssi, uint8_t, []).
-message_field('GSM_LINK_STATUS', rsrp_rscp, uint8_t, []).
-message_field('GSM_LINK_STATUS', sinr_ecio, uint8_t, []).
-message_field('GSM_LINK_STATUS', rsrq, uint8_t, []).
-message_field('SATCOM_LINK_STATUS', timestamp, uint64_t, [units=us]).
-message_field('SATCOM_LINK_STATUS', last_heartbeat, uint64_t, [units=us]).
-message_field('SATCOM_LINK_STATUS', failed_sessions, uint16_t, []).
-message_field('SATCOM_LINK_STATUS', successful_sessions, uint16_t, []).
-message_field('SATCOM_LINK_STATUS', signal_quality, uint8_t, []).
-message_field('SATCOM_LINK_STATUS', ring_pending, uint8_t, []).
-message_field('SATCOM_LINK_STATUS', tx_session_pending, uint8_t, []).
-message_field('SATCOM_LINK_STATUS', rx_session_pending, uint8_t, []).
-message_field('SENSOR_AIRFLOW_ANGLES', timestamp, uint64_t, [units=us]).
+message_field('GSM_LINK_STATUS', timestamp, uint(64), [units=us]).
+message_field('GSM_LINK_STATUS', gsm_modem_type, uint(8), [enum='GSM_MODEM_TYPE']).
+message_field('GSM_LINK_STATUS', gsm_link_type, uint(8), [enum='GSM_LINK_TYPE']).
+message_field('GSM_LINK_STATUS', rssi, uint(8), []).
+message_field('GSM_LINK_STATUS', rsrp_rscp, uint(8), []).
+message_field('GSM_LINK_STATUS', sinr_ecio, uint(8), []).
+message_field('GSM_LINK_STATUS', rsrq, uint(8), []).
+message_field('SATCOM_LINK_STATUS', timestamp, uint(64), [units=us]).
+message_field('SATCOM_LINK_STATUS', last_heartbeat, uint(64), [units=us]).
+message_field('SATCOM_LINK_STATUS', failed_sessions, uint(16), []).
+message_field('SATCOM_LINK_STATUS', successful_sessions, uint(16), []).
+message_field('SATCOM_LINK_STATUS', signal_quality, uint(8), []).
+message_field('SATCOM_LINK_STATUS', ring_pending, uint(8), []).
+message_field('SATCOM_LINK_STATUS', tx_session_pending, uint(8), []).
+message_field('SATCOM_LINK_STATUS', rx_session_pending, uint(8), []).
+message_field('SENSOR_AIRFLOW_ANGLES', timestamp, uint(64), [units=us]).
 message_field('SENSOR_AIRFLOW_ANGLES', angleofattack, float, [units=deg]).
-message_field('SENSOR_AIRFLOW_ANGLES', angleofattack_valid, uint8_t, []).
+message_field('SENSOR_AIRFLOW_ANGLES', angleofattack_valid, uint(8), []).
 message_field('SENSOR_AIRFLOW_ANGLES', sideslip, float, [units=deg]).
-message_field('SENSOR_AIRFLOW_ANGLES', sideslip_valid, uint8_t, []).
-message_field('SYS_STATUS', onboard_control_sensors_present, uint32_t, [enum='MAV_SYS_STATUS_SENSOR', display=bitmask, print_format='0x%04x']).
-message_field('SYS_STATUS', onboard_control_sensors_enabled, uint32_t, [enum='MAV_SYS_STATUS_SENSOR', display=bitmask, print_format='0x%04x']).
-message_field('SYS_STATUS', onboard_control_sensors_health, uint32_t, [enum='MAV_SYS_STATUS_SENSOR', display=bitmask, print_format='0x%04x']).
-message_field('SYS_STATUS', load, uint16_t, [units='d%']).
-message_field('SYS_STATUS', voltage_battery, uint16_t, [units=mV, invalid='UINT16_MAX']).
-message_field('SYS_STATUS', current_battery, int16_t, [units=cA, invalid='-1']).
-message_field('SYS_STATUS', battery_remaining, int8_t, [units='%', invalid='-1']).
-message_field('SYS_STATUS', drop_rate_comm, uint16_t, [units='c%']).
-message_field('SYS_STATUS', errors_comm, uint16_t, []).
-message_field('SYS_STATUS', errors_count1, uint16_t, []).
-message_field('SYS_STATUS', errors_count2, uint16_t, []).
-message_field('SYS_STATUS', errors_count3, uint16_t, []).
-message_field('SYS_STATUS', errors_count4, uint16_t, []).
-message_field('SYS_STATUS', onboard_control_sensors_present_extended, uint32_t, [enum='MAV_SYS_STATUS_SENSOR_EXTENDED', display=bitmask, print_format='0x%04x']).
-message_field('SYS_STATUS', onboard_control_sensors_enabled_extended, uint32_t, [enum='MAV_SYS_STATUS_SENSOR_EXTENDED', display=bitmask, print_format='0x%04x']).
-message_field('SYS_STATUS', onboard_control_sensors_health_extended, uint32_t, [enum='MAV_SYS_STATUS_SENSOR_EXTENDED', display=bitmask, print_format='0x%04x']).
-message_field('SYSTEM_TIME', time_unix_usec, uint64_t, [units=us]).
-message_field('SYSTEM_TIME', time_boot_ms, uint32_t, [units=ms]).
-message_field('PING', time_usec, uint64_t, [units=us]).
-message_field('PING', seq, uint32_t, []).
-message_field('PING', target_system, uint8_t, []).
-message_field('PING', target_component, uint8_t, []).
-message_field('CHANGE_OPERATOR_CONTROL', target_system, uint8_t, []).
-message_field('CHANGE_OPERATOR_CONTROL', control_request, uint8_t, []).
-message_field('CHANGE_OPERATOR_CONTROL', version, uint8_t, [units=rad]).
-message_field('CHANGE_OPERATOR_CONTROL', passkey, 'char[25]', []).
-message_field('CHANGE_OPERATOR_CONTROL_ACK', gcs_system_id, uint8_t, []).
-message_field('CHANGE_OPERATOR_CONTROL_ACK', control_request, uint8_t, []).
-message_field('CHANGE_OPERATOR_CONTROL_ACK', ack, uint8_t, []).
-message_field('AUTH_KEY', key, 'char[32]', []).
-message_field('LINK_NODE_STATUS', timestamp, uint64_t, [units=ms]).
-message_field('LINK_NODE_STATUS', tx_buf, uint8_t, [units='%']).
-message_field('LINK_NODE_STATUS', rx_buf, uint8_t, [units='%']).
-message_field('LINK_NODE_STATUS', tx_rate, uint32_t, [units='bytes/s']).
-message_field('LINK_NODE_STATUS', rx_rate, uint32_t, [units='bytes/s']).
-message_field('LINK_NODE_STATUS', rx_parse_err, uint16_t, [units=bytes]).
-message_field('LINK_NODE_STATUS', tx_overflows, uint16_t, [units=bytes]).
-message_field('LINK_NODE_STATUS', rx_overflows, uint16_t, [units=bytes]).
-message_field('LINK_NODE_STATUS', messages_sent, uint32_t, []).
-message_field('LINK_NODE_STATUS', messages_received, uint32_t, []).
-message_field('LINK_NODE_STATUS', messages_lost, uint32_t, []).
-message_field('SET_MODE', target_system, uint8_t, []).
-message_field('SET_MODE', base_mode, uint8_t, [enum='MAV_MODE']).
-message_field('SET_MODE', custom_mode, uint32_t, []).
-message_field('PARAM_REQUEST_READ', target_system, uint8_t, []).
-message_field('PARAM_REQUEST_READ', target_component, uint8_t, []).
-message_field('PARAM_REQUEST_READ', param_id, 'char[16]', []).
-message_field('PARAM_REQUEST_READ', param_index, int16_t, [invalid='-1']).
-message_field('PARAM_REQUEST_LIST', target_system, uint8_t, []).
-message_field('PARAM_REQUEST_LIST', target_component, uint8_t, []).
-message_field('PARAM_VALUE', param_id, 'char[16]', []).
+message_field('SENSOR_AIRFLOW_ANGLES', sideslip_valid, uint(8), []).
+message_field('SYS_STATUS', onboard_control_sensors_present, uint(32), [enum='MAV_SYS_STATUS_SENSOR', display=bitmask, print_format='0x%04x']).
+message_field('SYS_STATUS', onboard_control_sensors_enabled, uint(32), [enum='MAV_SYS_STATUS_SENSOR', display=bitmask, print_format='0x%04x']).
+message_field('SYS_STATUS', onboard_control_sensors_health, uint(32), [enum='MAV_SYS_STATUS_SENSOR', display=bitmask, print_format='0x%04x']).
+message_field('SYS_STATUS', load, uint(16), [units='d%']).
+message_field('SYS_STATUS', voltage_battery, uint(16), [units=mV, invalid='UINT16_MAX']).
+message_field('SYS_STATUS', current_battery, int(16), [units=cA, invalid='-1']).
+message_field('SYS_STATUS', battery_remaining, int(8), [units='%', invalid='-1']).
+message_field('SYS_STATUS', drop_rate_comm, uint(16), [units='c%']).
+message_field('SYS_STATUS', errors_comm, uint(16), []).
+message_field('SYS_STATUS', errors_count1, uint(16), []).
+message_field('SYS_STATUS', errors_count2, uint(16), []).
+message_field('SYS_STATUS', errors_count3, uint(16), []).
+message_field('SYS_STATUS', errors_count4, uint(16), []).
+message_field('SYS_STATUS', onboard_control_sensors_present_extended, uint(32), [enum='MAV_SYS_STATUS_SENSOR_EXTENDED', display=bitmask, print_format='0x%04x']).
+message_field('SYS_STATUS', onboard_control_sensors_enabled_extended, uint(32), [enum='MAV_SYS_STATUS_SENSOR_EXTENDED', display=bitmask, print_format='0x%04x']).
+message_field('SYS_STATUS', onboard_control_sensors_health_extended, uint(32), [enum='MAV_SYS_STATUS_SENSOR_EXTENDED', display=bitmask, print_format='0x%04x']).
+message_field('SYSTEM_TIME', time_unix_usec, uint(64), [units=us]).
+message_field('SYSTEM_TIME', time_boot_ms, uint(32), [units=ms]).
+message_field('PING', time_usec, uint(64), [units=us]).
+message_field('PING', seq, uint(32), []).
+message_field('PING', target_system, uint(8), []).
+message_field('PING', target_component, uint(8), []).
+message_field('CHANGE_OPERATOR_CONTROL', target_system, uint(8), []).
+message_field('CHANGE_OPERATOR_CONTROL', control_request, uint(8), []).
+message_field('CHANGE_OPERATOR_CONTROL', version, uint(8), [units=rad]).
+message_field('CHANGE_OPERATOR_CONTROL', passkey, char, []).
+message_field('CHANGE_OPERATOR_CONTROL_ACK', gcs_system_id, uint(8), []).
+message_field('CHANGE_OPERATOR_CONTROL_ACK', control_request, uint(8), []).
+message_field('CHANGE_OPERATOR_CONTROL_ACK', ack, uint(8), []).
+message_field('AUTH_KEY', key, char, []).
+message_field('LINK_NODE_STATUS', timestamp, uint(64), [units=ms]).
+message_field('LINK_NODE_STATUS', tx_buf, uint(8), [units='%']).
+message_field('LINK_NODE_STATUS', rx_buf, uint(8), [units='%']).
+message_field('LINK_NODE_STATUS', tx_rate, uint(32), [units='bytes/s']).
+message_field('LINK_NODE_STATUS', rx_rate, uint(32), [units='bytes/s']).
+message_field('LINK_NODE_STATUS', rx_parse_err, uint(16), [units=bytes]).
+message_field('LINK_NODE_STATUS', tx_overflows, uint(16), [units=bytes]).
+message_field('LINK_NODE_STATUS', rx_overflows, uint(16), [units=bytes]).
+message_field('LINK_NODE_STATUS', messages_sent, uint(32), []).
+message_field('LINK_NODE_STATUS', messages_received, uint(32), []).
+message_field('LINK_NODE_STATUS', messages_lost, uint(32), []).
+message_field('SET_MODE', target_system, uint(8), []).
+message_field('SET_MODE', base_mode, uint(8), [enum='MAV_MODE']).
+message_field('SET_MODE', custom_mode, uint(32), []).
+message_field('PARAM_REQUEST_READ', target_system, uint(8), []).
+message_field('PARAM_REQUEST_READ', target_component, uint(8), []).
+message_field('PARAM_REQUEST_READ', param_id, char, []).
+message_field('PARAM_REQUEST_READ', param_index, int(16), [invalid='-1']).
+message_field('PARAM_REQUEST_LIST', target_system, uint(8), []).
+message_field('PARAM_REQUEST_LIST', target_component, uint(8), []).
+message_field('PARAM_VALUE', param_id, char, []).
 message_field('PARAM_VALUE', param_value, float, []).
-message_field('PARAM_VALUE', param_type, uint8_t, [enum='MAV_PARAM_TYPE']).
-message_field('PARAM_VALUE', param_count, uint16_t, []).
-message_field('PARAM_VALUE', param_index, uint16_t, []).
-message_field('PARAM_SET', target_system, uint8_t, []).
-message_field('PARAM_SET', target_component, uint8_t, []).
-message_field('PARAM_SET', param_id, 'char[16]', []).
+message_field('PARAM_VALUE', param_type, uint(8), [enum='MAV_PARAM_TYPE']).
+message_field('PARAM_VALUE', param_count, uint(16), []).
+message_field('PARAM_VALUE', param_index, uint(16), []).
+message_field('PARAM_SET', target_system, uint(8), []).
+message_field('PARAM_SET', target_component, uint(8), []).
+message_field('PARAM_SET', param_id, char, []).
 message_field('PARAM_SET', param_value, float, []).
-message_field('PARAM_SET', param_type, uint8_t, [enum='MAV_PARAM_TYPE']).
-message_field('GPS_RAW_INT', time_usec, uint64_t, [units=us]).
-message_field('GPS_RAW_INT', fix_type, uint8_t, [enum='GPS_FIX_TYPE']).
-message_field('GPS_RAW_INT', lat, int32_t, [units=degE7]).
-message_field('GPS_RAW_INT', lon, int32_t, [units=degE7]).
-message_field('GPS_RAW_INT', alt, int32_t, [units=mm]).
-message_field('GPS_RAW_INT', eph, uint16_t, [invalid='UINT16_MAX']).
-message_field('GPS_RAW_INT', epv, uint16_t, [invalid='UINT16_MAX']).
-message_field('GPS_RAW_INT', vel, uint16_t, [units='cm/s', invalid='UINT16_MAX']).
-message_field('GPS_RAW_INT', cog, uint16_t, [units=cdeg, invalid='UINT16_MAX']).
-message_field('GPS_RAW_INT', satellites_visible, uint8_t, [invalid='UINT8_MAX']).
-message_field('GPS_RAW_INT', alt_ellipsoid, int32_t, [units=mm]).
-message_field('GPS_RAW_INT', h_acc, uint32_t, [units=mm]).
-message_field('GPS_RAW_INT', v_acc, uint32_t, [units=mm]).
-message_field('GPS_RAW_INT', vel_acc, uint32_t, [units=mm]).
-message_field('GPS_RAW_INT', hdg_acc, uint32_t, [units=degE5]).
-message_field('GPS_RAW_INT', yaw, uint16_t, [units=cdeg, invalid='0']).
-message_field('GPS_STATUS', satellites_visible, uint8_t, []).
-message_field('GPS_STATUS', satellite_prn, 'uint8_t[20]', []).
-message_field('GPS_STATUS', satellite_used, 'uint8_t[20]', []).
-message_field('GPS_STATUS', satellite_elevation, 'uint8_t[20]', [units=deg]).
-message_field('GPS_STATUS', satellite_azimuth, 'uint8_t[20]', [units=deg]).
-message_field('GPS_STATUS', satellite_snr, 'uint8_t[20]', [units=dB]).
-message_field('SCALED_IMU', time_boot_ms, uint32_t, [units=ms]).
-message_field('SCALED_IMU', xacc, int16_t, [units=mG]).
-message_field('SCALED_IMU', yacc, int16_t, [units=mG]).
-message_field('SCALED_IMU', zacc, int16_t, [units=mG]).
-message_field('SCALED_IMU', xgyro, int16_t, [units='mrad/s']).
-message_field('SCALED_IMU', ygyro, int16_t, [units='mrad/s']).
-message_field('SCALED_IMU', zgyro, int16_t, [units='mrad/s']).
-message_field('SCALED_IMU', xmag, int16_t, [units=mgauss]).
-message_field('SCALED_IMU', ymag, int16_t, [units=mgauss]).
-message_field('SCALED_IMU', zmag, int16_t, [units=mgauss]).
-message_field('SCALED_IMU', temperature, int16_t, [units=cdegC]).
-message_field('RAW_IMU', time_usec, uint64_t, [units=us]).
-message_field('RAW_IMU', xacc, int16_t, []).
-message_field('RAW_IMU', yacc, int16_t, []).
-message_field('RAW_IMU', zacc, int16_t, []).
-message_field('RAW_IMU', xgyro, int16_t, []).
-message_field('RAW_IMU', ygyro, int16_t, []).
-message_field('RAW_IMU', zgyro, int16_t, []).
-message_field('RAW_IMU', xmag, int16_t, []).
-message_field('RAW_IMU', ymag, int16_t, []).
-message_field('RAW_IMU', zmag, int16_t, []).
-message_field('RAW_IMU', id, uint8_t, [instance=true]).
-message_field('RAW_IMU', temperature, int16_t, [units=cdegC]).
-message_field('RAW_PRESSURE', time_usec, uint64_t, [units=us]).
-message_field('RAW_PRESSURE', press_abs, int16_t, []).
-message_field('RAW_PRESSURE', press_diff1, int16_t, [invalid='0']).
-message_field('RAW_PRESSURE', press_diff2, int16_t, [invalid='0']).
-message_field('RAW_PRESSURE', temperature, int16_t, []).
-message_field('SCALED_PRESSURE', time_boot_ms, uint32_t, [units=ms]).
+message_field('PARAM_SET', param_type, uint(8), [enum='MAV_PARAM_TYPE']).
+message_field('GPS_RAW_INT', time_usec, uint(64), [units=us]).
+message_field('GPS_RAW_INT', fix_type, uint(8), [enum='GPS_FIX_TYPE']).
+message_field('GPS_RAW_INT', lat, int(32), [units=degE7]).
+message_field('GPS_RAW_INT', lon, int(32), [units=degE7]).
+message_field('GPS_RAW_INT', alt, int(32), [units=mm]).
+message_field('GPS_RAW_INT', eph, uint(16), [invalid='UINT16_MAX']).
+message_field('GPS_RAW_INT', epv, uint(16), [invalid='UINT16_MAX']).
+message_field('GPS_RAW_INT', vel, uint(16), [units='cm/s', invalid='UINT16_MAX']).
+message_field('GPS_RAW_INT', cog, uint(16), [units=cdeg, invalid='UINT16_MAX']).
+message_field('GPS_RAW_INT', satellites_visible, uint(8), [invalid='UINT8_MAX']).
+message_field('GPS_RAW_INT', alt_ellipsoid, int(32), [units=mm]).
+message_field('GPS_RAW_INT', h_acc, uint(32), [units=mm]).
+message_field('GPS_RAW_INT', v_acc, uint(32), [units=mm]).
+message_field('GPS_RAW_INT', vel_acc, uint(32), [units=mm]).
+message_field('GPS_RAW_INT', hdg_acc, uint(32), [units=degE5]).
+message_field('GPS_RAW_INT', yaw, uint(16), [units=cdeg, invalid='0']).
+message_field('GPS_STATUS', satellites_visible, uint(8), []).
+message_field('GPS_STATUS', satellite_prn, uint(8), []).
+message_field('GPS_STATUS', satellite_used, uint(8), []).
+message_field('GPS_STATUS', satellite_elevation, uint(8), [units=deg]).
+message_field('GPS_STATUS', satellite_azimuth, uint(8), [units=deg]).
+message_field('GPS_STATUS', satellite_snr, uint(8), [units=dB]).
+message_field('SCALED_IMU', time_boot_ms, uint(32), [units=ms]).
+message_field('SCALED_IMU', xacc, int(16), [units=mG]).
+message_field('SCALED_IMU', yacc, int(16), [units=mG]).
+message_field('SCALED_IMU', zacc, int(16), [units=mG]).
+message_field('SCALED_IMU', xgyro, int(16), [units='mrad/s']).
+message_field('SCALED_IMU', ygyro, int(16), [units='mrad/s']).
+message_field('SCALED_IMU', zgyro, int(16), [units='mrad/s']).
+message_field('SCALED_IMU', xmag, int(16), [units=mgauss]).
+message_field('SCALED_IMU', ymag, int(16), [units=mgauss]).
+message_field('SCALED_IMU', zmag, int(16), [units=mgauss]).
+message_field('SCALED_IMU', temperature, int(16), [units=cdegC]).
+message_field('RAW_IMU', time_usec, uint(64), [units=us]).
+message_field('RAW_IMU', xacc, int(16), []).
+message_field('RAW_IMU', yacc, int(16), []).
+message_field('RAW_IMU', zacc, int(16), []).
+message_field('RAW_IMU', xgyro, int(16), []).
+message_field('RAW_IMU', ygyro, int(16), []).
+message_field('RAW_IMU', zgyro, int(16), []).
+message_field('RAW_IMU', xmag, int(16), []).
+message_field('RAW_IMU', ymag, int(16), []).
+message_field('RAW_IMU', zmag, int(16), []).
+message_field('RAW_IMU', id, uint(8), [instance=true]).
+message_field('RAW_IMU', temperature, int(16), [units=cdegC]).
+message_field('RAW_PRESSURE', time_usec, uint(64), [units=us]).
+message_field('RAW_PRESSURE', press_abs, int(16), []).
+message_field('RAW_PRESSURE', press_diff1, int(16), [invalid='0']).
+message_field('RAW_PRESSURE', press_diff2, int(16), [invalid='0']).
+message_field('RAW_PRESSURE', temperature, int(16), []).
+message_field('SCALED_PRESSURE', time_boot_ms, uint(32), [units=ms]).
 message_field('SCALED_PRESSURE', press_abs, float, [units=hPa]).
 message_field('SCALED_PRESSURE', press_diff, float, [units=hPa]).
-message_field('SCALED_PRESSURE', temperature, int16_t, [units=cdegC]).
-message_field('SCALED_PRESSURE', temperature_press_diff, int16_t, [units=cdegC, invalid='0']).
-message_field('ATTITUDE', time_boot_ms, uint32_t, [units=ms]).
+message_field('SCALED_PRESSURE', temperature, int(16), [units=cdegC]).
+message_field('SCALED_PRESSURE', temperature_press_diff, int(16), [units=cdegC, invalid='0']).
+message_field('ATTITUDE', time_boot_ms, uint(32), [units=ms]).
 message_field('ATTITUDE', roll, float, [units=rad]).
 message_field('ATTITUDE', pitch, float, [units=rad]).
 message_field('ATTITUDE', yaw, float, [units=rad]).
 message_field('ATTITUDE', rollspeed, float, [units='rad/s']).
 message_field('ATTITUDE', pitchspeed, float, [units='rad/s']).
 message_field('ATTITUDE', yawspeed, float, [units='rad/s']).
-message_field('ATTITUDE_QUATERNION', time_boot_ms, uint32_t, [units=ms]).
+message_field('ATTITUDE_QUATERNION', time_boot_ms, uint(32), [units=ms]).
 message_field('ATTITUDE_QUATERNION', q1, float, []).
 message_field('ATTITUDE_QUATERNION', q2, float, []).
 message_field('ATTITUDE_QUATERNION', q3, float, []).
@@ -7236,80 +7247,80 @@ message_field('ATTITUDE_QUATERNION', q4, float, []).
 message_field('ATTITUDE_QUATERNION', rollspeed, float, [units='rad/s']).
 message_field('ATTITUDE_QUATERNION', pitchspeed, float, [units='rad/s']).
 message_field('ATTITUDE_QUATERNION', yawspeed, float, [units='rad/s']).
-message_field('ATTITUDE_QUATERNION', repr_offset_q, 'float[4]', [invalid='[0]']).
-message_field('LOCAL_POSITION_NED', time_boot_ms, uint32_t, [units=ms]).
+message_field('ATTITUDE_QUATERNION', repr_offset_q, float, [invalid='[0]']).
+message_field('LOCAL_POSITION_NED', time_boot_ms, uint(32), [units=ms]).
 message_field('LOCAL_POSITION_NED', x, float, [units=m]).
 message_field('LOCAL_POSITION_NED', y, float, [units=m]).
 message_field('LOCAL_POSITION_NED', z, float, [units=m]).
 message_field('LOCAL_POSITION_NED', vx, float, [units='m/s']).
 message_field('LOCAL_POSITION_NED', vy, float, [units='m/s']).
 message_field('LOCAL_POSITION_NED', vz, float, [units='m/s']).
-message_field('GLOBAL_POSITION_INT', time_boot_ms, uint32_t, [units=ms]).
-message_field('GLOBAL_POSITION_INT', lat, int32_t, [units=degE7]).
-message_field('GLOBAL_POSITION_INT', lon, int32_t, [units=degE7]).
-message_field('GLOBAL_POSITION_INT', alt, int32_t, [units=mm]).
-message_field('GLOBAL_POSITION_INT', relative_alt, int32_t, [units=mm]).
-message_field('GLOBAL_POSITION_INT', vx, int16_t, [units='cm/s']).
-message_field('GLOBAL_POSITION_INT', vy, int16_t, [units='cm/s']).
-message_field('GLOBAL_POSITION_INT', vz, int16_t, [units='cm/s']).
-message_field('GLOBAL_POSITION_INT', hdg, uint16_t, [units=cdeg, invalid='UINT16_MAX']).
-message_field('RC_CHANNELS_SCALED', time_boot_ms, uint32_t, [units=ms]).
-message_field('RC_CHANNELS_SCALED', port, uint8_t, []).
-message_field('RC_CHANNELS_SCALED', chan1_scaled, int16_t, [invalid='INT16_MAX']).
-message_field('RC_CHANNELS_SCALED', chan2_scaled, int16_t, [invalid='INT16_MAX']).
-message_field('RC_CHANNELS_SCALED', chan3_scaled, int16_t, [invalid='INT16_MAX']).
-message_field('RC_CHANNELS_SCALED', chan4_scaled, int16_t, [invalid='INT16_MAX']).
-message_field('RC_CHANNELS_SCALED', chan5_scaled, int16_t, [invalid='INT16_MAX']).
-message_field('RC_CHANNELS_SCALED', chan6_scaled, int16_t, [invalid='INT16_MAX']).
-message_field('RC_CHANNELS_SCALED', chan7_scaled, int16_t, [invalid='INT16_MAX']).
-message_field('RC_CHANNELS_SCALED', chan8_scaled, int16_t, [invalid='INT16_MAX']).
-message_field('RC_CHANNELS_SCALED', rssi, uint8_t, [invalid='UINT8_MAX']).
-message_field('RC_CHANNELS_RAW', time_boot_ms, uint32_t, [units=ms]).
-message_field('RC_CHANNELS_RAW', port, uint8_t, []).
-message_field('RC_CHANNELS_RAW', chan1_raw, uint16_t, [units=us, invalid='UINT16_MAX']).
-message_field('RC_CHANNELS_RAW', chan2_raw, uint16_t, [units=us, invalid='UINT16_MAX']).
-message_field('RC_CHANNELS_RAW', chan3_raw, uint16_t, [units=us, invalid='UINT16_MAX']).
-message_field('RC_CHANNELS_RAW', chan4_raw, uint16_t, [units=us, invalid='UINT16_MAX']).
-message_field('RC_CHANNELS_RAW', chan5_raw, uint16_t, [units=us, invalid='UINT16_MAX']).
-message_field('RC_CHANNELS_RAW', chan6_raw, uint16_t, [units=us, invalid='UINT16_MAX']).
-message_field('RC_CHANNELS_RAW', chan7_raw, uint16_t, [units=us, invalid='UINT16_MAX']).
-message_field('RC_CHANNELS_RAW', chan8_raw, uint16_t, [units=us, invalid='UINT16_MAX']).
-message_field('RC_CHANNELS_RAW', rssi, uint8_t, [invalid='UINT8_MAX']).
-message_field('SERVO_OUTPUT_RAW', time_usec, uint32_t, [units=us]).
-message_field('SERVO_OUTPUT_RAW', port, uint8_t, []).
-message_field('SERVO_OUTPUT_RAW', servo1_raw, uint16_t, [units=us]).
-message_field('SERVO_OUTPUT_RAW', servo2_raw, uint16_t, [units=us]).
-message_field('SERVO_OUTPUT_RAW', servo3_raw, uint16_t, [units=us]).
-message_field('SERVO_OUTPUT_RAW', servo4_raw, uint16_t, [units=us]).
-message_field('SERVO_OUTPUT_RAW', servo5_raw, uint16_t, [units=us]).
-message_field('SERVO_OUTPUT_RAW', servo6_raw, uint16_t, [units=us]).
-message_field('SERVO_OUTPUT_RAW', servo7_raw, uint16_t, [units=us]).
-message_field('SERVO_OUTPUT_RAW', servo8_raw, uint16_t, [units=us]).
-message_field('SERVO_OUTPUT_RAW', servo9_raw, uint16_t, [units=us]).
-message_field('SERVO_OUTPUT_RAW', servo10_raw, uint16_t, [units=us]).
-message_field('SERVO_OUTPUT_RAW', servo11_raw, uint16_t, [units=us]).
-message_field('SERVO_OUTPUT_RAW', servo12_raw, uint16_t, [units=us]).
-message_field('SERVO_OUTPUT_RAW', servo13_raw, uint16_t, [units=us]).
-message_field('SERVO_OUTPUT_RAW', servo14_raw, uint16_t, [units=us]).
-message_field('SERVO_OUTPUT_RAW', servo15_raw, uint16_t, [units=us]).
-message_field('SERVO_OUTPUT_RAW', servo16_raw, uint16_t, [units=us]).
-message_field('MISSION_REQUEST_PARTIAL_LIST', target_system, uint8_t, []).
-message_field('MISSION_REQUEST_PARTIAL_LIST', target_component, uint8_t, []).
-message_field('MISSION_REQUEST_PARTIAL_LIST', start_index, int16_t, []).
-message_field('MISSION_REQUEST_PARTIAL_LIST', end_index, int16_t, []).
-message_field('MISSION_REQUEST_PARTIAL_LIST', mission_type, uint8_t, [enum='MAV_MISSION_TYPE']).
-message_field('MISSION_WRITE_PARTIAL_LIST', target_system, uint8_t, []).
-message_field('MISSION_WRITE_PARTIAL_LIST', target_component, uint8_t, []).
-message_field('MISSION_WRITE_PARTIAL_LIST', start_index, int16_t, []).
-message_field('MISSION_WRITE_PARTIAL_LIST', end_index, int16_t, []).
-message_field('MISSION_WRITE_PARTIAL_LIST', mission_type, uint8_t, [enum='MAV_MISSION_TYPE']).
-message_field('MISSION_ITEM', target_system, uint8_t, []).
-message_field('MISSION_ITEM', target_component, uint8_t, []).
-message_field('MISSION_ITEM', seq, uint16_t, []).
-message_field('MISSION_ITEM', frame, uint8_t, [enum='MAV_FRAME']).
-message_field('MISSION_ITEM', command, uint16_t, [enum='MAV_CMD']).
-message_field('MISSION_ITEM', current, uint8_t, []).
-message_field('MISSION_ITEM', autocontinue, uint8_t, []).
+message_field('GLOBAL_POSITION_INT', time_boot_ms, uint(32), [units=ms]).
+message_field('GLOBAL_POSITION_INT', lat, int(32), [units=degE7]).
+message_field('GLOBAL_POSITION_INT', lon, int(32), [units=degE7]).
+message_field('GLOBAL_POSITION_INT', alt, int(32), [units=mm]).
+message_field('GLOBAL_POSITION_INT', relative_alt, int(32), [units=mm]).
+message_field('GLOBAL_POSITION_INT', vx, int(16), [units='cm/s']).
+message_field('GLOBAL_POSITION_INT', vy, int(16), [units='cm/s']).
+message_field('GLOBAL_POSITION_INT', vz, int(16), [units='cm/s']).
+message_field('GLOBAL_POSITION_INT', hdg, uint(16), [units=cdeg, invalid='UINT16_MAX']).
+message_field('RC_CHANNELS_SCALED', time_boot_ms, uint(32), [units=ms]).
+message_field('RC_CHANNELS_SCALED', port, uint(8), []).
+message_field('RC_CHANNELS_SCALED', chan1_scaled, int(16), [invalid='INT16_MAX']).
+message_field('RC_CHANNELS_SCALED', chan2_scaled, int(16), [invalid='INT16_MAX']).
+message_field('RC_CHANNELS_SCALED', chan3_scaled, int(16), [invalid='INT16_MAX']).
+message_field('RC_CHANNELS_SCALED', chan4_scaled, int(16), [invalid='INT16_MAX']).
+message_field('RC_CHANNELS_SCALED', chan5_scaled, int(16), [invalid='INT16_MAX']).
+message_field('RC_CHANNELS_SCALED', chan6_scaled, int(16), [invalid='INT16_MAX']).
+message_field('RC_CHANNELS_SCALED', chan7_scaled, int(16), [invalid='INT16_MAX']).
+message_field('RC_CHANNELS_SCALED', chan8_scaled, int(16), [invalid='INT16_MAX']).
+message_field('RC_CHANNELS_SCALED', rssi, uint(8), [invalid='UINT8_MAX']).
+message_field('RC_CHANNELS_RAW', time_boot_ms, uint(32), [units=ms]).
+message_field('RC_CHANNELS_RAW', port, uint(8), []).
+message_field('RC_CHANNELS_RAW', chan1_raw, uint(16), [units=us, invalid='UINT16_MAX']).
+message_field('RC_CHANNELS_RAW', chan2_raw, uint(16), [units=us, invalid='UINT16_MAX']).
+message_field('RC_CHANNELS_RAW', chan3_raw, uint(16), [units=us, invalid='UINT16_MAX']).
+message_field('RC_CHANNELS_RAW', chan4_raw, uint(16), [units=us, invalid='UINT16_MAX']).
+message_field('RC_CHANNELS_RAW', chan5_raw, uint(16), [units=us, invalid='UINT16_MAX']).
+message_field('RC_CHANNELS_RAW', chan6_raw, uint(16), [units=us, invalid='UINT16_MAX']).
+message_field('RC_CHANNELS_RAW', chan7_raw, uint(16), [units=us, invalid='UINT16_MAX']).
+message_field('RC_CHANNELS_RAW', chan8_raw, uint(16), [units=us, invalid='UINT16_MAX']).
+message_field('RC_CHANNELS_RAW', rssi, uint(8), [invalid='UINT8_MAX']).
+message_field('SERVO_OUTPUT_RAW', time_usec, uint(32), [units=us]).
+message_field('SERVO_OUTPUT_RAW', port, uint(8), []).
+message_field('SERVO_OUTPUT_RAW', servo1_raw, uint(16), [units=us]).
+message_field('SERVO_OUTPUT_RAW', servo2_raw, uint(16), [units=us]).
+message_field('SERVO_OUTPUT_RAW', servo3_raw, uint(16), [units=us]).
+message_field('SERVO_OUTPUT_RAW', servo4_raw, uint(16), [units=us]).
+message_field('SERVO_OUTPUT_RAW', servo5_raw, uint(16), [units=us]).
+message_field('SERVO_OUTPUT_RAW', servo6_raw, uint(16), [units=us]).
+message_field('SERVO_OUTPUT_RAW', servo7_raw, uint(16), [units=us]).
+message_field('SERVO_OUTPUT_RAW', servo8_raw, uint(16), [units=us]).
+message_field('SERVO_OUTPUT_RAW', servo9_raw, uint(16), [units=us]).
+message_field('SERVO_OUTPUT_RAW', servo10_raw, uint(16), [units=us]).
+message_field('SERVO_OUTPUT_RAW', servo11_raw, uint(16), [units=us]).
+message_field('SERVO_OUTPUT_RAW', servo12_raw, uint(16), [units=us]).
+message_field('SERVO_OUTPUT_RAW', servo13_raw, uint(16), [units=us]).
+message_field('SERVO_OUTPUT_RAW', servo14_raw, uint(16), [units=us]).
+message_field('SERVO_OUTPUT_RAW', servo15_raw, uint(16), [units=us]).
+message_field('SERVO_OUTPUT_RAW', servo16_raw, uint(16), [units=us]).
+message_field('MISSION_REQUEST_PARTIAL_LIST', target_system, uint(8), []).
+message_field('MISSION_REQUEST_PARTIAL_LIST', target_component, uint(8), []).
+message_field('MISSION_REQUEST_PARTIAL_LIST', start_index, int(16), []).
+message_field('MISSION_REQUEST_PARTIAL_LIST', end_index, int(16), []).
+message_field('MISSION_REQUEST_PARTIAL_LIST', mission_type, uint(8), [enum='MAV_MISSION_TYPE']).
+message_field('MISSION_WRITE_PARTIAL_LIST', target_system, uint(8), []).
+message_field('MISSION_WRITE_PARTIAL_LIST', target_component, uint(8), []).
+message_field('MISSION_WRITE_PARTIAL_LIST', start_index, int(16), []).
+message_field('MISSION_WRITE_PARTIAL_LIST', end_index, int(16), []).
+message_field('MISSION_WRITE_PARTIAL_LIST', mission_type, uint(8), [enum='MAV_MISSION_TYPE']).
+message_field('MISSION_ITEM', target_system, uint(8), []).
+message_field('MISSION_ITEM', target_component, uint(8), []).
+message_field('MISSION_ITEM', seq, uint(16), []).
+message_field('MISSION_ITEM', frame, uint(8), [enum='MAV_FRAME']).
+message_field('MISSION_ITEM', command, uint(16), [enum='MAV_CMD']).
+message_field('MISSION_ITEM', current, uint(8), []).
+message_field('MISSION_ITEM', autocontinue, uint(8), []).
 message_field('MISSION_ITEM', param1, float, []).
 message_field('MISSION_ITEM', param2, float, []).
 message_field('MISSION_ITEM', param3, float, []).
@@ -7317,97 +7328,97 @@ message_field('MISSION_ITEM', param4, float, []).
 message_field('MISSION_ITEM', x, float, []).
 message_field('MISSION_ITEM', y, float, []).
 message_field('MISSION_ITEM', z, float, []).
-message_field('MISSION_ITEM', mission_type, uint8_t, [enum='MAV_MISSION_TYPE']).
-message_field('MISSION_REQUEST', target_system, uint8_t, []).
-message_field('MISSION_REQUEST', target_component, uint8_t, []).
-message_field('MISSION_REQUEST', seq, uint16_t, []).
-message_field('MISSION_REQUEST', mission_type, uint8_t, [enum='MAV_MISSION_TYPE']).
-message_field('MISSION_SET_CURRENT', target_system, uint8_t, []).
-message_field('MISSION_SET_CURRENT', target_component, uint8_t, []).
-message_field('MISSION_SET_CURRENT', seq, uint16_t, []).
-message_field('MISSION_CURRENT', seq, uint16_t, []).
-message_field('MISSION_CURRENT', total, uint16_t, [invalid='UINT16_MAX']).
-message_field('MISSION_CURRENT', mission_state, uint8_t, [enum='MISSION_STATE', invalid='0']).
-message_field('MISSION_CURRENT', mission_mode, uint8_t, [invalid='0']).
-message_field('MISSION_REQUEST_LIST', target_system, uint8_t, []).
-message_field('MISSION_REQUEST_LIST', target_component, uint8_t, []).
-message_field('MISSION_REQUEST_LIST', mission_type, uint8_t, [enum='MAV_MISSION_TYPE']).
-message_field('MISSION_COUNT', target_system, uint8_t, []).
-message_field('MISSION_COUNT', target_component, uint8_t, []).
-message_field('MISSION_COUNT', count, uint16_t, []).
-message_field('MISSION_COUNT', mission_type, uint8_t, [enum='MAV_MISSION_TYPE']).
-message_field('MISSION_CLEAR_ALL', target_system, uint8_t, []).
-message_field('MISSION_CLEAR_ALL', target_component, uint8_t, []).
-message_field('MISSION_CLEAR_ALL', mission_type, uint8_t, [enum='MAV_MISSION_TYPE']).
-message_field('MISSION_ITEM_REACHED', seq, uint16_t, []).
-message_field('MISSION_ACK', target_system, uint8_t, []).
-message_field('MISSION_ACK', target_component, uint8_t, []).
-message_field('MISSION_ACK', type, uint8_t, [enum='MAV_MISSION_RESULT']).
-message_field('MISSION_ACK', mission_type, uint8_t, [enum='MAV_MISSION_TYPE']).
-message_field('SET_GPS_GLOBAL_ORIGIN', target_system, uint8_t, []).
-message_field('SET_GPS_GLOBAL_ORIGIN', latitude, int32_t, [units=degE7]).
-message_field('SET_GPS_GLOBAL_ORIGIN', longitude, int32_t, [units=degE7]).
-message_field('SET_GPS_GLOBAL_ORIGIN', altitude, int32_t, [units=mm]).
-message_field('SET_GPS_GLOBAL_ORIGIN', time_usec, uint64_t, [units=us]).
-message_field('GPS_GLOBAL_ORIGIN', latitude, int32_t, [units=degE7]).
-message_field('GPS_GLOBAL_ORIGIN', longitude, int32_t, [units=degE7]).
-message_field('GPS_GLOBAL_ORIGIN', altitude, int32_t, [units=mm]).
-message_field('GPS_GLOBAL_ORIGIN', time_usec, uint64_t, [units=us]).
-message_field('PARAM_MAP_RC', target_system, uint8_t, []).
-message_field('PARAM_MAP_RC', target_component, uint8_t, []).
-message_field('PARAM_MAP_RC', param_id, 'char[16]', []).
-message_field('PARAM_MAP_RC', param_index, int16_t, []).
-message_field('PARAM_MAP_RC', parameter_rc_channel_index, uint8_t, []).
+message_field('MISSION_ITEM', mission_type, uint(8), [enum='MAV_MISSION_TYPE']).
+message_field('MISSION_REQUEST', target_system, uint(8), []).
+message_field('MISSION_REQUEST', target_component, uint(8), []).
+message_field('MISSION_REQUEST', seq, uint(16), []).
+message_field('MISSION_REQUEST', mission_type, uint(8), [enum='MAV_MISSION_TYPE']).
+message_field('MISSION_SET_CURRENT', target_system, uint(8), []).
+message_field('MISSION_SET_CURRENT', target_component, uint(8), []).
+message_field('MISSION_SET_CURRENT', seq, uint(16), []).
+message_field('MISSION_CURRENT', seq, uint(16), []).
+message_field('MISSION_CURRENT', total, uint(16), [invalid='UINT16_MAX']).
+message_field('MISSION_CURRENT', mission_state, uint(8), [enum='MISSION_STATE', invalid='0']).
+message_field('MISSION_CURRENT', mission_mode, uint(8), [invalid='0']).
+message_field('MISSION_REQUEST_LIST', target_system, uint(8), []).
+message_field('MISSION_REQUEST_LIST', target_component, uint(8), []).
+message_field('MISSION_REQUEST_LIST', mission_type, uint(8), [enum='MAV_MISSION_TYPE']).
+message_field('MISSION_COUNT', target_system, uint(8), []).
+message_field('MISSION_COUNT', target_component, uint(8), []).
+message_field('MISSION_COUNT', count, uint(16), []).
+message_field('MISSION_COUNT', mission_type, uint(8), [enum='MAV_MISSION_TYPE']).
+message_field('MISSION_CLEAR_ALL', target_system, uint(8), []).
+message_field('MISSION_CLEAR_ALL', target_component, uint(8), []).
+message_field('MISSION_CLEAR_ALL', mission_type, uint(8), [enum='MAV_MISSION_TYPE']).
+message_field('MISSION_ITEM_REACHED', seq, uint(16), []).
+message_field('MISSION_ACK', target_system, uint(8), []).
+message_field('MISSION_ACK', target_component, uint(8), []).
+message_field('MISSION_ACK', type, uint(8), [enum='MAV_MISSION_RESULT']).
+message_field('MISSION_ACK', mission_type, uint(8), [enum='MAV_MISSION_TYPE']).
+message_field('SET_GPS_GLOBAL_ORIGIN', target_system, uint(8), []).
+message_field('SET_GPS_GLOBAL_ORIGIN', latitude, int(32), [units=degE7]).
+message_field('SET_GPS_GLOBAL_ORIGIN', longitude, int(32), [units=degE7]).
+message_field('SET_GPS_GLOBAL_ORIGIN', altitude, int(32), [units=mm]).
+message_field('SET_GPS_GLOBAL_ORIGIN', time_usec, uint(64), [units=us]).
+message_field('GPS_GLOBAL_ORIGIN', latitude, int(32), [units=degE7]).
+message_field('GPS_GLOBAL_ORIGIN', longitude, int(32), [units=degE7]).
+message_field('GPS_GLOBAL_ORIGIN', altitude, int(32), [units=mm]).
+message_field('GPS_GLOBAL_ORIGIN', time_usec, uint(64), [units=us]).
+message_field('PARAM_MAP_RC', target_system, uint(8), []).
+message_field('PARAM_MAP_RC', target_component, uint(8), []).
+message_field('PARAM_MAP_RC', param_id, char, []).
+message_field('PARAM_MAP_RC', param_index, int(16), []).
+message_field('PARAM_MAP_RC', parameter_rc_channel_index, uint(8), []).
 message_field('PARAM_MAP_RC', param_value0, float, []).
 message_field('PARAM_MAP_RC', scale, float, []).
 message_field('PARAM_MAP_RC', param_value_min, float, []).
 message_field('PARAM_MAP_RC', param_value_max, float, []).
-message_field('MISSION_REQUEST_INT', target_system, uint8_t, []).
-message_field('MISSION_REQUEST_INT', target_component, uint8_t, []).
-message_field('MISSION_REQUEST_INT', seq, uint16_t, []).
-message_field('MISSION_REQUEST_INT', mission_type, uint8_t, [enum='MAV_MISSION_TYPE']).
-message_field('SAFETY_SET_ALLOWED_AREA', target_system, uint8_t, []).
-message_field('SAFETY_SET_ALLOWED_AREA', target_component, uint8_t, []).
-message_field('SAFETY_SET_ALLOWED_AREA', frame, uint8_t, [enum='MAV_FRAME']).
+message_field('MISSION_REQUEST_INT', target_system, uint(8), []).
+message_field('MISSION_REQUEST_INT', target_component, uint(8), []).
+message_field('MISSION_REQUEST_INT', seq, uint(16), []).
+message_field('MISSION_REQUEST_INT', mission_type, uint(8), [enum='MAV_MISSION_TYPE']).
+message_field('SAFETY_SET_ALLOWED_AREA', target_system, uint(8), []).
+message_field('SAFETY_SET_ALLOWED_AREA', target_component, uint(8), []).
+message_field('SAFETY_SET_ALLOWED_AREA', frame, uint(8), [enum='MAV_FRAME']).
 message_field('SAFETY_SET_ALLOWED_AREA', p1x, float, [units=m]).
 message_field('SAFETY_SET_ALLOWED_AREA', p1y, float, [units=m]).
 message_field('SAFETY_SET_ALLOWED_AREA', p1z, float, [units=m]).
 message_field('SAFETY_SET_ALLOWED_AREA', p2x, float, [units=m]).
 message_field('SAFETY_SET_ALLOWED_AREA', p2y, float, [units=m]).
 message_field('SAFETY_SET_ALLOWED_AREA', p2z, float, [units=m]).
-message_field('SAFETY_ALLOWED_AREA', frame, uint8_t, [enum='MAV_FRAME']).
+message_field('SAFETY_ALLOWED_AREA', frame, uint(8), [enum='MAV_FRAME']).
 message_field('SAFETY_ALLOWED_AREA', p1x, float, [units=m]).
 message_field('SAFETY_ALLOWED_AREA', p1y, float, [units=m]).
 message_field('SAFETY_ALLOWED_AREA', p1z, float, [units=m]).
 message_field('SAFETY_ALLOWED_AREA', p2x, float, [units=m]).
 message_field('SAFETY_ALLOWED_AREA', p2y, float, [units=m]).
 message_field('SAFETY_ALLOWED_AREA', p2z, float, [units=m]).
-message_field('ATTITUDE_QUATERNION_COV', time_usec, uint64_t, [units=us]).
-message_field('ATTITUDE_QUATERNION_COV', q, 'float[4]', []).
+message_field('ATTITUDE_QUATERNION_COV', time_usec, uint(64), [units=us]).
+message_field('ATTITUDE_QUATERNION_COV', q, float, []).
 message_field('ATTITUDE_QUATERNION_COV', rollspeed, float, [units='rad/s']).
 message_field('ATTITUDE_QUATERNION_COV', pitchspeed, float, [units='rad/s']).
 message_field('ATTITUDE_QUATERNION_COV', yawspeed, float, [units='rad/s']).
-message_field('ATTITUDE_QUATERNION_COV', covariance, 'float[9]', [invalid='[NaN:]']).
+message_field('ATTITUDE_QUATERNION_COV', covariance, float, [invalid='[NaN:]']).
 message_field('NAV_CONTROLLER_OUTPUT', nav_roll, float, [units=deg]).
 message_field('NAV_CONTROLLER_OUTPUT', nav_pitch, float, [units=deg]).
-message_field('NAV_CONTROLLER_OUTPUT', nav_bearing, int16_t, [units=deg]).
-message_field('NAV_CONTROLLER_OUTPUT', target_bearing, int16_t, [units=deg]).
-message_field('NAV_CONTROLLER_OUTPUT', wp_dist, uint16_t, [units=m]).
+message_field('NAV_CONTROLLER_OUTPUT', nav_bearing, int(16), [units=deg]).
+message_field('NAV_CONTROLLER_OUTPUT', target_bearing, int(16), [units=deg]).
+message_field('NAV_CONTROLLER_OUTPUT', wp_dist, uint(16), [units=m]).
 message_field('NAV_CONTROLLER_OUTPUT', alt_error, float, [units=m]).
 message_field('NAV_CONTROLLER_OUTPUT', aspd_error, float, [units='m/s']).
 message_field('NAV_CONTROLLER_OUTPUT', xtrack_error, float, [units=m]).
-message_field('GLOBAL_POSITION_INT_COV', time_usec, uint64_t, [units=us]).
-message_field('GLOBAL_POSITION_INT_COV', estimator_type, uint8_t, [enum='MAV_ESTIMATOR_TYPE']).
-message_field('GLOBAL_POSITION_INT_COV', lat, int32_t, [units=degE7]).
-message_field('GLOBAL_POSITION_INT_COV', lon, int32_t, [units=degE7]).
-message_field('GLOBAL_POSITION_INT_COV', alt, int32_t, [units=mm]).
-message_field('GLOBAL_POSITION_INT_COV', relative_alt, int32_t, [units=mm]).
+message_field('GLOBAL_POSITION_INT_COV', time_usec, uint(64), [units=us]).
+message_field('GLOBAL_POSITION_INT_COV', estimator_type, uint(8), [enum='MAV_ESTIMATOR_TYPE']).
+message_field('GLOBAL_POSITION_INT_COV', lat, int(32), [units=degE7]).
+message_field('GLOBAL_POSITION_INT_COV', lon, int(32), [units=degE7]).
+message_field('GLOBAL_POSITION_INT_COV', alt, int(32), [units=mm]).
+message_field('GLOBAL_POSITION_INT_COV', relative_alt, int(32), [units=mm]).
 message_field('GLOBAL_POSITION_INT_COV', vx, float, [units='m/s']).
 message_field('GLOBAL_POSITION_INT_COV', vy, float, [units='m/s']).
 message_field('GLOBAL_POSITION_INT_COV', vz, float, [units='m/s']).
-message_field('GLOBAL_POSITION_INT_COV', covariance, 'float[36]', [invalid='[NaN:]']).
-message_field('LOCAL_POSITION_NED_COV', time_usec, uint64_t, [units=us]).
-message_field('LOCAL_POSITION_NED_COV', estimator_type, uint8_t, [enum='MAV_ESTIMATOR_TYPE']).
+message_field('GLOBAL_POSITION_INT_COV', covariance, float, [invalid='[NaN:]']).
+message_field('LOCAL_POSITION_NED_COV', time_usec, uint(64), [units=us]).
+message_field('LOCAL_POSITION_NED_COV', estimator_type, uint(8), [enum='MAV_ESTIMATOR_TYPE']).
 message_field('LOCAL_POSITION_NED_COV', x, float, [units=m]).
 message_field('LOCAL_POSITION_NED_COV', y, float, [units=m]).
 message_field('LOCAL_POSITION_NED_COV', z, float, [units=m]).
@@ -7417,110 +7428,110 @@ message_field('LOCAL_POSITION_NED_COV', vz, float, [units='m/s']).
 message_field('LOCAL_POSITION_NED_COV', ax, float, [units='m/s/s']).
 message_field('LOCAL_POSITION_NED_COV', ay, float, [units='m/s/s']).
 message_field('LOCAL_POSITION_NED_COV', az, float, [units='m/s/s']).
-message_field('LOCAL_POSITION_NED_COV', covariance, 'float[45]', [invalid='[NaN:]']).
-message_field('RC_CHANNELS', time_boot_ms, uint32_t, [units=ms]).
-message_field('RC_CHANNELS', chancount, uint8_t, []).
-message_field('RC_CHANNELS', chan1_raw, uint16_t, [units=us, invalid='UINT16_MAX']).
-message_field('RC_CHANNELS', chan2_raw, uint16_t, [units=us, invalid='UINT16_MAX']).
-message_field('RC_CHANNELS', chan3_raw, uint16_t, [units=us, invalid='UINT16_MAX']).
-message_field('RC_CHANNELS', chan4_raw, uint16_t, [units=us, invalid='UINT16_MAX']).
-message_field('RC_CHANNELS', chan5_raw, uint16_t, [units=us, invalid='UINT16_MAX']).
-message_field('RC_CHANNELS', chan6_raw, uint16_t, [units=us, invalid='UINT16_MAX']).
-message_field('RC_CHANNELS', chan7_raw, uint16_t, [units=us, invalid='UINT16_MAX']).
-message_field('RC_CHANNELS', chan8_raw, uint16_t, [units=us, invalid='UINT16_MAX']).
-message_field('RC_CHANNELS', chan9_raw, uint16_t, [units=us, invalid='UINT16_MAX']).
-message_field('RC_CHANNELS', chan10_raw, uint16_t, [units=us, invalid='UINT16_MAX']).
-message_field('RC_CHANNELS', chan11_raw, uint16_t, [units=us, invalid='UINT16_MAX']).
-message_field('RC_CHANNELS', chan12_raw, uint16_t, [units=us, invalid='UINT16_MAX']).
-message_field('RC_CHANNELS', chan13_raw, uint16_t, [units=us, invalid='UINT16_MAX']).
-message_field('RC_CHANNELS', chan14_raw, uint16_t, [units=us, invalid='UINT16_MAX']).
-message_field('RC_CHANNELS', chan15_raw, uint16_t, [units=us, invalid='UINT16_MAX']).
-message_field('RC_CHANNELS', chan16_raw, uint16_t, [units=us, invalid='UINT16_MAX']).
-message_field('RC_CHANNELS', chan17_raw, uint16_t, [units=us, invalid='UINT16_MAX']).
-message_field('RC_CHANNELS', chan18_raw, uint16_t, [units=us, invalid='UINT16_MAX']).
-message_field('RC_CHANNELS', rssi, uint8_t, [invalid='UINT8_MAX']).
-message_field('REQUEST_DATA_STREAM', target_system, uint8_t, []).
-message_field('REQUEST_DATA_STREAM', target_component, uint8_t, []).
-message_field('REQUEST_DATA_STREAM', req_stream_id, uint8_t, []).
-message_field('REQUEST_DATA_STREAM', req_message_rate, uint16_t, [units='Hz']).
-message_field('REQUEST_DATA_STREAM', start_stop, uint8_t, []).
-message_field('DATA_STREAM', stream_id, uint8_t, []).
-message_field('DATA_STREAM', message_rate, uint16_t, [units='Hz']).
-message_field('DATA_STREAM', on_off, uint8_t, []).
-message_field('MANUAL_CONTROL', target, uint8_t, []).
-message_field('MANUAL_CONTROL', x, int16_t, [invalid='INT16_MAX']).
-message_field('MANUAL_CONTROL', y, int16_t, [invalid='INT16_MAX']).
-message_field('MANUAL_CONTROL', z, int16_t, [invalid='INT16_MAX']).
-message_field('MANUAL_CONTROL', r, int16_t, [invalid='INT16_MAX']).
-message_field('MANUAL_CONTROL', buttons, uint16_t, []).
-message_field('MANUAL_CONTROL', buttons2, uint16_t, []).
-message_field('MANUAL_CONTROL', enabled_extensions, uint8_t, []).
-message_field('MANUAL_CONTROL', s, int16_t, []).
-message_field('MANUAL_CONTROL', t, int16_t, []).
-message_field('MANUAL_CONTROL', aux1, int16_t, []).
-message_field('MANUAL_CONTROL', aux2, int16_t, []).
-message_field('MANUAL_CONTROL', aux3, int16_t, []).
-message_field('MANUAL_CONTROL', aux4, int16_t, []).
-message_field('MANUAL_CONTROL', aux5, int16_t, []).
-message_field('MANUAL_CONTROL', aux6, int16_t, []).
-message_field('RC_CHANNELS_OVERRIDE', target_system, uint8_t, []).
-message_field('RC_CHANNELS_OVERRIDE', target_component, uint8_t, []).
-message_field('RC_CHANNELS_OVERRIDE', chan1_raw, uint16_t, [units=us, invalid='UINT16_MAX']).
-message_field('RC_CHANNELS_OVERRIDE', chan2_raw, uint16_t, [units=us, invalid='UINT16_MAX']).
-message_field('RC_CHANNELS_OVERRIDE', chan3_raw, uint16_t, [units=us, invalid='UINT16_MAX']).
-message_field('RC_CHANNELS_OVERRIDE', chan4_raw, uint16_t, [units=us, invalid='UINT16_MAX']).
-message_field('RC_CHANNELS_OVERRIDE', chan5_raw, uint16_t, [units=us, invalid='UINT16_MAX']).
-message_field('RC_CHANNELS_OVERRIDE', chan6_raw, uint16_t, [units=us, invalid='UINT16_MAX']).
-message_field('RC_CHANNELS_OVERRIDE', chan7_raw, uint16_t, [units=us, invalid='UINT16_MAX']).
-message_field('RC_CHANNELS_OVERRIDE', chan8_raw, uint16_t, [units=us, invalid='UINT16_MAX']).
-message_field('RC_CHANNELS_OVERRIDE', chan9_raw, uint16_t, [units=us, invalid='0']).
-message_field('RC_CHANNELS_OVERRIDE', chan10_raw, uint16_t, [units=us, invalid='0']).
-message_field('RC_CHANNELS_OVERRIDE', chan11_raw, uint16_t, [units=us, invalid='0']).
-message_field('RC_CHANNELS_OVERRIDE', chan12_raw, uint16_t, [units=us, invalid='0']).
-message_field('RC_CHANNELS_OVERRIDE', chan13_raw, uint16_t, [units=us, invalid='0']).
-message_field('RC_CHANNELS_OVERRIDE', chan14_raw, uint16_t, [units=us, invalid='0']).
-message_field('RC_CHANNELS_OVERRIDE', chan15_raw, uint16_t, [units=us, invalid='0']).
-message_field('RC_CHANNELS_OVERRIDE', chan16_raw, uint16_t, [units=us, invalid='0']).
-message_field('RC_CHANNELS_OVERRIDE', chan17_raw, uint16_t, [units=us, invalid='0']).
-message_field('RC_CHANNELS_OVERRIDE', chan18_raw, uint16_t, [units=us, invalid='0']).
-message_field('MISSION_ITEM_INT', target_system, uint8_t, []).
-message_field('MISSION_ITEM_INT', target_component, uint8_t, []).
-message_field('MISSION_ITEM_INT', seq, uint16_t, []).
-message_field('MISSION_ITEM_INT', frame, uint8_t, [enum='MAV_FRAME']).
-message_field('MISSION_ITEM_INT', command, uint16_t, [enum='MAV_CMD']).
-message_field('MISSION_ITEM_INT', current, uint8_t, []).
-message_field('MISSION_ITEM_INT', autocontinue, uint8_t, []).
+message_field('LOCAL_POSITION_NED_COV', covariance, float, [invalid='[NaN:]']).
+message_field('RC_CHANNELS', time_boot_ms, uint(32), [units=ms]).
+message_field('RC_CHANNELS', chancount, uint(8), []).
+message_field('RC_CHANNELS', chan1_raw, uint(16), [units=us, invalid='UINT16_MAX']).
+message_field('RC_CHANNELS', chan2_raw, uint(16), [units=us, invalid='UINT16_MAX']).
+message_field('RC_CHANNELS', chan3_raw, uint(16), [units=us, invalid='UINT16_MAX']).
+message_field('RC_CHANNELS', chan4_raw, uint(16), [units=us, invalid='UINT16_MAX']).
+message_field('RC_CHANNELS', chan5_raw, uint(16), [units=us, invalid='UINT16_MAX']).
+message_field('RC_CHANNELS', chan6_raw, uint(16), [units=us, invalid='UINT16_MAX']).
+message_field('RC_CHANNELS', chan7_raw, uint(16), [units=us, invalid='UINT16_MAX']).
+message_field('RC_CHANNELS', chan8_raw, uint(16), [units=us, invalid='UINT16_MAX']).
+message_field('RC_CHANNELS', chan9_raw, uint(16), [units=us, invalid='UINT16_MAX']).
+message_field('RC_CHANNELS', chan10_raw, uint(16), [units=us, invalid='UINT16_MAX']).
+message_field('RC_CHANNELS', chan11_raw, uint(16), [units=us, invalid='UINT16_MAX']).
+message_field('RC_CHANNELS', chan12_raw, uint(16), [units=us, invalid='UINT16_MAX']).
+message_field('RC_CHANNELS', chan13_raw, uint(16), [units=us, invalid='UINT16_MAX']).
+message_field('RC_CHANNELS', chan14_raw, uint(16), [units=us, invalid='UINT16_MAX']).
+message_field('RC_CHANNELS', chan15_raw, uint(16), [units=us, invalid='UINT16_MAX']).
+message_field('RC_CHANNELS', chan16_raw, uint(16), [units=us, invalid='UINT16_MAX']).
+message_field('RC_CHANNELS', chan17_raw, uint(16), [units=us, invalid='UINT16_MAX']).
+message_field('RC_CHANNELS', chan18_raw, uint(16), [units=us, invalid='UINT16_MAX']).
+message_field('RC_CHANNELS', rssi, uint(8), [invalid='UINT8_MAX']).
+message_field('REQUEST_DATA_STREAM', target_system, uint(8), []).
+message_field('REQUEST_DATA_STREAM', target_component, uint(8), []).
+message_field('REQUEST_DATA_STREAM', req_stream_id, uint(8), []).
+message_field('REQUEST_DATA_STREAM', req_message_rate, uint(16), [units='Hz']).
+message_field('REQUEST_DATA_STREAM', start_stop, uint(8), []).
+message_field('DATA_STREAM', stream_id, uint(8), []).
+message_field('DATA_STREAM', message_rate, uint(16), [units='Hz']).
+message_field('DATA_STREAM', on_off, uint(8), []).
+message_field('MANUAL_CONTROL', target, uint(8), []).
+message_field('MANUAL_CONTROL', x, int(16), [invalid='INT16_MAX']).
+message_field('MANUAL_CONTROL', y, int(16), [invalid='INT16_MAX']).
+message_field('MANUAL_CONTROL', z, int(16), [invalid='INT16_MAX']).
+message_field('MANUAL_CONTROL', r, int(16), [invalid='INT16_MAX']).
+message_field('MANUAL_CONTROL', buttons, uint(16), []).
+message_field('MANUAL_CONTROL', buttons2, uint(16), []).
+message_field('MANUAL_CONTROL', enabled_extensions, uint(8), []).
+message_field('MANUAL_CONTROL', s, int(16), []).
+message_field('MANUAL_CONTROL', t, int(16), []).
+message_field('MANUAL_CONTROL', aux1, int(16), []).
+message_field('MANUAL_CONTROL', aux2, int(16), []).
+message_field('MANUAL_CONTROL', aux3, int(16), []).
+message_field('MANUAL_CONTROL', aux4, int(16), []).
+message_field('MANUAL_CONTROL', aux5, int(16), []).
+message_field('MANUAL_CONTROL', aux6, int(16), []).
+message_field('RC_CHANNELS_OVERRIDE', target_system, uint(8), []).
+message_field('RC_CHANNELS_OVERRIDE', target_component, uint(8), []).
+message_field('RC_CHANNELS_OVERRIDE', chan1_raw, uint(16), [units=us, invalid='UINT16_MAX']).
+message_field('RC_CHANNELS_OVERRIDE', chan2_raw, uint(16), [units=us, invalid='UINT16_MAX']).
+message_field('RC_CHANNELS_OVERRIDE', chan3_raw, uint(16), [units=us, invalid='UINT16_MAX']).
+message_field('RC_CHANNELS_OVERRIDE', chan4_raw, uint(16), [units=us, invalid='UINT16_MAX']).
+message_field('RC_CHANNELS_OVERRIDE', chan5_raw, uint(16), [units=us, invalid='UINT16_MAX']).
+message_field('RC_CHANNELS_OVERRIDE', chan6_raw, uint(16), [units=us, invalid='UINT16_MAX']).
+message_field('RC_CHANNELS_OVERRIDE', chan7_raw, uint(16), [units=us, invalid='UINT16_MAX']).
+message_field('RC_CHANNELS_OVERRIDE', chan8_raw, uint(16), [units=us, invalid='UINT16_MAX']).
+message_field('RC_CHANNELS_OVERRIDE', chan9_raw, uint(16), [units=us, invalid='0']).
+message_field('RC_CHANNELS_OVERRIDE', chan10_raw, uint(16), [units=us, invalid='0']).
+message_field('RC_CHANNELS_OVERRIDE', chan11_raw, uint(16), [units=us, invalid='0']).
+message_field('RC_CHANNELS_OVERRIDE', chan12_raw, uint(16), [units=us, invalid='0']).
+message_field('RC_CHANNELS_OVERRIDE', chan13_raw, uint(16), [units=us, invalid='0']).
+message_field('RC_CHANNELS_OVERRIDE', chan14_raw, uint(16), [units=us, invalid='0']).
+message_field('RC_CHANNELS_OVERRIDE', chan15_raw, uint(16), [units=us, invalid='0']).
+message_field('RC_CHANNELS_OVERRIDE', chan16_raw, uint(16), [units=us, invalid='0']).
+message_field('RC_CHANNELS_OVERRIDE', chan17_raw, uint(16), [units=us, invalid='0']).
+message_field('RC_CHANNELS_OVERRIDE', chan18_raw, uint(16), [units=us, invalid='0']).
+message_field('MISSION_ITEM_INT', target_system, uint(8), []).
+message_field('MISSION_ITEM_INT', target_component, uint(8), []).
+message_field('MISSION_ITEM_INT', seq, uint(16), []).
+message_field('MISSION_ITEM_INT', frame, uint(8), [enum='MAV_FRAME']).
+message_field('MISSION_ITEM_INT', command, uint(16), [enum='MAV_CMD']).
+message_field('MISSION_ITEM_INT', current, uint(8), []).
+message_field('MISSION_ITEM_INT', autocontinue, uint(8), []).
 message_field('MISSION_ITEM_INT', param1, float, []).
 message_field('MISSION_ITEM_INT', param2, float, []).
 message_field('MISSION_ITEM_INT', param3, float, []).
 message_field('MISSION_ITEM_INT', param4, float, []).
-message_field('MISSION_ITEM_INT', x, int32_t, []).
-message_field('MISSION_ITEM_INT', y, int32_t, []).
+message_field('MISSION_ITEM_INT', x, int(32), []).
+message_field('MISSION_ITEM_INT', y, int(32), []).
 message_field('MISSION_ITEM_INT', z, float, []).
-message_field('MISSION_ITEM_INT', mission_type, uint8_t, [enum='MAV_MISSION_TYPE']).
+message_field('MISSION_ITEM_INT', mission_type, uint(8), [enum='MAV_MISSION_TYPE']).
 message_field('VFR_HUD', airspeed, float, [units='m/s']).
 message_field('VFR_HUD', groundspeed, float, [units='m/s']).
-message_field('VFR_HUD', heading, int16_t, [units=deg]).
-message_field('VFR_HUD', throttle, uint16_t, [units='%']).
+message_field('VFR_HUD', heading, int(16), [units=deg]).
+message_field('VFR_HUD', throttle, uint(16), [units='%']).
 message_field('VFR_HUD', alt, float, [units=m]).
 message_field('VFR_HUD', climb, float, [units='m/s']).
-message_field('COMMAND_INT', target_system, uint8_t, []).
-message_field('COMMAND_INT', target_component, uint8_t, []).
-message_field('COMMAND_INT', frame, uint8_t, [enum='MAV_FRAME']).
-message_field('COMMAND_INT', command, uint16_t, [enum='MAV_CMD']).
-message_field('COMMAND_INT', current, uint8_t, []).
-message_field('COMMAND_INT', autocontinue, uint8_t, []).
+message_field('COMMAND_INT', target_system, uint(8), []).
+message_field('COMMAND_INT', target_component, uint(8), []).
+message_field('COMMAND_INT', frame, uint(8), [enum='MAV_FRAME']).
+message_field('COMMAND_INT', command, uint(16), [enum='MAV_CMD']).
+message_field('COMMAND_INT', current, uint(8), []).
+message_field('COMMAND_INT', autocontinue, uint(8), []).
 message_field('COMMAND_INT', param1, float, [invalid='NaN']).
 message_field('COMMAND_INT', param2, float, [invalid='NaN']).
 message_field('COMMAND_INT', param3, float, [invalid='NaN']).
 message_field('COMMAND_INT', param4, float, [invalid='NaN']).
-message_field('COMMAND_INT', x, int32_t, [invalid='INT32_MAX']).
-message_field('COMMAND_INT', y, int32_t, [invalid='INT32_MAX']).
+message_field('COMMAND_INT', x, int(32), [invalid='INT32_MAX']).
+message_field('COMMAND_INT', y, int(32), [invalid='INT32_MAX']).
 message_field('COMMAND_INT', z, float, [invalid='NaN']).
-message_field('COMMAND_LONG', target_system, uint8_t, []).
-message_field('COMMAND_LONG', target_component, uint8_t, []).
-message_field('COMMAND_LONG', command, uint16_t, [enum='MAV_CMD']).
-message_field('COMMAND_LONG', confirmation, uint8_t, []).
+message_field('COMMAND_LONG', target_system, uint(8), []).
+message_field('COMMAND_LONG', target_component, uint(8), []).
+message_field('COMMAND_LONG', command, uint(16), [enum='MAV_CMD']).
+message_field('COMMAND_LONG', confirmation, uint(8), []).
 message_field('COMMAND_LONG', param1, float, [invalid='NaN']).
 message_field('COMMAND_LONG', param2, float, [invalid='NaN']).
 message_field('COMMAND_LONG', param3, float, [invalid='NaN']).
@@ -7528,44 +7539,44 @@ message_field('COMMAND_LONG', param4, float, [invalid='NaN']).
 message_field('COMMAND_LONG', param5, float, [invalid='NaN']).
 message_field('COMMAND_LONG', param6, float, [invalid='NaN']).
 message_field('COMMAND_LONG', param7, float, [invalid='NaN']).
-message_field('COMMAND_ACK', command, uint16_t, [enum='MAV_CMD']).
-message_field('COMMAND_ACK', result, uint8_t, [enum='MAV_RESULT']).
-message_field('COMMAND_ACK', progress, uint8_t, [invalid='UINT8_MAX', units='%']).
-message_field('COMMAND_ACK', result_param2, int32_t, []).
-message_field('COMMAND_ACK', target_system, uint8_t, []).
-message_field('COMMAND_ACK', target_component, uint8_t, []).
-message_field('COMMAND_CANCEL', target_system, uint8_t, []).
-message_field('COMMAND_CANCEL', target_component, uint8_t, []).
-message_field('COMMAND_CANCEL', command, uint16_t, [enum='MAV_CMD']).
-message_field('MANUAL_SETPOINT', time_boot_ms, uint32_t, [units=ms]).
+message_field('COMMAND_ACK', command, uint(16), [enum='MAV_CMD']).
+message_field('COMMAND_ACK', result, uint(8), [enum='MAV_RESULT']).
+message_field('COMMAND_ACK', progress, uint(8), [invalid='UINT8_MAX', units='%']).
+message_field('COMMAND_ACK', result_param2, int(32), []).
+message_field('COMMAND_ACK', target_system, uint(8), []).
+message_field('COMMAND_ACK', target_component, uint(8), []).
+message_field('COMMAND_CANCEL', target_system, uint(8), []).
+message_field('COMMAND_CANCEL', target_component, uint(8), []).
+message_field('COMMAND_CANCEL', command, uint(16), [enum='MAV_CMD']).
+message_field('MANUAL_SETPOINT', time_boot_ms, uint(32), [units=ms]).
 message_field('MANUAL_SETPOINT', roll, float, [units='rad/s']).
 message_field('MANUAL_SETPOINT', pitch, float, [units='rad/s']).
 message_field('MANUAL_SETPOINT', yaw, float, [units='rad/s']).
 message_field('MANUAL_SETPOINT', thrust, float, []).
-message_field('MANUAL_SETPOINT', mode_switch, uint8_t, []).
-message_field('MANUAL_SETPOINT', manual_override_switch, uint8_t, []).
-message_field('SET_ATTITUDE_TARGET', time_boot_ms, uint32_t, [units=ms]).
-message_field('SET_ATTITUDE_TARGET', target_system, uint8_t, []).
-message_field('SET_ATTITUDE_TARGET', target_component, uint8_t, []).
-message_field('SET_ATTITUDE_TARGET', type_mask, uint8_t, [enum='ATTITUDE_TARGET_TYPEMASK', display=bitmask]).
-message_field('SET_ATTITUDE_TARGET', q, 'float[4]', []).
+message_field('MANUAL_SETPOINT', mode_switch, uint(8), []).
+message_field('MANUAL_SETPOINT', manual_override_switch, uint(8), []).
+message_field('SET_ATTITUDE_TARGET', time_boot_ms, uint(32), [units=ms]).
+message_field('SET_ATTITUDE_TARGET', target_system, uint(8), []).
+message_field('SET_ATTITUDE_TARGET', target_component, uint(8), []).
+message_field('SET_ATTITUDE_TARGET', type_mask, uint(8), [enum='ATTITUDE_TARGET_TYPEMASK', display=bitmask]).
+message_field('SET_ATTITUDE_TARGET', q, float, []).
 message_field('SET_ATTITUDE_TARGET', body_roll_rate, float, [units='rad/s']).
 message_field('SET_ATTITUDE_TARGET', body_pitch_rate, float, [units='rad/s']).
 message_field('SET_ATTITUDE_TARGET', body_yaw_rate, float, [units='rad/s']).
 message_field('SET_ATTITUDE_TARGET', thrust, float, []).
-message_field('SET_ATTITUDE_TARGET', thrust_body, 'float[3]', []).
-message_field('ATTITUDE_TARGET', time_boot_ms, uint32_t, [units=ms]).
-message_field('ATTITUDE_TARGET', type_mask, uint8_t, [enum='ATTITUDE_TARGET_TYPEMASK', display=bitmask]).
-message_field('ATTITUDE_TARGET', q, 'float[4]', []).
+message_field('SET_ATTITUDE_TARGET', thrust_body, float, []).
+message_field('ATTITUDE_TARGET', time_boot_ms, uint(32), [units=ms]).
+message_field('ATTITUDE_TARGET', type_mask, uint(8), [enum='ATTITUDE_TARGET_TYPEMASK', display=bitmask]).
+message_field('ATTITUDE_TARGET', q, float, []).
 message_field('ATTITUDE_TARGET', body_roll_rate, float, [units='rad/s']).
 message_field('ATTITUDE_TARGET', body_pitch_rate, float, [units='rad/s']).
 message_field('ATTITUDE_TARGET', body_yaw_rate, float, [units='rad/s']).
 message_field('ATTITUDE_TARGET', thrust, float, []).
-message_field('SET_POSITION_TARGET_LOCAL_NED', time_boot_ms, uint32_t, [units=ms]).
-message_field('SET_POSITION_TARGET_LOCAL_NED', target_system, uint8_t, []).
-message_field('SET_POSITION_TARGET_LOCAL_NED', target_component, uint8_t, []).
-message_field('SET_POSITION_TARGET_LOCAL_NED', coordinate_frame, uint8_t, [enum='MAV_FRAME']).
-message_field('SET_POSITION_TARGET_LOCAL_NED', type_mask, uint16_t, [enum='POSITION_TARGET_TYPEMASK', display=bitmask]).
+message_field('SET_POSITION_TARGET_LOCAL_NED', time_boot_ms, uint(32), [units=ms]).
+message_field('SET_POSITION_TARGET_LOCAL_NED', target_system, uint(8), []).
+message_field('SET_POSITION_TARGET_LOCAL_NED', target_component, uint(8), []).
+message_field('SET_POSITION_TARGET_LOCAL_NED', coordinate_frame, uint(8), [enum='MAV_FRAME']).
+message_field('SET_POSITION_TARGET_LOCAL_NED', type_mask, uint(16), [enum='POSITION_TARGET_TYPEMASK', display=bitmask]).
 message_field('SET_POSITION_TARGET_LOCAL_NED', x, float, [units=m]).
 message_field('SET_POSITION_TARGET_LOCAL_NED', y, float, [units=m]).
 message_field('SET_POSITION_TARGET_LOCAL_NED', z, float, [units=m]).
@@ -7577,9 +7588,9 @@ message_field('SET_POSITION_TARGET_LOCAL_NED', afy, float, [units='m/s/s']).
 message_field('SET_POSITION_TARGET_LOCAL_NED', afz, float, [units='m/s/s']).
 message_field('SET_POSITION_TARGET_LOCAL_NED', yaw, float, [units=rad]).
 message_field('SET_POSITION_TARGET_LOCAL_NED', yaw_rate, float, [units='rad/s']).
-message_field('POSITION_TARGET_LOCAL_NED', time_boot_ms, uint32_t, [units=ms]).
-message_field('POSITION_TARGET_LOCAL_NED', coordinate_frame, uint8_t, [enum='MAV_FRAME']).
-message_field('POSITION_TARGET_LOCAL_NED', type_mask, uint16_t, [enum='POSITION_TARGET_TYPEMASK', display=bitmask]).
+message_field('POSITION_TARGET_LOCAL_NED', time_boot_ms, uint(32), [units=ms]).
+message_field('POSITION_TARGET_LOCAL_NED', coordinate_frame, uint(8), [enum='MAV_FRAME']).
+message_field('POSITION_TARGET_LOCAL_NED', type_mask, uint(16), [enum='POSITION_TARGET_TYPEMASK', display=bitmask]).
 message_field('POSITION_TARGET_LOCAL_NED', x, float, [units=m]).
 message_field('POSITION_TARGET_LOCAL_NED', y, float, [units=m]).
 message_field('POSITION_TARGET_LOCAL_NED', z, float, [units=m]).
@@ -7591,13 +7602,13 @@ message_field('POSITION_TARGET_LOCAL_NED', afy, float, [units='m/s/s']).
 message_field('POSITION_TARGET_LOCAL_NED', afz, float, [units='m/s/s']).
 message_field('POSITION_TARGET_LOCAL_NED', yaw, float, [units=rad]).
 message_field('POSITION_TARGET_LOCAL_NED', yaw_rate, float, [units='rad/s']).
-message_field('SET_POSITION_TARGET_GLOBAL_INT', time_boot_ms, uint32_t, [units=ms]).
-message_field('SET_POSITION_TARGET_GLOBAL_INT', target_system, uint8_t, []).
-message_field('SET_POSITION_TARGET_GLOBAL_INT', target_component, uint8_t, []).
-message_field('SET_POSITION_TARGET_GLOBAL_INT', coordinate_frame, uint8_t, [enum='MAV_FRAME']).
-message_field('SET_POSITION_TARGET_GLOBAL_INT', type_mask, uint16_t, [enum='POSITION_TARGET_TYPEMASK', display=bitmask]).
-message_field('SET_POSITION_TARGET_GLOBAL_INT', lat_int, int32_t, [units=degE7]).
-message_field('SET_POSITION_TARGET_GLOBAL_INT', lon_int, int32_t, [units=degE7]).
+message_field('SET_POSITION_TARGET_GLOBAL_INT', time_boot_ms, uint(32), [units=ms]).
+message_field('SET_POSITION_TARGET_GLOBAL_INT', target_system, uint(8), []).
+message_field('SET_POSITION_TARGET_GLOBAL_INT', target_component, uint(8), []).
+message_field('SET_POSITION_TARGET_GLOBAL_INT', coordinate_frame, uint(8), [enum='MAV_FRAME']).
+message_field('SET_POSITION_TARGET_GLOBAL_INT', type_mask, uint(16), [enum='POSITION_TARGET_TYPEMASK', display=bitmask]).
+message_field('SET_POSITION_TARGET_GLOBAL_INT', lat_int, int(32), [units=degE7]).
+message_field('SET_POSITION_TARGET_GLOBAL_INT', lon_int, int(32), [units=degE7]).
 message_field('SET_POSITION_TARGET_GLOBAL_INT', alt, float, [units=m]).
 message_field('SET_POSITION_TARGET_GLOBAL_INT', vx, float, [units='m/s']).
 message_field('SET_POSITION_TARGET_GLOBAL_INT', vy, float, [units='m/s']).
@@ -7607,11 +7618,11 @@ message_field('SET_POSITION_TARGET_GLOBAL_INT', afy, float, [units='m/s/s']).
 message_field('SET_POSITION_TARGET_GLOBAL_INT', afz, float, [units='m/s/s']).
 message_field('SET_POSITION_TARGET_GLOBAL_INT', yaw, float, [units=rad]).
 message_field('SET_POSITION_TARGET_GLOBAL_INT', yaw_rate, float, [units='rad/s']).
-message_field('POSITION_TARGET_GLOBAL_INT', time_boot_ms, uint32_t, [units=ms]).
-message_field('POSITION_TARGET_GLOBAL_INT', coordinate_frame, uint8_t, [enum='MAV_FRAME']).
-message_field('POSITION_TARGET_GLOBAL_INT', type_mask, uint16_t, [enum='POSITION_TARGET_TYPEMASK', display=bitmask]).
-message_field('POSITION_TARGET_GLOBAL_INT', lat_int, int32_t, [units=degE7]).
-message_field('POSITION_TARGET_GLOBAL_INT', lon_int, int32_t, [units=degE7]).
+message_field('POSITION_TARGET_GLOBAL_INT', time_boot_ms, uint(32), [units=ms]).
+message_field('POSITION_TARGET_GLOBAL_INT', coordinate_frame, uint(8), [enum='MAV_FRAME']).
+message_field('POSITION_TARGET_GLOBAL_INT', type_mask, uint(16), [enum='POSITION_TARGET_TYPEMASK', display=bitmask]).
+message_field('POSITION_TARGET_GLOBAL_INT', lat_int, int(32), [units=degE7]).
+message_field('POSITION_TARGET_GLOBAL_INT', lon_int, int(32), [units=degE7]).
 message_field('POSITION_TARGET_GLOBAL_INT', alt, float, [units=m]).
 message_field('POSITION_TARGET_GLOBAL_INT', vx, float, [units='m/s']).
 message_field('POSITION_TARGET_GLOBAL_INT', vy, float, [units='m/s']).
@@ -7621,30 +7632,30 @@ message_field('POSITION_TARGET_GLOBAL_INT', afy, float, [units='m/s/s']).
 message_field('POSITION_TARGET_GLOBAL_INT', afz, float, [units='m/s/s']).
 message_field('POSITION_TARGET_GLOBAL_INT', yaw, float, [units=rad]).
 message_field('POSITION_TARGET_GLOBAL_INT', yaw_rate, float, [units='rad/s']).
-message_field('LOCAL_POSITION_NED_SYSTEM_GLOBAL_OFFSET', time_boot_ms, uint32_t, [units=ms]).
+message_field('LOCAL_POSITION_NED_SYSTEM_GLOBAL_OFFSET', time_boot_ms, uint(32), [units=ms]).
 message_field('LOCAL_POSITION_NED_SYSTEM_GLOBAL_OFFSET', x, float, [units=m]).
 message_field('LOCAL_POSITION_NED_SYSTEM_GLOBAL_OFFSET', y, float, [units=m]).
 message_field('LOCAL_POSITION_NED_SYSTEM_GLOBAL_OFFSET', z, float, [units=m]).
 message_field('LOCAL_POSITION_NED_SYSTEM_GLOBAL_OFFSET', roll, float, [units=rad]).
 message_field('LOCAL_POSITION_NED_SYSTEM_GLOBAL_OFFSET', pitch, float, [units=rad]).
 message_field('LOCAL_POSITION_NED_SYSTEM_GLOBAL_OFFSET', yaw, float, [units=rad]).
-message_field('HIL_STATE', time_usec, uint64_t, [units=us]).
+message_field('HIL_STATE', time_usec, uint(64), [units=us]).
 message_field('HIL_STATE', roll, float, [units=rad]).
 message_field('HIL_STATE', pitch, float, [units=rad]).
 message_field('HIL_STATE', yaw, float, [units=rad]).
 message_field('HIL_STATE', rollspeed, float, [units='rad/s']).
 message_field('HIL_STATE', pitchspeed, float, [units='rad/s']).
 message_field('HIL_STATE', yawspeed, float, [units='rad/s']).
-message_field('HIL_STATE', lat, int32_t, [units=degE7]).
-message_field('HIL_STATE', lon, int32_t, [units=degE7]).
-message_field('HIL_STATE', alt, int32_t, [units=mm]).
-message_field('HIL_STATE', vx, int16_t, [units='cm/s']).
-message_field('HIL_STATE', vy, int16_t, [units='cm/s']).
-message_field('HIL_STATE', vz, int16_t, [units='cm/s']).
-message_field('HIL_STATE', xacc, int16_t, [units=mG]).
-message_field('HIL_STATE', yacc, int16_t, [units=mG]).
-message_field('HIL_STATE', zacc, int16_t, [units=mG]).
-message_field('HIL_CONTROLS', time_usec, uint64_t, [units=us]).
+message_field('HIL_STATE', lat, int(32), [units=degE7]).
+message_field('HIL_STATE', lon, int(32), [units=degE7]).
+message_field('HIL_STATE', alt, int(32), [units=mm]).
+message_field('HIL_STATE', vx, int(16), [units='cm/s']).
+message_field('HIL_STATE', vy, int(16), [units='cm/s']).
+message_field('HIL_STATE', vz, int(16), [units='cm/s']).
+message_field('HIL_STATE', xacc, int(16), [units=mG]).
+message_field('HIL_STATE', yacc, int(16), [units=mG]).
+message_field('HIL_STATE', zacc, int(16), [units=mG]).
+message_field('HIL_CONTROLS', time_usec, uint(64), [units=us]).
 message_field('HIL_CONTROLS', roll_ailerons, float, []).
 message_field('HIL_CONTROLS', pitch_elevator, float, []).
 message_field('HIL_CONTROLS', yaw_rudder, float, []).
@@ -7653,69 +7664,69 @@ message_field('HIL_CONTROLS', aux1, float, []).
 message_field('HIL_CONTROLS', aux2, float, []).
 message_field('HIL_CONTROLS', aux3, float, []).
 message_field('HIL_CONTROLS', aux4, float, []).
-message_field('HIL_CONTROLS', mode, uint8_t, [enum='MAV_MODE']).
-message_field('HIL_CONTROLS', nav_mode, uint8_t, []).
-message_field('HIL_RC_INPUTS_RAW', time_usec, uint64_t, [units=us]).
-message_field('HIL_RC_INPUTS_RAW', chan1_raw, uint16_t, [units=us]).
-message_field('HIL_RC_INPUTS_RAW', chan2_raw, uint16_t, [units=us]).
-message_field('HIL_RC_INPUTS_RAW', chan3_raw, uint16_t, [units=us]).
-message_field('HIL_RC_INPUTS_RAW', chan4_raw, uint16_t, [units=us]).
-message_field('HIL_RC_INPUTS_RAW', chan5_raw, uint16_t, [units=us]).
-message_field('HIL_RC_INPUTS_RAW', chan6_raw, uint16_t, [units=us]).
-message_field('HIL_RC_INPUTS_RAW', chan7_raw, uint16_t, [units=us]).
-message_field('HIL_RC_INPUTS_RAW', chan8_raw, uint16_t, [units=us]).
-message_field('HIL_RC_INPUTS_RAW', chan9_raw, uint16_t, [units=us]).
-message_field('HIL_RC_INPUTS_RAW', chan10_raw, uint16_t, [units=us]).
-message_field('HIL_RC_INPUTS_RAW', chan11_raw, uint16_t, [units=us]).
-message_field('HIL_RC_INPUTS_RAW', chan12_raw, uint16_t, [units=us]).
-message_field('HIL_RC_INPUTS_RAW', rssi, uint8_t, [invalid='UINT8_MAX']).
-message_field('HIL_ACTUATOR_CONTROLS', time_usec, uint64_t, [units=us]).
-message_field('HIL_ACTUATOR_CONTROLS', controls, 'float[16]', []).
-message_field('HIL_ACTUATOR_CONTROLS', mode, uint8_t, [enum='MAV_MODE_FLAG', display=bitmask]).
-message_field('HIL_ACTUATOR_CONTROLS', flags, uint64_t, [display=bitmask]).
-message_field('OPTICAL_FLOW', time_usec, uint64_t, [units=us]).
-message_field('OPTICAL_FLOW', sensor_id, uint8_t, []).
-message_field('OPTICAL_FLOW', flow_x, int16_t, [units=dpix]).
-message_field('OPTICAL_FLOW', flow_y, int16_t, [units=dpix]).
+message_field('HIL_CONTROLS', mode, uint(8), [enum='MAV_MODE']).
+message_field('HIL_CONTROLS', nav_mode, uint(8), []).
+message_field('HIL_RC_INPUTS_RAW', time_usec, uint(64), [units=us]).
+message_field('HIL_RC_INPUTS_RAW', chan1_raw, uint(16), [units=us]).
+message_field('HIL_RC_INPUTS_RAW', chan2_raw, uint(16), [units=us]).
+message_field('HIL_RC_INPUTS_RAW', chan3_raw, uint(16), [units=us]).
+message_field('HIL_RC_INPUTS_RAW', chan4_raw, uint(16), [units=us]).
+message_field('HIL_RC_INPUTS_RAW', chan5_raw, uint(16), [units=us]).
+message_field('HIL_RC_INPUTS_RAW', chan6_raw, uint(16), [units=us]).
+message_field('HIL_RC_INPUTS_RAW', chan7_raw, uint(16), [units=us]).
+message_field('HIL_RC_INPUTS_RAW', chan8_raw, uint(16), [units=us]).
+message_field('HIL_RC_INPUTS_RAW', chan9_raw, uint(16), [units=us]).
+message_field('HIL_RC_INPUTS_RAW', chan10_raw, uint(16), [units=us]).
+message_field('HIL_RC_INPUTS_RAW', chan11_raw, uint(16), [units=us]).
+message_field('HIL_RC_INPUTS_RAW', chan12_raw, uint(16), [units=us]).
+message_field('HIL_RC_INPUTS_RAW', rssi, uint(8), [invalid='UINT8_MAX']).
+message_field('HIL_ACTUATOR_CONTROLS', time_usec, uint(64), [units=us]).
+message_field('HIL_ACTUATOR_CONTROLS', controls, float, []).
+message_field('HIL_ACTUATOR_CONTROLS', mode, uint(8), [enum='MAV_MODE_FLAG', display=bitmask]).
+message_field('HIL_ACTUATOR_CONTROLS', flags, uint(64), [display=bitmask]).
+message_field('OPTICAL_FLOW', time_usec, uint(64), [units=us]).
+message_field('OPTICAL_FLOW', sensor_id, uint(8), []).
+message_field('OPTICAL_FLOW', flow_x, int(16), [units=dpix]).
+message_field('OPTICAL_FLOW', flow_y, int(16), [units=dpix]).
 message_field('OPTICAL_FLOW', flow_comp_m_x, float, [units='m/s']).
 message_field('OPTICAL_FLOW', flow_comp_m_y, float, [units='m/s']).
-message_field('OPTICAL_FLOW', quality, uint8_t, []).
+message_field('OPTICAL_FLOW', quality, uint(8), []).
 message_field('OPTICAL_FLOW', ground_distance, float, [units=m]).
 message_field('OPTICAL_FLOW', flow_rate_x, float, [units='rad/s']).
 message_field('OPTICAL_FLOW', flow_rate_y, float, [units='rad/s']).
-message_field('GLOBAL_VISION_POSITION_ESTIMATE', usec, uint64_t, [units=us]).
+message_field('GLOBAL_VISION_POSITION_ESTIMATE', usec, uint(64), [units=us]).
 message_field('GLOBAL_VISION_POSITION_ESTIMATE', x, float, [units=m]).
 message_field('GLOBAL_VISION_POSITION_ESTIMATE', y, float, [units=m]).
 message_field('GLOBAL_VISION_POSITION_ESTIMATE', z, float, [units=m]).
 message_field('GLOBAL_VISION_POSITION_ESTIMATE', roll, float, [units=rad]).
 message_field('GLOBAL_VISION_POSITION_ESTIMATE', pitch, float, [units=rad]).
 message_field('GLOBAL_VISION_POSITION_ESTIMATE', yaw, float, [units=rad]).
-message_field('GLOBAL_VISION_POSITION_ESTIMATE', covariance, 'float[21]', [invalid='[NaN:]']).
-message_field('GLOBAL_VISION_POSITION_ESTIMATE', reset_counter, uint8_t, []).
-message_field('VISION_POSITION_ESTIMATE', usec, uint64_t, [units=us]).
+message_field('GLOBAL_VISION_POSITION_ESTIMATE', covariance, float, [invalid='[NaN:]']).
+message_field('GLOBAL_VISION_POSITION_ESTIMATE', reset_counter, uint(8), []).
+message_field('VISION_POSITION_ESTIMATE', usec, uint(64), [units=us]).
 message_field('VISION_POSITION_ESTIMATE', x, float, [units=m]).
 message_field('VISION_POSITION_ESTIMATE', y, float, [units=m]).
 message_field('VISION_POSITION_ESTIMATE', z, float, [units=m]).
 message_field('VISION_POSITION_ESTIMATE', roll, float, [units=rad]).
 message_field('VISION_POSITION_ESTIMATE', pitch, float, [units=rad]).
 message_field('VISION_POSITION_ESTIMATE', yaw, float, [units=rad]).
-message_field('VISION_POSITION_ESTIMATE', covariance, 'float[21]', [invalid='[NaN:]']).
-message_field('VISION_POSITION_ESTIMATE', reset_counter, uint8_t, []).
-message_field('VISION_SPEED_ESTIMATE', usec, uint64_t, [units=us]).
+message_field('VISION_POSITION_ESTIMATE', covariance, float, [invalid='[NaN:]']).
+message_field('VISION_POSITION_ESTIMATE', reset_counter, uint(8), []).
+message_field('VISION_SPEED_ESTIMATE', usec, uint(64), [units=us]).
 message_field('VISION_SPEED_ESTIMATE', x, float, [units='m/s']).
 message_field('VISION_SPEED_ESTIMATE', y, float, [units='m/s']).
 message_field('VISION_SPEED_ESTIMATE', z, float, [units='m/s']).
-message_field('VISION_SPEED_ESTIMATE', covariance, 'float[9]', [invalid='[NaN:]']).
-message_field('VISION_SPEED_ESTIMATE', reset_counter, uint8_t, []).
-message_field('VICON_POSITION_ESTIMATE', usec, uint64_t, [units=us]).
+message_field('VISION_SPEED_ESTIMATE', covariance, float, [invalid='[NaN:]']).
+message_field('VISION_SPEED_ESTIMATE', reset_counter, uint(8), []).
+message_field('VICON_POSITION_ESTIMATE', usec, uint(64), [units=us]).
 message_field('VICON_POSITION_ESTIMATE', x, float, [units=m]).
 message_field('VICON_POSITION_ESTIMATE', y, float, [units=m]).
 message_field('VICON_POSITION_ESTIMATE', z, float, [units=m]).
 message_field('VICON_POSITION_ESTIMATE', roll, float, [units=rad]).
 message_field('VICON_POSITION_ESTIMATE', pitch, float, [units=rad]).
 message_field('VICON_POSITION_ESTIMATE', yaw, float, [units=rad]).
-message_field('VICON_POSITION_ESTIMATE', covariance, 'float[21]', [invalid='[NaN:]']).
-message_field('HIGHRES_IMU', time_usec, uint64_t, [units=us]).
+message_field('VICON_POSITION_ESTIMATE', covariance, float, [invalid='[NaN:]']).
+message_field('HIGHRES_IMU', time_usec, uint(64), [units=us]).
 message_field('HIGHRES_IMU', xacc, float, [units='m/s/s']).
 message_field('HIGHRES_IMU', yacc, float, [units='m/s/s']).
 message_field('HIGHRES_IMU', zacc, float, [units='m/s/s']).
@@ -7729,21 +7740,21 @@ message_field('HIGHRES_IMU', abs_pressure, float, [units=hPa]).
 message_field('HIGHRES_IMU', diff_pressure, float, [units=hPa]).
 message_field('HIGHRES_IMU', pressure_alt, float, []).
 message_field('HIGHRES_IMU', temperature, float, [units=degC]).
-message_field('HIGHRES_IMU', fields_updated, uint16_t, [enum='HIGHRES_IMU_UPDATED_FLAGS', display=bitmask]).
-message_field('HIGHRES_IMU', id, uint8_t, [instance=true]).
-message_field('OPTICAL_FLOW_RAD', time_usec, uint64_t, [units=us]).
-message_field('OPTICAL_FLOW_RAD', sensor_id, uint8_t, [instance=true]).
-message_field('OPTICAL_FLOW_RAD', integration_time_us, uint32_t, [units=us]).
+message_field('HIGHRES_IMU', fields_updated, uint(16), [enum='HIGHRES_IMU_UPDATED_FLAGS', display=bitmask]).
+message_field('HIGHRES_IMU', id, uint(8), [instance=true]).
+message_field('OPTICAL_FLOW_RAD', time_usec, uint(64), [units=us]).
+message_field('OPTICAL_FLOW_RAD', sensor_id, uint(8), [instance=true]).
+message_field('OPTICAL_FLOW_RAD', integration_time_us, uint(32), [units=us]).
 message_field('OPTICAL_FLOW_RAD', integrated_x, float, [units=rad]).
 message_field('OPTICAL_FLOW_RAD', integrated_y, float, [units=rad]).
 message_field('OPTICAL_FLOW_RAD', integrated_xgyro, float, [units=rad]).
 message_field('OPTICAL_FLOW_RAD', integrated_ygyro, float, [units=rad]).
 message_field('OPTICAL_FLOW_RAD', integrated_zgyro, float, [units=rad]).
-message_field('OPTICAL_FLOW_RAD', temperature, int16_t, [units=cdegC]).
-message_field('OPTICAL_FLOW_RAD', quality, uint8_t, []).
-message_field('OPTICAL_FLOW_RAD', time_delta_distance_us, uint32_t, [units=us]).
+message_field('OPTICAL_FLOW_RAD', temperature, int(16), [units=cdegC]).
+message_field('OPTICAL_FLOW_RAD', quality, uint(8), []).
+message_field('OPTICAL_FLOW_RAD', time_delta_distance_us, uint(32), [units=us]).
 message_field('OPTICAL_FLOW_RAD', distance, float, [units=m]).
-message_field('HIL_SENSOR', time_usec, uint64_t, [units=us]).
+message_field('HIL_SENSOR', time_usec, uint(64), [units=us]).
 message_field('HIL_SENSOR', xacc, float, [units='m/s/s']).
 message_field('HIL_SENSOR', yacc, float, [units='m/s/s']).
 message_field('HIL_SENSOR', zacc, float, [units='m/s/s']).
@@ -7757,8 +7768,8 @@ message_field('HIL_SENSOR', abs_pressure, float, [units=hPa]).
 message_field('HIL_SENSOR', diff_pressure, float, [units=hPa]).
 message_field('HIL_SENSOR', pressure_alt, float, []).
 message_field('HIL_SENSOR', temperature, float, [units=degC]).
-message_field('HIL_SENSOR', fields_updated, uint32_t, [enum='HIL_SENSOR_UPDATED_FLAGS', display=bitmask]).
-message_field('HIL_SENSOR', id, uint8_t, []).
+message_field('HIL_SENSOR', fields_updated, uint(32), [enum='HIL_SENSOR_UPDATED_FLAGS', display=bitmask]).
+message_field('HIL_SENSOR', id, uint(8), []).
 message_field('SIM_STATE', q1, float, []).
 message_field('SIM_STATE', q2, float, []).
 message_field('SIM_STATE', q3, float, []).
@@ -7780,258 +7791,258 @@ message_field('SIM_STATE', std_dev_vert, float, []).
 message_field('SIM_STATE', vn, float, [units='m/s']).
 message_field('SIM_STATE', ve, float, [units='m/s']).
 message_field('SIM_STATE', vd, float, [units='m/s']).
-message_field('SIM_STATE', lat_int, int32_t, [units=degE7, invalid='0']).
-message_field('SIM_STATE', lon_int, int32_t, [units=degE7, invalid='0']).
-message_field('RADIO_STATUS', rssi, uint8_t, [invalid='UINT8_MAX']).
-message_field('RADIO_STATUS', remrssi, uint8_t, [invalid='UINT8_MAX']).
-message_field('RADIO_STATUS', txbuf, uint8_t, [units='%']).
-message_field('RADIO_STATUS', noise, uint8_t, [invalid='UINT8_MAX']).
-message_field('RADIO_STATUS', remnoise, uint8_t, [invalid='UINT8_MAX']).
-message_field('RADIO_STATUS', rxerrors, uint16_t, []).
-message_field('RADIO_STATUS', fixed, uint16_t, []).
-message_field('FILE_TRANSFER_PROTOCOL', target_network, uint8_t, []).
-message_field('FILE_TRANSFER_PROTOCOL', target_system, uint8_t, []).
-message_field('FILE_TRANSFER_PROTOCOL', target_component, uint8_t, []).
-message_field('FILE_TRANSFER_PROTOCOL', payload, 'uint8_t[251]', []).
-message_field('TIMESYNC', tc1, int64_t, [units=ns]).
-message_field('TIMESYNC', ts1, int64_t, [units=ns]).
-message_field('TIMESYNC', target_system, uint8_t, []).
-message_field('TIMESYNC', target_component, uint8_t, []).
-message_field('CAMERA_TRIGGER', time_usec, uint64_t, [units=us]).
-message_field('CAMERA_TRIGGER', seq, uint32_t, []).
-message_field('HIL_GPS', time_usec, uint64_t, [units=us]).
-message_field('HIL_GPS', fix_type, uint8_t, []).
-message_field('HIL_GPS', lat, int32_t, [units=degE7]).
-message_field('HIL_GPS', lon, int32_t, [units=degE7]).
-message_field('HIL_GPS', alt, int32_t, [units=mm]).
-message_field('HIL_GPS', eph, uint16_t, [invalid='UINT16_MAX']).
-message_field('HIL_GPS', epv, uint16_t, [invalid='UINT16_MAX']).
-message_field('HIL_GPS', vel, uint16_t, [units='cm/s', invalid='UINT16_MAX']).
-message_field('HIL_GPS', vn, int16_t, [units='cm/s']).
-message_field('HIL_GPS', ve, int16_t, [units='cm/s']).
-message_field('HIL_GPS', vd, int16_t, [units='cm/s']).
-message_field('HIL_GPS', cog, uint16_t, [units=cdeg, invalid='UINT16_MAX']).
-message_field('HIL_GPS', satellites_visible, uint8_t, [invalid='UINT8_MAX']).
-message_field('HIL_GPS', id, uint8_t, []).
-message_field('HIL_GPS', yaw, uint16_t, [units=cdeg]).
-message_field('HIL_OPTICAL_FLOW', time_usec, uint64_t, [units=us]).
-message_field('HIL_OPTICAL_FLOW', sensor_id, uint8_t, []).
-message_field('HIL_OPTICAL_FLOW', integration_time_us, uint32_t, [units=us]).
+message_field('SIM_STATE', lat_int, int(32), [units=degE7, invalid='0']).
+message_field('SIM_STATE', lon_int, int(32), [units=degE7, invalid='0']).
+message_field('RADIO_STATUS', rssi, uint(8), [invalid='UINT8_MAX']).
+message_field('RADIO_STATUS', remrssi, uint(8), [invalid='UINT8_MAX']).
+message_field('RADIO_STATUS', txbuf, uint(8), [units='%']).
+message_field('RADIO_STATUS', noise, uint(8), [invalid='UINT8_MAX']).
+message_field('RADIO_STATUS', remnoise, uint(8), [invalid='UINT8_MAX']).
+message_field('RADIO_STATUS', rxerrors, uint(16), []).
+message_field('RADIO_STATUS', fixed, uint(16), []).
+message_field('FILE_TRANSFER_PROTOCOL', target_network, uint(8), []).
+message_field('FILE_TRANSFER_PROTOCOL', target_system, uint(8), []).
+message_field('FILE_TRANSFER_PROTOCOL', target_component, uint(8), []).
+message_field('FILE_TRANSFER_PROTOCOL', payload, uint(8), []).
+message_field('TIMESYNC', tc1, int(64), [units=ns]).
+message_field('TIMESYNC', ts1, int(64), [units=ns]).
+message_field('TIMESYNC', target_system, uint(8), []).
+message_field('TIMESYNC', target_component, uint(8), []).
+message_field('CAMERA_TRIGGER', time_usec, uint(64), [units=us]).
+message_field('CAMERA_TRIGGER', seq, uint(32), []).
+message_field('HIL_GPS', time_usec, uint(64), [units=us]).
+message_field('HIL_GPS', fix_type, uint(8), []).
+message_field('HIL_GPS', lat, int(32), [units=degE7]).
+message_field('HIL_GPS', lon, int(32), [units=degE7]).
+message_field('HIL_GPS', alt, int(32), [units=mm]).
+message_field('HIL_GPS', eph, uint(16), [invalid='UINT16_MAX']).
+message_field('HIL_GPS', epv, uint(16), [invalid='UINT16_MAX']).
+message_field('HIL_GPS', vel, uint(16), [units='cm/s', invalid='UINT16_MAX']).
+message_field('HIL_GPS', vn, int(16), [units='cm/s']).
+message_field('HIL_GPS', ve, int(16), [units='cm/s']).
+message_field('HIL_GPS', vd, int(16), [units='cm/s']).
+message_field('HIL_GPS', cog, uint(16), [units=cdeg, invalid='UINT16_MAX']).
+message_field('HIL_GPS', satellites_visible, uint(8), [invalid='UINT8_MAX']).
+message_field('HIL_GPS', id, uint(8), []).
+message_field('HIL_GPS', yaw, uint(16), [units=cdeg]).
+message_field('HIL_OPTICAL_FLOW', time_usec, uint(64), [units=us]).
+message_field('HIL_OPTICAL_FLOW', sensor_id, uint(8), []).
+message_field('HIL_OPTICAL_FLOW', integration_time_us, uint(32), [units=us]).
 message_field('HIL_OPTICAL_FLOW', integrated_x, float, [units=rad]).
 message_field('HIL_OPTICAL_FLOW', integrated_y, float, [units=rad]).
 message_field('HIL_OPTICAL_FLOW', integrated_xgyro, float, [units=rad]).
 message_field('HIL_OPTICAL_FLOW', integrated_ygyro, float, [units=rad]).
 message_field('HIL_OPTICAL_FLOW', integrated_zgyro, float, [units=rad]).
-message_field('HIL_OPTICAL_FLOW', temperature, int16_t, [units=cdegC]).
-message_field('HIL_OPTICAL_FLOW', quality, uint8_t, []).
-message_field('HIL_OPTICAL_FLOW', time_delta_distance_us, uint32_t, [units=us]).
+message_field('HIL_OPTICAL_FLOW', temperature, int(16), [units=cdegC]).
+message_field('HIL_OPTICAL_FLOW', quality, uint(8), []).
+message_field('HIL_OPTICAL_FLOW', time_delta_distance_us, uint(32), [units=us]).
 message_field('HIL_OPTICAL_FLOW', distance, float, [units=m, invalid='-1.0']).
-message_field('HIL_STATE_QUATERNION', time_usec, uint64_t, [units=us]).
-message_field('HIL_STATE_QUATERNION', attitude_quaternion, 'float[4]', []).
+message_field('HIL_STATE_QUATERNION', time_usec, uint(64), [units=us]).
+message_field('HIL_STATE_QUATERNION', attitude_quaternion, float, []).
 message_field('HIL_STATE_QUATERNION', rollspeed, float, [units='rad/s']).
 message_field('HIL_STATE_QUATERNION', pitchspeed, float, [units='rad/s']).
 message_field('HIL_STATE_QUATERNION', yawspeed, float, [units='rad/s']).
-message_field('HIL_STATE_QUATERNION', lat, int32_t, [units=degE7]).
-message_field('HIL_STATE_QUATERNION', lon, int32_t, [units=degE7]).
-message_field('HIL_STATE_QUATERNION', alt, int32_t, [units=mm]).
-message_field('HIL_STATE_QUATERNION', vx, int16_t, [units='cm/s']).
-message_field('HIL_STATE_QUATERNION', vy, int16_t, [units='cm/s']).
-message_field('HIL_STATE_QUATERNION', vz, int16_t, [units='cm/s']).
-message_field('HIL_STATE_QUATERNION', ind_airspeed, uint16_t, [units='cm/s']).
-message_field('HIL_STATE_QUATERNION', true_airspeed, uint16_t, [units='cm/s']).
-message_field('HIL_STATE_QUATERNION', xacc, int16_t, [units=mG]).
-message_field('HIL_STATE_QUATERNION', yacc, int16_t, [units=mG]).
-message_field('HIL_STATE_QUATERNION', zacc, int16_t, [units=mG]).
-message_field('SCALED_IMU2', time_boot_ms, uint32_t, [units=ms]).
-message_field('SCALED_IMU2', xacc, int16_t, [units=mG]).
-message_field('SCALED_IMU2', yacc, int16_t, [units=mG]).
-message_field('SCALED_IMU2', zacc, int16_t, [units=mG]).
-message_field('SCALED_IMU2', xgyro, int16_t, [units='mrad/s']).
-message_field('SCALED_IMU2', ygyro, int16_t, [units='mrad/s']).
-message_field('SCALED_IMU2', zgyro, int16_t, [units='mrad/s']).
-message_field('SCALED_IMU2', xmag, int16_t, [units=mgauss]).
-message_field('SCALED_IMU2', ymag, int16_t, [units=mgauss]).
-message_field('SCALED_IMU2', zmag, int16_t, [units=mgauss]).
-message_field('SCALED_IMU2', temperature, int16_t, [units=cdegC, invalid='0']).
-message_field('LOG_REQUEST_LIST', target_system, uint8_t, []).
-message_field('LOG_REQUEST_LIST', target_component, uint8_t, []).
-message_field('LOG_REQUEST_LIST', start, uint16_t, []).
-message_field('LOG_REQUEST_LIST', end, uint16_t, []).
-message_field('LOG_ENTRY', id, uint16_t, []).
-message_field('LOG_ENTRY', num_logs, uint16_t, []).
-message_field('LOG_ENTRY', last_log_num, uint16_t, []).
-message_field('LOG_ENTRY', time_utc, uint32_t, [units=s, invalid='0']).
-message_field('LOG_ENTRY', size, uint32_t, [units=bytes]).
-message_field('LOG_REQUEST_DATA', target_system, uint8_t, []).
-message_field('LOG_REQUEST_DATA', target_component, uint8_t, []).
-message_field('LOG_REQUEST_DATA', id, uint16_t, []).
-message_field('LOG_REQUEST_DATA', ofs, uint32_t, []).
-message_field('LOG_REQUEST_DATA', count, uint32_t, [units=bytes]).
-message_field('LOG_DATA', id, uint16_t, []).
-message_field('LOG_DATA', ofs, uint32_t, []).
-message_field('LOG_DATA', count, uint8_t, [units=bytes]).
-message_field('LOG_DATA', data, 'uint8_t[90]', []).
-message_field('LOG_ERASE', target_system, uint8_t, []).
-message_field('LOG_ERASE', target_component, uint8_t, []).
-message_field('LOG_REQUEST_END', target_system, uint8_t, []).
-message_field('LOG_REQUEST_END', target_component, uint8_t, []).
-message_field('GPS_INJECT_DATA', target_system, uint8_t, []).
-message_field('GPS_INJECT_DATA', target_component, uint8_t, []).
-message_field('GPS_INJECT_DATA', len, uint8_t, [units=bytes]).
-message_field('GPS_INJECT_DATA', data, 'uint8_t[110]', []).
-message_field('GPS2_RAW', time_usec, uint64_t, [units=us]).
-message_field('GPS2_RAW', fix_type, uint8_t, [enum='GPS_FIX_TYPE']).
-message_field('GPS2_RAW', lat, int32_t, [units=degE7]).
-message_field('GPS2_RAW', lon, int32_t, [units=degE7]).
-message_field('GPS2_RAW', alt, int32_t, [units=mm]).
-message_field('GPS2_RAW', eph, uint16_t, [invalid='UINT16_MAX']).
-message_field('GPS2_RAW', epv, uint16_t, [invalid='UINT16_MAX']).
-message_field('GPS2_RAW', vel, uint16_t, [units='cm/s', invalid='UINT16_MAX']).
-message_field('GPS2_RAW', cog, uint16_t, [units=cdeg, invalid='UINT16_MAX']).
-message_field('GPS2_RAW', satellites_visible, uint8_t, [invalid='UINT8_MAX']).
-message_field('GPS2_RAW', dgps_numch, uint8_t, []).
-message_field('GPS2_RAW', dgps_age, uint32_t, [units=ms]).
-message_field('GPS2_RAW', yaw, uint16_t, [units=cdeg, invalid='0']).
-message_field('GPS2_RAW', alt_ellipsoid, int32_t, [units=mm]).
-message_field('GPS2_RAW', h_acc, uint32_t, [units=mm]).
-message_field('GPS2_RAW', v_acc, uint32_t, [units=mm]).
-message_field('GPS2_RAW', vel_acc, uint32_t, [units=mm]).
-message_field('GPS2_RAW', hdg_acc, uint32_t, [units=degE5]).
-message_field('POWER_STATUS', 'Vcc', uint16_t, [units=mV]).
-message_field('POWER_STATUS', 'Vservo', uint16_t, [units=mV]).
-message_field('POWER_STATUS', flags, uint16_t, [enum='MAV_POWER_STATUS', display=bitmask]).
-message_field('SERIAL_CONTROL', device, uint8_t, [enum='SERIAL_CONTROL_DEV']).
-message_field('SERIAL_CONTROL', flags, uint8_t, [enum='SERIAL_CONTROL_FLAG', display=bitmask]).
-message_field('SERIAL_CONTROL', timeout, uint16_t, [units=ms]).
-message_field('SERIAL_CONTROL', baudrate, uint32_t, [units='bits/s']).
-message_field('SERIAL_CONTROL', count, uint8_t, [units=bytes]).
-message_field('SERIAL_CONTROL', data, 'uint8_t[70]', []).
-message_field('SERIAL_CONTROL', target_system, uint8_t, []).
-message_field('SERIAL_CONTROL', target_component, uint8_t, []).
-message_field('GPS_RTK', time_last_baseline_ms, uint32_t, [units=ms]).
-message_field('GPS_RTK', rtk_receiver_id, uint8_t, []).
-message_field('GPS_RTK', wn, uint16_t, []).
-message_field('GPS_RTK', tow, uint32_t, [units=ms]).
-message_field('GPS_RTK', rtk_health, uint8_t, []).
-message_field('GPS_RTK', rtk_rate, uint8_t, [units='Hz']).
-message_field('GPS_RTK', nsats, uint8_t, []).
-message_field('GPS_RTK', baseline_coords_type, uint8_t, [enum='RTK_BASELINE_COORDINATE_SYSTEM']).
-message_field('GPS_RTK', baseline_a_mm, int32_t, [units=mm]).
-message_field('GPS_RTK', baseline_b_mm, int32_t, [units=mm]).
-message_field('GPS_RTK', baseline_c_mm, int32_t, [units=mm]).
-message_field('GPS_RTK', accuracy, uint32_t, []).
-message_field('GPS_RTK', iar_num_hypotheses, int32_t, []).
-message_field('GPS2_RTK', time_last_baseline_ms, uint32_t, [units=ms]).
-message_field('GPS2_RTK', rtk_receiver_id, uint8_t, []).
-message_field('GPS2_RTK', wn, uint16_t, []).
-message_field('GPS2_RTK', tow, uint32_t, [units=ms]).
-message_field('GPS2_RTK', rtk_health, uint8_t, []).
-message_field('GPS2_RTK', rtk_rate, uint8_t, [units='Hz']).
-message_field('GPS2_RTK', nsats, uint8_t, []).
-message_field('GPS2_RTK', baseline_coords_type, uint8_t, [enum='RTK_BASELINE_COORDINATE_SYSTEM']).
-message_field('GPS2_RTK', baseline_a_mm, int32_t, [units=mm]).
-message_field('GPS2_RTK', baseline_b_mm, int32_t, [units=mm]).
-message_field('GPS2_RTK', baseline_c_mm, int32_t, [units=mm]).
-message_field('GPS2_RTK', accuracy, uint32_t, []).
-message_field('GPS2_RTK', iar_num_hypotheses, int32_t, []).
-message_field('SCALED_IMU3', time_boot_ms, uint32_t, [units=ms]).
-message_field('SCALED_IMU3', xacc, int16_t, [units=mG]).
-message_field('SCALED_IMU3', yacc, int16_t, [units=mG]).
-message_field('SCALED_IMU3', zacc, int16_t, [units=mG]).
-message_field('SCALED_IMU3', xgyro, int16_t, [units='mrad/s']).
-message_field('SCALED_IMU3', ygyro, int16_t, [units='mrad/s']).
-message_field('SCALED_IMU3', zgyro, int16_t, [units='mrad/s']).
-message_field('SCALED_IMU3', xmag, int16_t, [units=mgauss]).
-message_field('SCALED_IMU3', ymag, int16_t, [units=mgauss]).
-message_field('SCALED_IMU3', zmag, int16_t, [units=mgauss]).
-message_field('SCALED_IMU3', temperature, int16_t, [units=cdegC, invalid='0']).
-message_field('DATA_TRANSMISSION_HANDSHAKE', type, uint8_t, [enum='MAVLINK_DATA_STREAM_TYPE']).
-message_field('DATA_TRANSMISSION_HANDSHAKE', size, uint32_t, [units=bytes]).
-message_field('DATA_TRANSMISSION_HANDSHAKE', width, uint16_t, []).
-message_field('DATA_TRANSMISSION_HANDSHAKE', height, uint16_t, []).
-message_field('DATA_TRANSMISSION_HANDSHAKE', packets, uint16_t, []).
-message_field('DATA_TRANSMISSION_HANDSHAKE', payload, uint8_t, [units=bytes]).
-message_field('DATA_TRANSMISSION_HANDSHAKE', jpg_quality, uint8_t, [units='%']).
-message_field('ENCAPSULATED_DATA', seqnr, uint16_t, []).
-message_field('ENCAPSULATED_DATA', data, 'uint8_t[253]', []).
-message_field('DISTANCE_SENSOR', time_boot_ms, uint32_t, [units=ms]).
-message_field('DISTANCE_SENSOR', min_distance, uint16_t, [units=cm]).
-message_field('DISTANCE_SENSOR', max_distance, uint16_t, [units=cm]).
-message_field('DISTANCE_SENSOR', current_distance, uint16_t, [units=cm]).
-message_field('DISTANCE_SENSOR', type, uint8_t, [enum='MAV_DISTANCE_SENSOR']).
-message_field('DISTANCE_SENSOR', id, uint8_t, [instance=true]).
-message_field('DISTANCE_SENSOR', orientation, uint8_t, [enum='MAV_SENSOR_ORIENTATION']).
-message_field('DISTANCE_SENSOR', covariance, uint8_t, [units='cm^2', invalid='UINT8_MAX']).
+message_field('HIL_STATE_QUATERNION', lat, int(32), [units=degE7]).
+message_field('HIL_STATE_QUATERNION', lon, int(32), [units=degE7]).
+message_field('HIL_STATE_QUATERNION', alt, int(32), [units=mm]).
+message_field('HIL_STATE_QUATERNION', vx, int(16), [units='cm/s']).
+message_field('HIL_STATE_QUATERNION', vy, int(16), [units='cm/s']).
+message_field('HIL_STATE_QUATERNION', vz, int(16), [units='cm/s']).
+message_field('HIL_STATE_QUATERNION', ind_airspeed, uint(16), [units='cm/s']).
+message_field('HIL_STATE_QUATERNION', true_airspeed, uint(16), [units='cm/s']).
+message_field('HIL_STATE_QUATERNION', xacc, int(16), [units=mG]).
+message_field('HIL_STATE_QUATERNION', yacc, int(16), [units=mG]).
+message_field('HIL_STATE_QUATERNION', zacc, int(16), [units=mG]).
+message_field('SCALED_IMU2', time_boot_ms, uint(32), [units=ms]).
+message_field('SCALED_IMU2', xacc, int(16), [units=mG]).
+message_field('SCALED_IMU2', yacc, int(16), [units=mG]).
+message_field('SCALED_IMU2', zacc, int(16), [units=mG]).
+message_field('SCALED_IMU2', xgyro, int(16), [units='mrad/s']).
+message_field('SCALED_IMU2', ygyro, int(16), [units='mrad/s']).
+message_field('SCALED_IMU2', zgyro, int(16), [units='mrad/s']).
+message_field('SCALED_IMU2', xmag, int(16), [units=mgauss]).
+message_field('SCALED_IMU2', ymag, int(16), [units=mgauss]).
+message_field('SCALED_IMU2', zmag, int(16), [units=mgauss]).
+message_field('SCALED_IMU2', temperature, int(16), [units=cdegC, invalid='0']).
+message_field('LOG_REQUEST_LIST', target_system, uint(8), []).
+message_field('LOG_REQUEST_LIST', target_component, uint(8), []).
+message_field('LOG_REQUEST_LIST', start, uint(16), []).
+message_field('LOG_REQUEST_LIST', end, uint(16), []).
+message_field('LOG_ENTRY', id, uint(16), []).
+message_field('LOG_ENTRY', num_logs, uint(16), []).
+message_field('LOG_ENTRY', last_log_num, uint(16), []).
+message_field('LOG_ENTRY', time_utc, uint(32), [units=s, invalid='0']).
+message_field('LOG_ENTRY', size, uint(32), [units=bytes]).
+message_field('LOG_REQUEST_DATA', target_system, uint(8), []).
+message_field('LOG_REQUEST_DATA', target_component, uint(8), []).
+message_field('LOG_REQUEST_DATA', id, uint(16), []).
+message_field('LOG_REQUEST_DATA', ofs, uint(32), []).
+message_field('LOG_REQUEST_DATA', count, uint(32), [units=bytes]).
+message_field('LOG_DATA', id, uint(16), []).
+message_field('LOG_DATA', ofs, uint(32), []).
+message_field('LOG_DATA', count, uint(8), [units=bytes]).
+message_field('LOG_DATA', data, uint(8), []).
+message_field('LOG_ERASE', target_system, uint(8), []).
+message_field('LOG_ERASE', target_component, uint(8), []).
+message_field('LOG_REQUEST_END', target_system, uint(8), []).
+message_field('LOG_REQUEST_END', target_component, uint(8), []).
+message_field('GPS_INJECT_DATA', target_system, uint(8), []).
+message_field('GPS_INJECT_DATA', target_component, uint(8), []).
+message_field('GPS_INJECT_DATA', len, uint(8), [units=bytes]).
+message_field('GPS_INJECT_DATA', data, uint(8), []).
+message_field('GPS2_RAW', time_usec, uint(64), [units=us]).
+message_field('GPS2_RAW', fix_type, uint(8), [enum='GPS_FIX_TYPE']).
+message_field('GPS2_RAW', lat, int(32), [units=degE7]).
+message_field('GPS2_RAW', lon, int(32), [units=degE7]).
+message_field('GPS2_RAW', alt, int(32), [units=mm]).
+message_field('GPS2_RAW', eph, uint(16), [invalid='UINT16_MAX']).
+message_field('GPS2_RAW', epv, uint(16), [invalid='UINT16_MAX']).
+message_field('GPS2_RAW', vel, uint(16), [units='cm/s', invalid='UINT16_MAX']).
+message_field('GPS2_RAW', cog, uint(16), [units=cdeg, invalid='UINT16_MAX']).
+message_field('GPS2_RAW', satellites_visible, uint(8), [invalid='UINT8_MAX']).
+message_field('GPS2_RAW', dgps_numch, uint(8), []).
+message_field('GPS2_RAW', dgps_age, uint(32), [units=ms]).
+message_field('GPS2_RAW', yaw, uint(16), [units=cdeg, invalid='0']).
+message_field('GPS2_RAW', alt_ellipsoid, int(32), [units=mm]).
+message_field('GPS2_RAW', h_acc, uint(32), [units=mm]).
+message_field('GPS2_RAW', v_acc, uint(32), [units=mm]).
+message_field('GPS2_RAW', vel_acc, uint(32), [units=mm]).
+message_field('GPS2_RAW', hdg_acc, uint(32), [units=degE5]).
+message_field('POWER_STATUS', 'Vcc', uint(16), [units=mV]).
+message_field('POWER_STATUS', 'Vservo', uint(16), [units=mV]).
+message_field('POWER_STATUS', flags, uint(16), [enum='MAV_POWER_STATUS', display=bitmask]).
+message_field('SERIAL_CONTROL', device, uint(8), [enum='SERIAL_CONTROL_DEV']).
+message_field('SERIAL_CONTROL', flags, uint(8), [enum='SERIAL_CONTROL_FLAG', display=bitmask]).
+message_field('SERIAL_CONTROL', timeout, uint(16), [units=ms]).
+message_field('SERIAL_CONTROL', baudrate, uint(32), [units='bits/s']).
+message_field('SERIAL_CONTROL', count, uint(8), [units=bytes]).
+message_field('SERIAL_CONTROL', data, uint(8), []).
+message_field('SERIAL_CONTROL', target_system, uint(8), []).
+message_field('SERIAL_CONTROL', target_component, uint(8), []).
+message_field('GPS_RTK', time_last_baseline_ms, uint(32), [units=ms]).
+message_field('GPS_RTK', rtk_receiver_id, uint(8), []).
+message_field('GPS_RTK', wn, uint(16), []).
+message_field('GPS_RTK', tow, uint(32), [units=ms]).
+message_field('GPS_RTK', rtk_health, uint(8), []).
+message_field('GPS_RTK', rtk_rate, uint(8), [units='Hz']).
+message_field('GPS_RTK', nsats, uint(8), []).
+message_field('GPS_RTK', baseline_coords_type, uint(8), [enum='RTK_BASELINE_COORDINATE_SYSTEM']).
+message_field('GPS_RTK', baseline_a_mm, int(32), [units=mm]).
+message_field('GPS_RTK', baseline_b_mm, int(32), [units=mm]).
+message_field('GPS_RTK', baseline_c_mm, int(32), [units=mm]).
+message_field('GPS_RTK', accuracy, uint(32), []).
+message_field('GPS_RTK', iar_num_hypotheses, int(32), []).
+message_field('GPS2_RTK', time_last_baseline_ms, uint(32), [units=ms]).
+message_field('GPS2_RTK', rtk_receiver_id, uint(8), []).
+message_field('GPS2_RTK', wn, uint(16), []).
+message_field('GPS2_RTK', tow, uint(32), [units=ms]).
+message_field('GPS2_RTK', rtk_health, uint(8), []).
+message_field('GPS2_RTK', rtk_rate, uint(8), [units='Hz']).
+message_field('GPS2_RTK', nsats, uint(8), []).
+message_field('GPS2_RTK', baseline_coords_type, uint(8), [enum='RTK_BASELINE_COORDINATE_SYSTEM']).
+message_field('GPS2_RTK', baseline_a_mm, int(32), [units=mm]).
+message_field('GPS2_RTK', baseline_b_mm, int(32), [units=mm]).
+message_field('GPS2_RTK', baseline_c_mm, int(32), [units=mm]).
+message_field('GPS2_RTK', accuracy, uint(32), []).
+message_field('GPS2_RTK', iar_num_hypotheses, int(32), []).
+message_field('SCALED_IMU3', time_boot_ms, uint(32), [units=ms]).
+message_field('SCALED_IMU3', xacc, int(16), [units=mG]).
+message_field('SCALED_IMU3', yacc, int(16), [units=mG]).
+message_field('SCALED_IMU3', zacc, int(16), [units=mG]).
+message_field('SCALED_IMU3', xgyro, int(16), [units='mrad/s']).
+message_field('SCALED_IMU3', ygyro, int(16), [units='mrad/s']).
+message_field('SCALED_IMU3', zgyro, int(16), [units='mrad/s']).
+message_field('SCALED_IMU3', xmag, int(16), [units=mgauss]).
+message_field('SCALED_IMU3', ymag, int(16), [units=mgauss]).
+message_field('SCALED_IMU3', zmag, int(16), [units=mgauss]).
+message_field('SCALED_IMU3', temperature, int(16), [units=cdegC, invalid='0']).
+message_field('DATA_TRANSMISSION_HANDSHAKE', type, uint(8), [enum='MAVLINK_DATA_STREAM_TYPE']).
+message_field('DATA_TRANSMISSION_HANDSHAKE', size, uint(32), [units=bytes]).
+message_field('DATA_TRANSMISSION_HANDSHAKE', width, uint(16), []).
+message_field('DATA_TRANSMISSION_HANDSHAKE', height, uint(16), []).
+message_field('DATA_TRANSMISSION_HANDSHAKE', packets, uint(16), []).
+message_field('DATA_TRANSMISSION_HANDSHAKE', payload, uint(8), [units=bytes]).
+message_field('DATA_TRANSMISSION_HANDSHAKE', jpg_quality, uint(8), [units='%']).
+message_field('ENCAPSULATED_DATA', seqnr, uint(16), []).
+message_field('ENCAPSULATED_DATA', data, uint(8), []).
+message_field('DISTANCE_SENSOR', time_boot_ms, uint(32), [units=ms]).
+message_field('DISTANCE_SENSOR', min_distance, uint(16), [units=cm]).
+message_field('DISTANCE_SENSOR', max_distance, uint(16), [units=cm]).
+message_field('DISTANCE_SENSOR', current_distance, uint(16), [units=cm]).
+message_field('DISTANCE_SENSOR', type, uint(8), [enum='MAV_DISTANCE_SENSOR']).
+message_field('DISTANCE_SENSOR', id, uint(8), [instance=true]).
+message_field('DISTANCE_SENSOR', orientation, uint(8), [enum='MAV_SENSOR_ORIENTATION']).
+message_field('DISTANCE_SENSOR', covariance, uint(8), [units='cm^2', invalid='UINT8_MAX']).
 message_field('DISTANCE_SENSOR', horizontal_fov, float, [units=rad, invalid='0']).
 message_field('DISTANCE_SENSOR', vertical_fov, float, [units=rad, invalid='0']).
-message_field('DISTANCE_SENSOR', quaternion, 'float[4]', [invalid='[0]']).
-message_field('DISTANCE_SENSOR', signal_quality, uint8_t, [units='%', invalid='0']).
-message_field('TERRAIN_REQUEST', lat, int32_t, [units=degE7]).
-message_field('TERRAIN_REQUEST', lon, int32_t, [units=degE7]).
-message_field('TERRAIN_REQUEST', grid_spacing, uint16_t, [units=m]).
-message_field('TERRAIN_REQUEST', mask, uint64_t, [display=bitmask, print_format='0x%07x']).
-message_field('TERRAIN_DATA', lat, int32_t, [units=degE7]).
-message_field('TERRAIN_DATA', lon, int32_t, [units=degE7]).
-message_field('TERRAIN_DATA', grid_spacing, uint16_t, [units=m]).
-message_field('TERRAIN_DATA', gridbit, uint8_t, []).
-message_field('TERRAIN_DATA', data, 'int16_t[16]', [units=m]).
-message_field('TERRAIN_CHECK', lat, int32_t, [units=degE7]).
-message_field('TERRAIN_CHECK', lon, int32_t, [units=degE7]).
-message_field('TERRAIN_REPORT', lat, int32_t, [units=degE7]).
-message_field('TERRAIN_REPORT', lon, int32_t, [units=degE7]).
-message_field('TERRAIN_REPORT', spacing, uint16_t, []).
+message_field('DISTANCE_SENSOR', quaternion, float, [invalid='[0]']).
+message_field('DISTANCE_SENSOR', signal_quality, uint(8), [units='%', invalid='0']).
+message_field('TERRAIN_REQUEST', lat, int(32), [units=degE7]).
+message_field('TERRAIN_REQUEST', lon, int(32), [units=degE7]).
+message_field('TERRAIN_REQUEST', grid_spacing, uint(16), [units=m]).
+message_field('TERRAIN_REQUEST', mask, uint(64), [display=bitmask, print_format='0x%07x']).
+message_field('TERRAIN_DATA', lat, int(32), [units=degE7]).
+message_field('TERRAIN_DATA', lon, int(32), [units=degE7]).
+message_field('TERRAIN_DATA', grid_spacing, uint(16), [units=m]).
+message_field('TERRAIN_DATA', gridbit, uint(8), []).
+message_field('TERRAIN_DATA', data, int(16), [units=m]).
+message_field('TERRAIN_CHECK', lat, int(32), [units=degE7]).
+message_field('TERRAIN_CHECK', lon, int(32), [units=degE7]).
+message_field('TERRAIN_REPORT', lat, int(32), [units=degE7]).
+message_field('TERRAIN_REPORT', lon, int(32), [units=degE7]).
+message_field('TERRAIN_REPORT', spacing, uint(16), []).
 message_field('TERRAIN_REPORT', terrain_height, float, [units=m]).
 message_field('TERRAIN_REPORT', current_height, float, [units=m]).
-message_field('TERRAIN_REPORT', pending, uint16_t, []).
-message_field('TERRAIN_REPORT', loaded, uint16_t, []).
-message_field('SCALED_PRESSURE2', time_boot_ms, uint32_t, [units=ms]).
+message_field('TERRAIN_REPORT', pending, uint(16), []).
+message_field('TERRAIN_REPORT', loaded, uint(16), []).
+message_field('SCALED_PRESSURE2', time_boot_ms, uint(32), [units=ms]).
 message_field('SCALED_PRESSURE2', press_abs, float, [units=hPa]).
 message_field('SCALED_PRESSURE2', press_diff, float, [units=hPa]).
-message_field('SCALED_PRESSURE2', temperature, int16_t, [units=cdegC]).
-message_field('SCALED_PRESSURE2', temperature_press_diff, int16_t, [units=cdegC, invalid='0']).
-message_field('ATT_POS_MOCAP', time_usec, uint64_t, [units=us]).
-message_field('ATT_POS_MOCAP', q, 'float[4]', []).
+message_field('SCALED_PRESSURE2', temperature, int(16), [units=cdegC]).
+message_field('SCALED_PRESSURE2', temperature_press_diff, int(16), [units=cdegC, invalid='0']).
+message_field('ATT_POS_MOCAP', time_usec, uint(64), [units=us]).
+message_field('ATT_POS_MOCAP', q, float, []).
 message_field('ATT_POS_MOCAP', x, float, [units=m]).
 message_field('ATT_POS_MOCAP', y, float, [units=m]).
 message_field('ATT_POS_MOCAP', z, float, [units=m]).
-message_field('ATT_POS_MOCAP', covariance, 'float[21]', [invalid='[NaN:]']).
-message_field('SET_ACTUATOR_CONTROL_TARGET', time_usec, uint64_t, [units=us]).
-message_field('SET_ACTUATOR_CONTROL_TARGET', group_mlx, uint8_t, []).
-message_field('SET_ACTUATOR_CONTROL_TARGET', target_system, uint8_t, []).
-message_field('SET_ACTUATOR_CONTROL_TARGET', target_component, uint8_t, []).
-message_field('SET_ACTUATOR_CONTROL_TARGET', controls, 'float[8]', []).
-message_field('ACTUATOR_CONTROL_TARGET', time_usec, uint64_t, [units=us]).
-message_field('ACTUATOR_CONTROL_TARGET', group_mlx, uint8_t, []).
-message_field('ACTUATOR_CONTROL_TARGET', controls, 'float[8]', []).
-message_field('ALTITUDE', time_usec, uint64_t, [units=us]).
+message_field('ATT_POS_MOCAP', covariance, float, [invalid='[NaN:]']).
+message_field('SET_ACTUATOR_CONTROL_TARGET', time_usec, uint(64), [units=us]).
+message_field('SET_ACTUATOR_CONTROL_TARGET', group_mlx, uint(8), []).
+message_field('SET_ACTUATOR_CONTROL_TARGET', target_system, uint(8), []).
+message_field('SET_ACTUATOR_CONTROL_TARGET', target_component, uint(8), []).
+message_field('SET_ACTUATOR_CONTROL_TARGET', controls, float, []).
+message_field('ACTUATOR_CONTROL_TARGET', time_usec, uint(64), [units=us]).
+message_field('ACTUATOR_CONTROL_TARGET', group_mlx, uint(8), []).
+message_field('ACTUATOR_CONTROL_TARGET', controls, float, []).
+message_field('ALTITUDE', time_usec, uint(64), [units=us]).
 message_field('ALTITUDE', altitude_monotonic, float, [units=m]).
 message_field('ALTITUDE', altitude_amsl, float, [units=m]).
 message_field('ALTITUDE', altitude_local, float, [units=m]).
 message_field('ALTITUDE', altitude_relative, float, [units=m]).
 message_field('ALTITUDE', altitude_terrain, float, [units=m]).
 message_field('ALTITUDE', bottom_clearance, float, [units=m]).
-message_field('RESOURCE_REQUEST', request_id, uint8_t, []).
-message_field('RESOURCE_REQUEST', uri_type, uint8_t, []).
-message_field('RESOURCE_REQUEST', uri, 'uint8_t[120]', []).
-message_field('RESOURCE_REQUEST', transfer_type, uint8_t, []).
-message_field('RESOURCE_REQUEST', storage, 'uint8_t[120]', []).
-message_field('SCALED_PRESSURE3', time_boot_ms, uint32_t, [units=ms]).
+message_field('RESOURCE_REQUEST', request_id, uint(8), []).
+message_field('RESOURCE_REQUEST', uri_type, uint(8), []).
+message_field('RESOURCE_REQUEST', uri, uint(8), []).
+message_field('RESOURCE_REQUEST', transfer_type, uint(8), []).
+message_field('RESOURCE_REQUEST', storage, uint(8), []).
+message_field('SCALED_PRESSURE3', time_boot_ms, uint(32), [units=ms]).
 message_field('SCALED_PRESSURE3', press_abs, float, [units=hPa]).
 message_field('SCALED_PRESSURE3', press_diff, float, [units=hPa]).
-message_field('SCALED_PRESSURE3', temperature, int16_t, [units=cdegC]).
-message_field('SCALED_PRESSURE3', temperature_press_diff, int16_t, [units=cdegC, invalid='0']).
-message_field('FOLLOW_TARGET', timestamp, uint64_t, [units=ms]).
-message_field('FOLLOW_TARGET', est_capabilities, uint8_t, []).
-message_field('FOLLOW_TARGET', lat, int32_t, [units=degE7]).
-message_field('FOLLOW_TARGET', lon, int32_t, [units=degE7]).
+message_field('SCALED_PRESSURE3', temperature, int(16), [units=cdegC]).
+message_field('SCALED_PRESSURE3', temperature_press_diff, int(16), [units=cdegC, invalid='0']).
+message_field('FOLLOW_TARGET', timestamp, uint(64), [units=ms]).
+message_field('FOLLOW_TARGET', est_capabilities, uint(8), []).
+message_field('FOLLOW_TARGET', lat, int(32), [units=degE7]).
+message_field('FOLLOW_TARGET', lon, int(32), [units=degE7]).
 message_field('FOLLOW_TARGET', alt, float, [units=m]).
-message_field('FOLLOW_TARGET', vel, 'float[3]', [units='m/s', invalid='[0]']).
-message_field('FOLLOW_TARGET', acc, 'float[3]', [units='m/s/s', invalid='[0]']).
-message_field('FOLLOW_TARGET', attitude_q, 'float[4]', [invalid='[0]']).
-message_field('FOLLOW_TARGET', rates, 'float[3]', [invalid='[0]']).
-message_field('FOLLOW_TARGET', position_cov, 'float[3]', []).
-message_field('FOLLOW_TARGET', custom_state, uint64_t, []).
-message_field('CONTROL_SYSTEM_STATE', time_usec, uint64_t, [units=us]).
+message_field('FOLLOW_TARGET', vel, float, [units='m/s', invalid='[0]']).
+message_field('FOLLOW_TARGET', acc, float, [units='m/s/s', invalid='[0]']).
+message_field('FOLLOW_TARGET', attitude_q, float, [invalid='[0]']).
+message_field('FOLLOW_TARGET', rates, float, [invalid='[0]']).
+message_field('FOLLOW_TARGET', position_cov, float, []).
+message_field('FOLLOW_TARGET', custom_state, uint(64), []).
+message_field('CONTROL_SYSTEM_STATE', time_usec, uint(64), [units=us]).
 message_field('CONTROL_SYSTEM_STATE', x_acc, float, [units='m/s/s']).
 message_field('CONTROL_SYSTEM_STATE', y_acc, float, [units='m/s/s']).
 message_field('CONTROL_SYSTEM_STATE', z_acc, float, [units='m/s/s']).
@@ -8042,41 +8053,41 @@ message_field('CONTROL_SYSTEM_STATE', x_pos, float, [units=m]).
 message_field('CONTROL_SYSTEM_STATE', y_pos, float, [units=m]).
 message_field('CONTROL_SYSTEM_STATE', z_pos, float, [units=m]).
 message_field('CONTROL_SYSTEM_STATE', airspeed, float, [units='m/s', invalid='-1']).
-message_field('CONTROL_SYSTEM_STATE', vel_variance, 'float[3]', []).
-message_field('CONTROL_SYSTEM_STATE', pos_variance, 'float[3]', []).
-message_field('CONTROL_SYSTEM_STATE', q, 'float[4]', []).
+message_field('CONTROL_SYSTEM_STATE', vel_variance, float, []).
+message_field('CONTROL_SYSTEM_STATE', pos_variance, float, []).
+message_field('CONTROL_SYSTEM_STATE', q, float, []).
 message_field('CONTROL_SYSTEM_STATE', roll_rate, float, [units='rad/s']).
 message_field('CONTROL_SYSTEM_STATE', pitch_rate, float, [units='rad/s']).
 message_field('CONTROL_SYSTEM_STATE', yaw_rate, float, [units='rad/s']).
-message_field('BATTERY_STATUS', id, uint8_t, [instance=true]).
-message_field('BATTERY_STATUS', battery_function, uint8_t, [enum='MAV_BATTERY_FUNCTION']).
-message_field('BATTERY_STATUS', type, uint8_t, [enum='MAV_BATTERY_TYPE']).
-message_field('BATTERY_STATUS', temperature, int16_t, [units=cdegC, invalid='INT16_MAX']).
-message_field('BATTERY_STATUS', voltages, 'uint16_t[10]', [units=mV, invalid='[UINT16_MAX]']).
-message_field('BATTERY_STATUS', current_battery, int16_t, [units=cA, invalid='-1']).
-message_field('BATTERY_STATUS', current_consumed, int32_t, [units=mAh, invalid='-1']).
-message_field('BATTERY_STATUS', energy_consumed, int32_t, [units=hJ, invalid='-1']).
-message_field('BATTERY_STATUS', battery_remaining, int8_t, [units='%', invalid='-1']).
-message_field('BATTERY_STATUS', time_remaining, int32_t, [units=s, invalid='0']).
-message_field('BATTERY_STATUS', charge_state, uint8_t, [enum='MAV_BATTERY_CHARGE_STATE']).
-message_field('BATTERY_STATUS', voltages_ext, 'uint16_t[4]', [units=mV, invalid='[0]']).
-message_field('BATTERY_STATUS', mode, uint8_t, [enum='MAV_BATTERY_MODE']).
-message_field('BATTERY_STATUS', fault_bitmask, uint32_t, [display=bitmask, enum='MAV_BATTERY_FAULT']).
-message_field('AUTOPILOT_VERSION', capabilities, uint64_t, [enum='MAV_PROTOCOL_CAPABILITY', display=bitmask]).
-message_field('AUTOPILOT_VERSION', flight_sw_version, uint32_t, []).
-message_field('AUTOPILOT_VERSION', middleware_sw_version, uint32_t, []).
-message_field('AUTOPILOT_VERSION', os_sw_version, uint32_t, []).
-message_field('AUTOPILOT_VERSION', board_version, uint32_t, []).
-message_field('AUTOPILOT_VERSION', flight_custom_version, 'uint8_t[8]', []).
-message_field('AUTOPILOT_VERSION', middleware_custom_version, 'uint8_t[8]', []).
-message_field('AUTOPILOT_VERSION', os_custom_version, 'uint8_t[8]', []).
-message_field('AUTOPILOT_VERSION', vendor_id, uint16_t, []).
-message_field('AUTOPILOT_VERSION', product_id, uint16_t, []).
-message_field('AUTOPILOT_VERSION', uid, uint64_t, []).
-message_field('AUTOPILOT_VERSION', uid2, 'uint8_t[18]', []).
-message_field('LANDING_TARGET', time_usec, uint64_t, [units=us]).
-message_field('LANDING_TARGET', target_num, uint8_t, []).
-message_field('LANDING_TARGET', frame, uint8_t, [enum='MAV_FRAME']).
+message_field('BATTERY_STATUS', id, uint(8), [instance=true]).
+message_field('BATTERY_STATUS', battery_function, uint(8), [enum='MAV_BATTERY_FUNCTION']).
+message_field('BATTERY_STATUS', type, uint(8), [enum='MAV_BATTERY_TYPE']).
+message_field('BATTERY_STATUS', temperature, int(16), [units=cdegC, invalid='INT16_MAX']).
+message_field('BATTERY_STATUS', voltages, uint(16), [units=mV, invalid='[UINT16_MAX]']).
+message_field('BATTERY_STATUS', current_battery, int(16), [units=cA, invalid='-1']).
+message_field('BATTERY_STATUS', current_consumed, int(32), [units=mAh, invalid='-1']).
+message_field('BATTERY_STATUS', energy_consumed, int(32), [units=hJ, invalid='-1']).
+message_field('BATTERY_STATUS', battery_remaining, int(8), [units='%', invalid='-1']).
+message_field('BATTERY_STATUS', time_remaining, int(32), [units=s, invalid='0']).
+message_field('BATTERY_STATUS', charge_state, uint(8), [enum='MAV_BATTERY_CHARGE_STATE']).
+message_field('BATTERY_STATUS', voltages_ext, uint(16), [units=mV, invalid='[0]']).
+message_field('BATTERY_STATUS', mode, uint(8), [enum='MAV_BATTERY_MODE']).
+message_field('BATTERY_STATUS', fault_bitmask, uint(32), [display=bitmask, enum='MAV_BATTERY_FAULT']).
+message_field('AUTOPILOT_VERSION', capabilities, uint(64), [enum='MAV_PROTOCOL_CAPABILITY', display=bitmask]).
+message_field('AUTOPILOT_VERSION', flight_sw_version, uint(32), []).
+message_field('AUTOPILOT_VERSION', middleware_sw_version, uint(32), []).
+message_field('AUTOPILOT_VERSION', os_sw_version, uint(32), []).
+message_field('AUTOPILOT_VERSION', board_version, uint(32), []).
+message_field('AUTOPILOT_VERSION', flight_custom_version, uint(8), []).
+message_field('AUTOPILOT_VERSION', middleware_custom_version, uint(8), []).
+message_field('AUTOPILOT_VERSION', os_custom_version, uint(8), []).
+message_field('AUTOPILOT_VERSION', vendor_id, uint(16), []).
+message_field('AUTOPILOT_VERSION', product_id, uint(16), []).
+message_field('AUTOPILOT_VERSION', uid, uint(64), []).
+message_field('AUTOPILOT_VERSION', uid2, uint(8), []).
+message_field('LANDING_TARGET', time_usec, uint(64), [units=us]).
+message_field('LANDING_TARGET', target_num, uint(8), []).
+message_field('LANDING_TARGET', frame, uint(8), [enum='MAV_FRAME']).
 message_field('LANDING_TARGET', angle_x, float, [units=rad]).
 message_field('LANDING_TARGET', angle_y, float, [units=rad]).
 message_field('LANDING_TARGET', distance, float, [units=m]).
@@ -8085,18 +8096,18 @@ message_field('LANDING_TARGET', size_y, float, [units=rad]).
 message_field('LANDING_TARGET', x, float, [units=m]).
 message_field('LANDING_TARGET', y, float, [units=m]).
 message_field('LANDING_TARGET', z, float, [units=m]).
-message_field('LANDING_TARGET', q, 'float[4]', []).
-message_field('LANDING_TARGET', type, uint8_t, [enum='LANDING_TARGET_TYPE']).
-message_field('LANDING_TARGET', position_valid, uint8_t, [invalid='0']).
-message_field('FENCE_STATUS', breach_status, uint8_t, []).
-message_field('FENCE_STATUS', breach_count, uint16_t, []).
-message_field('FENCE_STATUS', breach_type, uint8_t, [enum='FENCE_BREACH']).
-message_field('FENCE_STATUS', breach_time, uint32_t, [units=ms]).
-message_field('FENCE_STATUS', breach_mitigation, uint8_t, [enum='FENCE_MITIGATE']).
-message_field('MAG_CAL_REPORT', compass_id, uint8_t, [instance=true]).
-message_field('MAG_CAL_REPORT', cal_mask, uint8_t, [display=bitmask]).
-message_field('MAG_CAL_REPORT', cal_status, uint8_t, [enum='MAG_CAL_STATUS']).
-message_field('MAG_CAL_REPORT', autosaved, uint8_t, []).
+message_field('LANDING_TARGET', q, float, []).
+message_field('LANDING_TARGET', type, uint(8), [enum='LANDING_TARGET_TYPE']).
+message_field('LANDING_TARGET', position_valid, uint(8), [invalid='0']).
+message_field('FENCE_STATUS', breach_status, uint(8), []).
+message_field('FENCE_STATUS', breach_count, uint(16), []).
+message_field('FENCE_STATUS', breach_type, uint(8), [enum='FENCE_BREACH']).
+message_field('FENCE_STATUS', breach_time, uint(32), [units=ms]).
+message_field('FENCE_STATUS', breach_mitigation, uint(8), [enum='FENCE_MITIGATE']).
+message_field('MAG_CAL_REPORT', compass_id, uint(8), [instance=true]).
+message_field('MAG_CAL_REPORT', cal_mask, uint(8), [display=bitmask]).
+message_field('MAG_CAL_REPORT', cal_status, uint(8), [enum='MAG_CAL_STATUS']).
+message_field('MAG_CAL_REPORT', autosaved, uint(8), []).
 message_field('MAG_CAL_REPORT', fitness, float, [units=mgauss]).
 message_field('MAG_CAL_REPORT', ofs_x, float, []).
 message_field('MAG_CAL_REPORT', ofs_y, float, []).
@@ -8108,10 +8119,10 @@ message_field('MAG_CAL_REPORT', offdiag_x, float, []).
 message_field('MAG_CAL_REPORT', offdiag_y, float, []).
 message_field('MAG_CAL_REPORT', offdiag_z, float, []).
 message_field('MAG_CAL_REPORT', orientation_confidence, float, []).
-message_field('MAG_CAL_REPORT', old_orientation, uint8_t, [enum='MAV_SENSOR_ORIENTATION']).
-message_field('MAG_CAL_REPORT', new_orientation, uint8_t, [enum='MAV_SENSOR_ORIENTATION']).
+message_field('MAG_CAL_REPORT', old_orientation, uint(8), [enum='MAV_SENSOR_ORIENTATION']).
+message_field('MAG_CAL_REPORT', new_orientation, uint(8), [enum='MAV_SENSOR_ORIENTATION']).
 message_field('MAG_CAL_REPORT', scale_factor, float, []).
-message_field('EFI_STATUS', health, uint8_t, []).
+message_field('EFI_STATUS', health, uint(8), []).
 message_field('EFI_STATUS', ecu_index, float, []).
 message_field('EFI_STATUS', rpm, float, []).
 message_field('EFI_STATUS', fuel_consumed, float, [units='cm^3']).
@@ -8130,8 +8141,8 @@ message_field('EFI_STATUS', throttle_out, float, [units='%']).
 message_field('EFI_STATUS', pt_compensation, float, []).
 message_field('EFI_STATUS', ignition_voltage, float, [units='V']).
 message_field('EFI_STATUS', fuel_pressure, float, [units=kPa]).
-message_field('ESTIMATOR_STATUS', time_usec, uint64_t, [units=us]).
-message_field('ESTIMATOR_STATUS', flags, uint16_t, [enum='ESTIMATOR_STATUS_FLAGS', display=bitmask]).
+message_field('ESTIMATOR_STATUS', time_usec, uint(64), [units=us]).
+message_field('ESTIMATOR_STATUS', flags, uint(16), [enum='ESTIMATOR_STATUS_FLAGS', display=bitmask]).
 message_field('ESTIMATOR_STATUS', vel_ratio, float, []).
 message_field('ESTIMATOR_STATUS', pos_horiz_ratio, float, []).
 message_field('ESTIMATOR_STATUS', pos_vert_ratio, float, []).
@@ -8140,7 +8151,7 @@ message_field('ESTIMATOR_STATUS', hagl_ratio, float, []).
 message_field('ESTIMATOR_STATUS', tas_ratio, float, []).
 message_field('ESTIMATOR_STATUS', pos_horiz_accuracy, float, [units=m]).
 message_field('ESTIMATOR_STATUS', pos_vert_accuracy, float, [units=m]).
-message_field('WIND_COV', time_usec, uint64_t, [units=us]).
+message_field('WIND_COV', time_usec, uint(64), [units=us]).
 message_field('WIND_COV', wind_x, float, [units='m/s', invalid='NaN']).
 message_field('WIND_COV', wind_y, float, [units='m/s', invalid='NaN']).
 message_field('WIND_COV', wind_z, float, [units='m/s', invalid='NaN']).
@@ -8149,14 +8160,14 @@ message_field('WIND_COV', var_vert, float, [units='m/s', invalid='NaN']).
 message_field('WIND_COV', wind_alt, float, [units=m, invalid='NaN']).
 message_field('WIND_COV', horiz_accuracy, float, [units='m/s', invalid='0']).
 message_field('WIND_COV', vert_accuracy, float, [units='m/s', invalid='0']).
-message_field('GPS_INPUT', time_usec, uint64_t, [units=us]).
-message_field('GPS_INPUT', gps_id, uint8_t, [instance=true]).
-message_field('GPS_INPUT', ignore_flags, uint16_t, [enum='GPS_INPUT_IGNORE_FLAGS', display=bitmask]).
-message_field('GPS_INPUT', time_week_ms, uint32_t, [units=ms]).
-message_field('GPS_INPUT', time_week, uint16_t, []).
-message_field('GPS_INPUT', fix_type, uint8_t, []).
-message_field('GPS_INPUT', lat, int32_t, [units=degE7]).
-message_field('GPS_INPUT', lon, int32_t, [units=degE7]).
+message_field('GPS_INPUT', time_usec, uint(64), [units=us]).
+message_field('GPS_INPUT', gps_id, uint(8), [instance=true]).
+message_field('GPS_INPUT', ignore_flags, uint(16), [enum='GPS_INPUT_IGNORE_FLAGS', display=bitmask]).
+message_field('GPS_INPUT', time_week_ms, uint(32), [units=ms]).
+message_field('GPS_INPUT', time_week, uint(16), []).
+message_field('GPS_INPUT', fix_type, uint(8), []).
+message_field('GPS_INPUT', lat, int(32), [units=degE7]).
+message_field('GPS_INPUT', lon, int(32), [units=degE7]).
 message_field('GPS_INPUT', alt, float, [units=m]).
 message_field('GPS_INPUT', hdop, float, [invalid='UINT16_MAX']).
 message_field('GPS_INPUT', vdop, float, [invalid='UINT16_MAX']).
@@ -8166,259 +8177,259 @@ message_field('GPS_INPUT', vd, float, [units='m/s']).
 message_field('GPS_INPUT', speed_accuracy, float, [units='m/s']).
 message_field('GPS_INPUT', horiz_accuracy, float, [units=m]).
 message_field('GPS_INPUT', vert_accuracy, float, [units=m]).
-message_field('GPS_INPUT', satellites_visible, uint8_t, []).
-message_field('GPS_INPUT', yaw, uint16_t, [units=cdeg]).
-message_field('GPS_RTCM_DATA', flags, uint8_t, []).
-message_field('GPS_RTCM_DATA', len, uint8_t, [units=bytes]).
-message_field('GPS_RTCM_DATA', data, 'uint8_t[180]', []).
-message_field('HIGH_LATENCY', base_mode, uint8_t, [enum='MAV_MODE_FLAG', display=bitmask]).
-message_field('HIGH_LATENCY', custom_mode, uint32_t, [display=bitmask]).
-message_field('HIGH_LATENCY', landed_state, uint8_t, [enum='MAV_LANDED_STATE']).
-message_field('HIGH_LATENCY', roll, int16_t, [units=cdeg]).
-message_field('HIGH_LATENCY', pitch, int16_t, [units=cdeg]).
-message_field('HIGH_LATENCY', heading, uint16_t, [units=cdeg]).
-message_field('HIGH_LATENCY', throttle, int8_t, [units='%']).
-message_field('HIGH_LATENCY', heading_sp, int16_t, [units=cdeg]).
-message_field('HIGH_LATENCY', latitude, int32_t, [units=degE7]).
-message_field('HIGH_LATENCY', longitude, int32_t, [units=degE7]).
-message_field('HIGH_LATENCY', altitude_amsl, int16_t, [units=m]).
-message_field('HIGH_LATENCY', altitude_sp, int16_t, [units=m]).
-message_field('HIGH_LATENCY', airspeed, uint8_t, [units='m/s']).
-message_field('HIGH_LATENCY', airspeed_sp, uint8_t, [units='m/s']).
-message_field('HIGH_LATENCY', groundspeed, uint8_t, [units='m/s']).
-message_field('HIGH_LATENCY', climb_rate, int8_t, [units='m/s']).
-message_field('HIGH_LATENCY', gps_nsat, uint8_t, [invalid='UINT8_MAX']).
-message_field('HIGH_LATENCY', gps_fix_type, uint8_t, [enum='GPS_FIX_TYPE']).
-message_field('HIGH_LATENCY', battery_remaining, uint8_t, [units='%']).
-message_field('HIGH_LATENCY', temperature, int8_t, [units=degC]).
-message_field('HIGH_LATENCY', temperature_air, int8_t, [units=degC]).
-message_field('HIGH_LATENCY', failsafe, uint8_t, []).
-message_field('HIGH_LATENCY', wp_num, uint8_t, []).
-message_field('HIGH_LATENCY', wp_distance, uint16_t, [units=m]).
-message_field('HIGH_LATENCY2', timestamp, uint32_t, [units=ms]).
-message_field('HIGH_LATENCY2', type, uint8_t, [enum='MAV_TYPE']).
-message_field('HIGH_LATENCY2', autopilot, uint8_t, [enum='MAV_AUTOPILOT']).
-message_field('HIGH_LATENCY2', custom_mode, uint16_t, [display=bitmask]).
-message_field('HIGH_LATENCY2', latitude, int32_t, [units=degE7]).
-message_field('HIGH_LATENCY2', longitude, int32_t, [units=degE7]).
-message_field('HIGH_LATENCY2', altitude, int16_t, [units=m]).
-message_field('HIGH_LATENCY2', target_altitude, int16_t, [units=m]).
-message_field('HIGH_LATENCY2', heading, uint8_t, [units='deg/2']).
-message_field('HIGH_LATENCY2', target_heading, uint8_t, [units='deg/2']).
-message_field('HIGH_LATENCY2', target_distance, uint16_t, [units=dam]).
-message_field('HIGH_LATENCY2', throttle, uint8_t, [units='%']).
-message_field('HIGH_LATENCY2', airspeed, uint8_t, [units='m/s*5']).
-message_field('HIGH_LATENCY2', airspeed_sp, uint8_t, [units='m/s*5']).
-message_field('HIGH_LATENCY2', groundspeed, uint8_t, [units='m/s*5']).
-message_field('HIGH_LATENCY2', windspeed, uint8_t, [units='m/s*5']).
-message_field('HIGH_LATENCY2', wind_heading, uint8_t, [units='deg/2']).
-message_field('HIGH_LATENCY2', eph, uint8_t, [units=dm]).
-message_field('HIGH_LATENCY2', epv, uint8_t, [units=dm]).
-message_field('HIGH_LATENCY2', temperature_air, int8_t, [units=degC]).
-message_field('HIGH_LATENCY2', climb_rate, int8_t, [units='dm/s']).
-message_field('HIGH_LATENCY2', battery, int8_t, [units='%', invalid='-1']).
-message_field('HIGH_LATENCY2', wp_num, uint16_t, []).
-message_field('HIGH_LATENCY2', failure_flags, uint16_t, [enum='HL_FAILURE_FLAG', display=bitmask]).
-message_field('HIGH_LATENCY2', custom0, int8_t, []).
-message_field('HIGH_LATENCY2', custom1, int8_t, []).
-message_field('HIGH_LATENCY2', custom2, int8_t, []).
-message_field('VIBRATION', time_usec, uint64_t, [units=us]).
+message_field('GPS_INPUT', satellites_visible, uint(8), []).
+message_field('GPS_INPUT', yaw, uint(16), [units=cdeg]).
+message_field('GPS_RTCM_DATA', flags, uint(8), []).
+message_field('GPS_RTCM_DATA', len, uint(8), [units=bytes]).
+message_field('GPS_RTCM_DATA', data, uint(8), []).
+message_field('HIGH_LATENCY', base_mode, uint(8), [enum='MAV_MODE_FLAG', display=bitmask]).
+message_field('HIGH_LATENCY', custom_mode, uint(32), [display=bitmask]).
+message_field('HIGH_LATENCY', landed_state, uint(8), [enum='MAV_LANDED_STATE']).
+message_field('HIGH_LATENCY', roll, int(16), [units=cdeg]).
+message_field('HIGH_LATENCY', pitch, int(16), [units=cdeg]).
+message_field('HIGH_LATENCY', heading, uint(16), [units=cdeg]).
+message_field('HIGH_LATENCY', throttle, int(8), [units='%']).
+message_field('HIGH_LATENCY', heading_sp, int(16), [units=cdeg]).
+message_field('HIGH_LATENCY', latitude, int(32), [units=degE7]).
+message_field('HIGH_LATENCY', longitude, int(32), [units=degE7]).
+message_field('HIGH_LATENCY', altitude_amsl, int(16), [units=m]).
+message_field('HIGH_LATENCY', altitude_sp, int(16), [units=m]).
+message_field('HIGH_LATENCY', airspeed, uint(8), [units='m/s']).
+message_field('HIGH_LATENCY', airspeed_sp, uint(8), [units='m/s']).
+message_field('HIGH_LATENCY', groundspeed, uint(8), [units='m/s']).
+message_field('HIGH_LATENCY', climb_rate, int(8), [units='m/s']).
+message_field('HIGH_LATENCY', gps_nsat, uint(8), [invalid='UINT8_MAX']).
+message_field('HIGH_LATENCY', gps_fix_type, uint(8), [enum='GPS_FIX_TYPE']).
+message_field('HIGH_LATENCY', battery_remaining, uint(8), [units='%']).
+message_field('HIGH_LATENCY', temperature, int(8), [units=degC]).
+message_field('HIGH_LATENCY', temperature_air, int(8), [units=degC]).
+message_field('HIGH_LATENCY', failsafe, uint(8), []).
+message_field('HIGH_LATENCY', wp_num, uint(8), []).
+message_field('HIGH_LATENCY', wp_distance, uint(16), [units=m]).
+message_field('HIGH_LATENCY2', timestamp, uint(32), [units=ms]).
+message_field('HIGH_LATENCY2', type, uint(8), [enum='MAV_TYPE']).
+message_field('HIGH_LATENCY2', autopilot, uint(8), [enum='MAV_AUTOPILOT']).
+message_field('HIGH_LATENCY2', custom_mode, uint(16), [display=bitmask]).
+message_field('HIGH_LATENCY2', latitude, int(32), [units=degE7]).
+message_field('HIGH_LATENCY2', longitude, int(32), [units=degE7]).
+message_field('HIGH_LATENCY2', altitude, int(16), [units=m]).
+message_field('HIGH_LATENCY2', target_altitude, int(16), [units=m]).
+message_field('HIGH_LATENCY2', heading, uint(8), [units='deg/2']).
+message_field('HIGH_LATENCY2', target_heading, uint(8), [units='deg/2']).
+message_field('HIGH_LATENCY2', target_distance, uint(16), [units=dam]).
+message_field('HIGH_LATENCY2', throttle, uint(8), [units='%']).
+message_field('HIGH_LATENCY2', airspeed, uint(8), [units='m/s*5']).
+message_field('HIGH_LATENCY2', airspeed_sp, uint(8), [units='m/s*5']).
+message_field('HIGH_LATENCY2', groundspeed, uint(8), [units='m/s*5']).
+message_field('HIGH_LATENCY2', windspeed, uint(8), [units='m/s*5']).
+message_field('HIGH_LATENCY2', wind_heading, uint(8), [units='deg/2']).
+message_field('HIGH_LATENCY2', eph, uint(8), [units=dm]).
+message_field('HIGH_LATENCY2', epv, uint(8), [units=dm]).
+message_field('HIGH_LATENCY2', temperature_air, int(8), [units=degC]).
+message_field('HIGH_LATENCY2', climb_rate, int(8), [units='dm/s']).
+message_field('HIGH_LATENCY2', battery, int(8), [units='%', invalid='-1']).
+message_field('HIGH_LATENCY2', wp_num, uint(16), []).
+message_field('HIGH_LATENCY2', failure_flags, uint(16), [enum='HL_FAILURE_FLAG', display=bitmask]).
+message_field('HIGH_LATENCY2', custom0, int(8), []).
+message_field('HIGH_LATENCY2', custom1, int(8), []).
+message_field('HIGH_LATENCY2', custom2, int(8), []).
+message_field('VIBRATION', time_usec, uint(64), [units=us]).
 message_field('VIBRATION', vibration_x, float, []).
 message_field('VIBRATION', vibration_y, float, []).
 message_field('VIBRATION', vibration_z, float, []).
-message_field('VIBRATION', clipping_0, uint32_t, []).
-message_field('VIBRATION', clipping_1, uint32_t, []).
-message_field('VIBRATION', clipping_2, uint32_t, []).
-message_field('HOME_POSITION', latitude, int32_t, [units=degE7]).
-message_field('HOME_POSITION', longitude, int32_t, [units=degE7]).
-message_field('HOME_POSITION', altitude, int32_t, [units=mm]).
+message_field('VIBRATION', clipping_0, uint(32), []).
+message_field('VIBRATION', clipping_1, uint(32), []).
+message_field('VIBRATION', clipping_2, uint(32), []).
+message_field('HOME_POSITION', latitude, int(32), [units=degE7]).
+message_field('HOME_POSITION', longitude, int(32), [units=degE7]).
+message_field('HOME_POSITION', altitude, int(32), [units=mm]).
 message_field('HOME_POSITION', x, float, [units=m]).
 message_field('HOME_POSITION', y, float, [units=m]).
 message_field('HOME_POSITION', z, float, [units=m]).
-message_field('HOME_POSITION', q, 'float[4]', [invalid='[NaN]']).
+message_field('HOME_POSITION', q, float, [invalid='[NaN]']).
 message_field('HOME_POSITION', approach_x, float, [units=m]).
 message_field('HOME_POSITION', approach_y, float, [units=m]).
 message_field('HOME_POSITION', approach_z, float, [units=m]).
-message_field('HOME_POSITION', time_usec, uint64_t, [units=us]).
-message_field('SET_HOME_POSITION', target_system, uint8_t, []).
-message_field('SET_HOME_POSITION', latitude, int32_t, [units=degE7]).
-message_field('SET_HOME_POSITION', longitude, int32_t, [units=degE7]).
-message_field('SET_HOME_POSITION', altitude, int32_t, [units=mm]).
+message_field('HOME_POSITION', time_usec, uint(64), [units=us]).
+message_field('SET_HOME_POSITION', target_system, uint(8), []).
+message_field('SET_HOME_POSITION', latitude, int(32), [units=degE7]).
+message_field('SET_HOME_POSITION', longitude, int(32), [units=degE7]).
+message_field('SET_HOME_POSITION', altitude, int(32), [units=mm]).
 message_field('SET_HOME_POSITION', x, float, [units=m]).
 message_field('SET_HOME_POSITION', y, float, [units=m]).
 message_field('SET_HOME_POSITION', z, float, [units=m]).
-message_field('SET_HOME_POSITION', q, 'float[4]', []).
+message_field('SET_HOME_POSITION', q, float, []).
 message_field('SET_HOME_POSITION', approach_x, float, [units=m]).
 message_field('SET_HOME_POSITION', approach_y, float, [units=m]).
 message_field('SET_HOME_POSITION', approach_z, float, [units=m]).
-message_field('SET_HOME_POSITION', time_usec, uint64_t, [units=us]).
-message_field('MESSAGE_INTERVAL', message_id, uint16_t, []).
-message_field('MESSAGE_INTERVAL', interval_us, int32_t, [units=us]).
-message_field('EXTENDED_SYS_STATE', vtol_state, uint8_t, [enum='MAV_VTOL_STATE']).
-message_field('EXTENDED_SYS_STATE', landed_state, uint8_t, [enum='MAV_LANDED_STATE']).
-message_field('ADSB_VEHICLE', 'ICAO_address', uint32_t, []).
-message_field('ADSB_VEHICLE', lat, int32_t, [units=degE7]).
-message_field('ADSB_VEHICLE', lon, int32_t, [units=degE7]).
-message_field('ADSB_VEHICLE', altitude_type, uint8_t, [enum='ADSB_ALTITUDE_TYPE']).
-message_field('ADSB_VEHICLE', altitude, int32_t, [units=mm]).
-message_field('ADSB_VEHICLE', heading, uint16_t, [units=cdeg]).
-message_field('ADSB_VEHICLE', hor_velocity, uint16_t, [units='cm/s']).
-message_field('ADSB_VEHICLE', ver_velocity, int16_t, [units='cm/s']).
-message_field('ADSB_VEHICLE', callsign, 'char[9]', []).
-message_field('ADSB_VEHICLE', emitter_type, uint8_t, [enum='ADSB_EMITTER_TYPE']).
-message_field('ADSB_VEHICLE', tslc, uint8_t, [units=s]).
-message_field('ADSB_VEHICLE', flags, uint16_t, [enum='ADSB_FLAGS', display=bitmask]).
-message_field('ADSB_VEHICLE', squawk, uint16_t, []).
-message_field('COLLISION', src, uint8_t, [enum='MAV_COLLISION_SRC']).
-message_field('COLLISION', id, uint32_t, []).
-message_field('COLLISION', action, uint8_t, [enum='MAV_COLLISION_ACTION']).
-message_field('COLLISION', threat_level, uint8_t, [enum='MAV_COLLISION_THREAT_LEVEL']).
+message_field('SET_HOME_POSITION', time_usec, uint(64), [units=us]).
+message_field('MESSAGE_INTERVAL', message_id, uint(16), []).
+message_field('MESSAGE_INTERVAL', interval_us, int(32), [units=us]).
+message_field('EXTENDED_SYS_STATE', vtol_state, uint(8), [enum='MAV_VTOL_STATE']).
+message_field('EXTENDED_SYS_STATE', landed_state, uint(8), [enum='MAV_LANDED_STATE']).
+message_field('ADSB_VEHICLE', 'ICAO_address', uint(32), []).
+message_field('ADSB_VEHICLE', lat, int(32), [units=degE7]).
+message_field('ADSB_VEHICLE', lon, int(32), [units=degE7]).
+message_field('ADSB_VEHICLE', altitude_type, uint(8), [enum='ADSB_ALTITUDE_TYPE']).
+message_field('ADSB_VEHICLE', altitude, int(32), [units=mm]).
+message_field('ADSB_VEHICLE', heading, uint(16), [units=cdeg]).
+message_field('ADSB_VEHICLE', hor_velocity, uint(16), [units='cm/s']).
+message_field('ADSB_VEHICLE', ver_velocity, int(16), [units='cm/s']).
+message_field('ADSB_VEHICLE', callsign, char, []).
+message_field('ADSB_VEHICLE', emitter_type, uint(8), [enum='ADSB_EMITTER_TYPE']).
+message_field('ADSB_VEHICLE', tslc, uint(8), [units=s]).
+message_field('ADSB_VEHICLE', flags, uint(16), [enum='ADSB_FLAGS', display=bitmask]).
+message_field('ADSB_VEHICLE', squawk, uint(16), []).
+message_field('COLLISION', src, uint(8), [enum='MAV_COLLISION_SRC']).
+message_field('COLLISION', id, uint(32), []).
+message_field('COLLISION', action, uint(8), [enum='MAV_COLLISION_ACTION']).
+message_field('COLLISION', threat_level, uint(8), [enum='MAV_COLLISION_THREAT_LEVEL']).
 message_field('COLLISION', time_to_minimum_delta, float, [units=s]).
 message_field('COLLISION', altitude_minimum_delta, float, [units=m]).
 message_field('COLLISION', horizontal_minimum_delta, float, [units=m]).
-message_field('V2_EXTENSION', target_network, uint8_t, []).
-message_field('V2_EXTENSION', target_system, uint8_t, []).
-message_field('V2_EXTENSION', target_component, uint8_t, []).
-message_field('V2_EXTENSION', message_type, uint16_t, []).
-message_field('V2_EXTENSION', payload, 'uint8_t[249]', []).
-message_field('MEMORY_VECT', address, uint16_t, []).
-message_field('MEMORY_VECT', ver, uint8_t, [invalid='0']).
-message_field('MEMORY_VECT', type, uint8_t, []).
-message_field('MEMORY_VECT', value, 'int8_t[32]', []).
-message_field('DEBUG_VECT', name, 'char[10]', [instance=true]).
-message_field('DEBUG_VECT', time_usec, uint64_t, [units=us]).
+message_field('V2_EXTENSION', target_network, uint(8), []).
+message_field('V2_EXTENSION', target_system, uint(8), []).
+message_field('V2_EXTENSION', target_component, uint(8), []).
+message_field('V2_EXTENSION', message_type, uint(16), []).
+message_field('V2_EXTENSION', payload, uint(8), []).
+message_field('MEMORY_VECT', address, uint(16), []).
+message_field('MEMORY_VECT', ver, uint(8), [invalid='0']).
+message_field('MEMORY_VECT', type, uint(8), []).
+message_field('MEMORY_VECT', value, int(8), []).
+message_field('DEBUG_VECT', name, char, [instance=true]).
+message_field('DEBUG_VECT', time_usec, uint(64), [units=us]).
 message_field('DEBUG_VECT', x, float, []).
 message_field('DEBUG_VECT', y, float, []).
 message_field('DEBUG_VECT', z, float, []).
-message_field('NAMED_VALUE_FLOAT', time_boot_ms, uint32_t, [units=ms]).
-message_field('NAMED_VALUE_FLOAT', name, 'char[10]', [instance=true]).
+message_field('NAMED_VALUE_FLOAT', time_boot_ms, uint(32), [units=ms]).
+message_field('NAMED_VALUE_FLOAT', name, char, [instance=true]).
 message_field('NAMED_VALUE_FLOAT', value, float, []).
-message_field('NAMED_VALUE_INT', time_boot_ms, uint32_t, [units=ms]).
-message_field('NAMED_VALUE_INT', name, 'char[10]', [instance=true]).
-message_field('NAMED_VALUE_INT', value, int32_t, []).
-message_field('STATUSTEXT', severity, uint8_t, [enum='MAV_SEVERITY']).
-message_field('STATUSTEXT', text, 'char[50]', []).
-message_field('STATUSTEXT', id, uint16_t, []).
-message_field('STATUSTEXT', chunk_seq, uint8_t, []).
-message_field('DEBUG', time_boot_ms, uint32_t, [units=ms]).
-message_field('DEBUG', ind, uint8_t, []).
+message_field('NAMED_VALUE_INT', time_boot_ms, uint(32), [units=ms]).
+message_field('NAMED_VALUE_INT', name, char, [instance=true]).
+message_field('NAMED_VALUE_INT', value, int(32), []).
+message_field('STATUSTEXT', severity, uint(8), [enum='MAV_SEVERITY']).
+message_field('STATUSTEXT', text, char, []).
+message_field('STATUSTEXT', id, uint(16), []).
+message_field('STATUSTEXT', chunk_seq, uint(8), []).
+message_field('DEBUG', time_boot_ms, uint(32), [units=ms]).
+message_field('DEBUG', ind, uint(8), []).
 message_field('DEBUG', value, float, []).
-message_field('SETUP_SIGNING', target_system, uint8_t, []).
-message_field('SETUP_SIGNING', target_component, uint8_t, []).
-message_field('SETUP_SIGNING', secret_key, 'uint8_t[32]', []).
-message_field('SETUP_SIGNING', initial_timestamp, uint64_t, []).
-message_field('BUTTON_CHANGE', time_boot_ms, uint32_t, [units=ms]).
-message_field('BUTTON_CHANGE', last_change_ms, uint32_t, [units=ms]).
-message_field('BUTTON_CHANGE', state, uint8_t, [display=bitmask]).
-message_field('PLAY_TUNE', target_system, uint8_t, []).
-message_field('PLAY_TUNE', target_component, uint8_t, []).
-message_field('PLAY_TUNE', tune, 'char[30]', []).
-message_field('PLAY_TUNE', tune2, 'char[200]', []).
-message_field('CAMERA_INFORMATION', time_boot_ms, uint32_t, [units=ms]).
-message_field('CAMERA_INFORMATION', vendor_name, 'uint8_t[32]', []).
-message_field('CAMERA_INFORMATION', model_name, 'uint8_t[32]', []).
-message_field('CAMERA_INFORMATION', firmware_version, uint32_t, [invalid='0']).
+message_field('SETUP_SIGNING', target_system, uint(8), []).
+message_field('SETUP_SIGNING', target_component, uint(8), []).
+message_field('SETUP_SIGNING', secret_key, uint(8), []).
+message_field('SETUP_SIGNING', initial_timestamp, uint(64), []).
+message_field('BUTTON_CHANGE', time_boot_ms, uint(32), [units=ms]).
+message_field('BUTTON_CHANGE', last_change_ms, uint(32), [units=ms]).
+message_field('BUTTON_CHANGE', state, uint(8), [display=bitmask]).
+message_field('PLAY_TUNE', target_system, uint(8), []).
+message_field('PLAY_TUNE', target_component, uint(8), []).
+message_field('PLAY_TUNE', tune, char, []).
+message_field('PLAY_TUNE', tune2, char, []).
+message_field('CAMERA_INFORMATION', time_boot_ms, uint(32), [units=ms]).
+message_field('CAMERA_INFORMATION', vendor_name, uint(8), []).
+message_field('CAMERA_INFORMATION', model_name, uint(8), []).
+message_field('CAMERA_INFORMATION', firmware_version, uint(32), [invalid='0']).
 message_field('CAMERA_INFORMATION', focal_length, float, [units=mm, invalid='NaN']).
 message_field('CAMERA_INFORMATION', sensor_size_h, float, [units=mm, invalid='NaN']).
 message_field('CAMERA_INFORMATION', sensor_size_v, float, [units=mm, invalid='NaN']).
-message_field('CAMERA_INFORMATION', resolution_h, uint16_t, [units=pix, invalid='0']).
-message_field('CAMERA_INFORMATION', resolution_v, uint16_t, [units=pix, invalid='0']).
-message_field('CAMERA_INFORMATION', lens_id, uint8_t, [invalid='0']).
-message_field('CAMERA_INFORMATION', flags, uint32_t, [enum='CAMERA_CAP_FLAGS', display=bitmask]).
-message_field('CAMERA_INFORMATION', cam_definition_version, uint16_t, []).
-message_field('CAMERA_INFORMATION', cam_definition_uri, 'char[140]', []).
-message_field('CAMERA_INFORMATION', gimbal_device_id, uint8_t, [invalid='0']).
-message_field('CAMERA_SETTINGS', time_boot_ms, uint32_t, [units=ms]).
-message_field('CAMERA_SETTINGS', mode_id, uint8_t, [enum='CAMERA_MODE']).
+message_field('CAMERA_INFORMATION', resolution_h, uint(16), [units=pix, invalid='0']).
+message_field('CAMERA_INFORMATION', resolution_v, uint(16), [units=pix, invalid='0']).
+message_field('CAMERA_INFORMATION', lens_id, uint(8), [invalid='0']).
+message_field('CAMERA_INFORMATION', flags, uint(32), [enum='CAMERA_CAP_FLAGS', display=bitmask]).
+message_field('CAMERA_INFORMATION', cam_definition_version, uint(16), []).
+message_field('CAMERA_INFORMATION', cam_definition_uri, char, []).
+message_field('CAMERA_INFORMATION', gimbal_device_id, uint(8), [invalid='0']).
+message_field('CAMERA_SETTINGS', time_boot_ms, uint(32), [units=ms]).
+message_field('CAMERA_SETTINGS', mode_id, uint(8), [enum='CAMERA_MODE']).
 message_field('CAMERA_SETTINGS', zoomLevel, float, [invalid='NaN']).
 message_field('CAMERA_SETTINGS', focusLevel, float, [invalid='NaN']).
-message_field('STORAGE_INFORMATION', time_boot_ms, uint32_t, [units=ms]).
-message_field('STORAGE_INFORMATION', storage_id, uint8_t, [instance=true]).
-message_field('STORAGE_INFORMATION', storage_count, uint8_t, []).
-message_field('STORAGE_INFORMATION', status, uint8_t, [enum='STORAGE_STATUS']).
+message_field('STORAGE_INFORMATION', time_boot_ms, uint(32), [units=ms]).
+message_field('STORAGE_INFORMATION', storage_id, uint(8), [instance=true]).
+message_field('STORAGE_INFORMATION', storage_count, uint(8), []).
+message_field('STORAGE_INFORMATION', status, uint(8), [enum='STORAGE_STATUS']).
 message_field('STORAGE_INFORMATION', total_capacity, float, [units='MiB']).
 message_field('STORAGE_INFORMATION', used_capacity, float, [units='MiB']).
 message_field('STORAGE_INFORMATION', available_capacity, float, [units='MiB']).
 message_field('STORAGE_INFORMATION', read_speed, float, [units='MiB/s']).
 message_field('STORAGE_INFORMATION', write_speed, float, [units='MiB/s']).
-message_field('STORAGE_INFORMATION', type, uint8_t, [enum='STORAGE_TYPE']).
-message_field('STORAGE_INFORMATION', name, 'char[32]', []).
-message_field('STORAGE_INFORMATION', storage_usage, uint8_t, [enum='STORAGE_USAGE_FLAG']).
-message_field('CAMERA_CAPTURE_STATUS', time_boot_ms, uint32_t, [units=ms]).
-message_field('CAMERA_CAPTURE_STATUS', image_status, uint8_t, []).
-message_field('CAMERA_CAPTURE_STATUS', video_status, uint8_t, []).
+message_field('STORAGE_INFORMATION', type, uint(8), [enum='STORAGE_TYPE']).
+message_field('STORAGE_INFORMATION', name, char, []).
+message_field('STORAGE_INFORMATION', storage_usage, uint(8), [enum='STORAGE_USAGE_FLAG']).
+message_field('CAMERA_CAPTURE_STATUS', time_boot_ms, uint(32), [units=ms]).
+message_field('CAMERA_CAPTURE_STATUS', image_status, uint(8), []).
+message_field('CAMERA_CAPTURE_STATUS', video_status, uint(8), []).
 message_field('CAMERA_CAPTURE_STATUS', image_interval, float, [units=s]).
-message_field('CAMERA_CAPTURE_STATUS', recording_time_ms, uint32_t, [units=ms]).
+message_field('CAMERA_CAPTURE_STATUS', recording_time_ms, uint(32), [units=ms]).
 message_field('CAMERA_CAPTURE_STATUS', available_capacity, float, [units='MiB']).
-message_field('CAMERA_CAPTURE_STATUS', image_count, int32_t, []).
-message_field('CAMERA_IMAGE_CAPTURED', time_boot_ms, uint32_t, [units=ms]).
-message_field('CAMERA_IMAGE_CAPTURED', time_utc, uint64_t, [units=us, invalid='0']).
-message_field('CAMERA_IMAGE_CAPTURED', camera_id, uint8_t, []).
-message_field('CAMERA_IMAGE_CAPTURED', lat, int32_t, [units=degE7]).
-message_field('CAMERA_IMAGE_CAPTURED', lon, int32_t, [units=degE7]).
-message_field('CAMERA_IMAGE_CAPTURED', alt, int32_t, [units=mm]).
-message_field('CAMERA_IMAGE_CAPTURED', relative_alt, int32_t, [units=mm]).
-message_field('CAMERA_IMAGE_CAPTURED', q, 'float[4]', []).
-message_field('CAMERA_IMAGE_CAPTURED', image_index, int32_t, []).
-message_field('CAMERA_IMAGE_CAPTURED', capture_result, int8_t, []).
-message_field('CAMERA_IMAGE_CAPTURED', file_url, 'char[205]', []).
-message_field('FLIGHT_INFORMATION', time_boot_ms, uint32_t, [units=ms]).
-message_field('FLIGHT_INFORMATION', arming_time_utc, uint64_t, [units=us, invalid='0']).
-message_field('FLIGHT_INFORMATION', takeoff_time_utc, uint64_t, [units=us, invalid='0']).
-message_field('FLIGHT_INFORMATION', flight_uuid, uint64_t, []).
-message_field('MOUNT_ORIENTATION', time_boot_ms, uint32_t, [units=ms]).
+message_field('CAMERA_CAPTURE_STATUS', image_count, int(32), []).
+message_field('CAMERA_IMAGE_CAPTURED', time_boot_ms, uint(32), [units=ms]).
+message_field('CAMERA_IMAGE_CAPTURED', time_utc, uint(64), [units=us, invalid='0']).
+message_field('CAMERA_IMAGE_CAPTURED', camera_id, uint(8), []).
+message_field('CAMERA_IMAGE_CAPTURED', lat, int(32), [units=degE7]).
+message_field('CAMERA_IMAGE_CAPTURED', lon, int(32), [units=degE7]).
+message_field('CAMERA_IMAGE_CAPTURED', alt, int(32), [units=mm]).
+message_field('CAMERA_IMAGE_CAPTURED', relative_alt, int(32), [units=mm]).
+message_field('CAMERA_IMAGE_CAPTURED', q, float, []).
+message_field('CAMERA_IMAGE_CAPTURED', image_index, int(32), []).
+message_field('CAMERA_IMAGE_CAPTURED', capture_result, int(8), []).
+message_field('CAMERA_IMAGE_CAPTURED', file_url, char, []).
+message_field('FLIGHT_INFORMATION', time_boot_ms, uint(32), [units=ms]).
+message_field('FLIGHT_INFORMATION', arming_time_utc, uint(64), [units=us, invalid='0']).
+message_field('FLIGHT_INFORMATION', takeoff_time_utc, uint(64), [units=us, invalid='0']).
+message_field('FLIGHT_INFORMATION', flight_uuid, uint(64), []).
+message_field('MOUNT_ORIENTATION', time_boot_ms, uint(32), [units=ms]).
 message_field('MOUNT_ORIENTATION', roll, float, [units=deg, invalid='NaN']).
 message_field('MOUNT_ORIENTATION', pitch, float, [units=deg, invalid='NaN']).
 message_field('MOUNT_ORIENTATION', yaw, float, [units=deg, invalid='NaN']).
 message_field('MOUNT_ORIENTATION', yaw_absolute, float, [units=deg, invalid='NaN']).
-message_field('LOGGING_DATA', target_system, uint8_t, []).
-message_field('LOGGING_DATA', target_component, uint8_t, []).
-message_field('LOGGING_DATA', sequence, uint16_t, []).
-message_field('LOGGING_DATA', length, uint8_t, [units=bytes]).
-message_field('LOGGING_DATA', first_message_offset, uint8_t, [units=bytes, invalid='UINT8_MAX']).
-message_field('LOGGING_DATA', data, 'uint8_t[249]', []).
-message_field('LOGGING_DATA_ACKED', target_system, uint8_t, []).
-message_field('LOGGING_DATA_ACKED', target_component, uint8_t, []).
-message_field('LOGGING_DATA_ACKED', sequence, uint16_t, []).
-message_field('LOGGING_DATA_ACKED', length, uint8_t, [units=bytes]).
-message_field('LOGGING_DATA_ACKED', first_message_offset, uint8_t, [units=bytes, invalid='UINT8_MAX']).
-message_field('LOGGING_DATA_ACKED', data, 'uint8_t[249]', []).
-message_field('LOGGING_ACK', target_system, uint8_t, []).
-message_field('LOGGING_ACK', target_component, uint8_t, []).
-message_field('LOGGING_ACK', sequence, uint16_t, []).
-message_field('VIDEO_STREAM_INFORMATION', stream_id, uint8_t, [instance=true]).
-message_field('VIDEO_STREAM_INFORMATION', count, uint8_t, []).
-message_field('VIDEO_STREAM_INFORMATION', type, uint8_t, [enum='VIDEO_STREAM_TYPE']).
-message_field('VIDEO_STREAM_INFORMATION', flags, uint16_t, [enum='VIDEO_STREAM_STATUS_FLAGS']).
+message_field('LOGGING_DATA', target_system, uint(8), []).
+message_field('LOGGING_DATA', target_component, uint(8), []).
+message_field('LOGGING_DATA', sequence, uint(16), []).
+message_field('LOGGING_DATA', length, uint(8), [units=bytes]).
+message_field('LOGGING_DATA', first_message_offset, uint(8), [units=bytes, invalid='UINT8_MAX']).
+message_field('LOGGING_DATA', data, uint(8), []).
+message_field('LOGGING_DATA_ACKED', target_system, uint(8), []).
+message_field('LOGGING_DATA_ACKED', target_component, uint(8), []).
+message_field('LOGGING_DATA_ACKED', sequence, uint(16), []).
+message_field('LOGGING_DATA_ACKED', length, uint(8), [units=bytes]).
+message_field('LOGGING_DATA_ACKED', first_message_offset, uint(8), [units=bytes, invalid='UINT8_MAX']).
+message_field('LOGGING_DATA_ACKED', data, uint(8), []).
+message_field('LOGGING_ACK', target_system, uint(8), []).
+message_field('LOGGING_ACK', target_component, uint(8), []).
+message_field('LOGGING_ACK', sequence, uint(16), []).
+message_field('VIDEO_STREAM_INFORMATION', stream_id, uint(8), [instance=true]).
+message_field('VIDEO_STREAM_INFORMATION', count, uint(8), []).
+message_field('VIDEO_STREAM_INFORMATION', type, uint(8), [enum='VIDEO_STREAM_TYPE']).
+message_field('VIDEO_STREAM_INFORMATION', flags, uint(16), [enum='VIDEO_STREAM_STATUS_FLAGS']).
 message_field('VIDEO_STREAM_INFORMATION', framerate, float, [units='Hz']).
-message_field('VIDEO_STREAM_INFORMATION', resolution_h, uint16_t, [units=pix]).
-message_field('VIDEO_STREAM_INFORMATION', resolution_v, uint16_t, [units=pix]).
-message_field('VIDEO_STREAM_INFORMATION', bitrate, uint32_t, [units='bits/s']).
-message_field('VIDEO_STREAM_INFORMATION', rotation, uint16_t, [units=deg]).
-message_field('VIDEO_STREAM_INFORMATION', hfov, uint16_t, [units=deg]).
-message_field('VIDEO_STREAM_INFORMATION', name, 'char[32]', []).
-message_field('VIDEO_STREAM_INFORMATION', uri, 'char[160]', []).
-message_field('VIDEO_STREAM_STATUS', stream_id, uint8_t, [instance=true]).
-message_field('VIDEO_STREAM_STATUS', flags, uint16_t, [enum='VIDEO_STREAM_STATUS_FLAGS']).
+message_field('VIDEO_STREAM_INFORMATION', resolution_h, uint(16), [units=pix]).
+message_field('VIDEO_STREAM_INFORMATION', resolution_v, uint(16), [units=pix]).
+message_field('VIDEO_STREAM_INFORMATION', bitrate, uint(32), [units='bits/s']).
+message_field('VIDEO_STREAM_INFORMATION', rotation, uint(16), [units=deg]).
+message_field('VIDEO_STREAM_INFORMATION', hfov, uint(16), [units=deg]).
+message_field('VIDEO_STREAM_INFORMATION', name, char, []).
+message_field('VIDEO_STREAM_INFORMATION', uri, char, []).
+message_field('VIDEO_STREAM_STATUS', stream_id, uint(8), [instance=true]).
+message_field('VIDEO_STREAM_STATUS', flags, uint(16), [enum='VIDEO_STREAM_STATUS_FLAGS']).
 message_field('VIDEO_STREAM_STATUS', framerate, float, [units='Hz']).
-message_field('VIDEO_STREAM_STATUS', resolution_h, uint16_t, [units=pix]).
-message_field('VIDEO_STREAM_STATUS', resolution_v, uint16_t, [units=pix]).
-message_field('VIDEO_STREAM_STATUS', bitrate, uint32_t, [units='bits/s']).
-message_field('VIDEO_STREAM_STATUS', rotation, uint16_t, [units=deg]).
-message_field('VIDEO_STREAM_STATUS', hfov, uint16_t, [units=deg]).
-message_field('CAMERA_FOV_STATUS', time_boot_ms, uint32_t, [units=ms]).
-message_field('CAMERA_FOV_STATUS', lat_camera, int32_t, [units=degE7, invalid='INT32_MAX']).
-message_field('CAMERA_FOV_STATUS', lon_camera, int32_t, [units=degE7, invalid='INT32_MAX']).
-message_field('CAMERA_FOV_STATUS', alt_camera, int32_t, [units=mm, invalid='INT32_MAX']).
-message_field('CAMERA_FOV_STATUS', lat_image, int32_t, [units=degE7, invalid='INT32_MAX']).
-message_field('CAMERA_FOV_STATUS', lon_image, int32_t, [units=degE7, invalid='INT32_MAX']).
-message_field('CAMERA_FOV_STATUS', alt_image, int32_t, [units=mm, invalid='INT32_MAX']).
-message_field('CAMERA_FOV_STATUS', q, 'float[4]', []).
+message_field('VIDEO_STREAM_STATUS', resolution_h, uint(16), [units=pix]).
+message_field('VIDEO_STREAM_STATUS', resolution_v, uint(16), [units=pix]).
+message_field('VIDEO_STREAM_STATUS', bitrate, uint(32), [units='bits/s']).
+message_field('VIDEO_STREAM_STATUS', rotation, uint(16), [units=deg]).
+message_field('VIDEO_STREAM_STATUS', hfov, uint(16), [units=deg]).
+message_field('CAMERA_FOV_STATUS', time_boot_ms, uint(32), [units=ms]).
+message_field('CAMERA_FOV_STATUS', lat_camera, int(32), [units=degE7, invalid='INT32_MAX']).
+message_field('CAMERA_FOV_STATUS', lon_camera, int(32), [units=degE7, invalid='INT32_MAX']).
+message_field('CAMERA_FOV_STATUS', alt_camera, int(32), [units=mm, invalid='INT32_MAX']).
+message_field('CAMERA_FOV_STATUS', lat_image, int(32), [units=degE7, invalid='INT32_MAX']).
+message_field('CAMERA_FOV_STATUS', lon_image, int(32), [units=degE7, invalid='INT32_MAX']).
+message_field('CAMERA_FOV_STATUS', alt_image, int(32), [units=mm, invalid='INT32_MAX']).
+message_field('CAMERA_FOV_STATUS', q, float, []).
 message_field('CAMERA_FOV_STATUS', hfov, float, [units=deg, invalid='NaN']).
 message_field('CAMERA_FOV_STATUS', vfov, float, [units=deg, invalid='NaN']).
-message_field('CAMERA_TRACKING_IMAGE_STATUS', tracking_status, uint8_t, [enum='CAMERA_TRACKING_STATUS_FLAGS']).
-message_field('CAMERA_TRACKING_IMAGE_STATUS', tracking_mode, uint8_t, [enum='CAMERA_TRACKING_MODE']).
-message_field('CAMERA_TRACKING_IMAGE_STATUS', target_data, uint8_t, [enum='CAMERA_TRACKING_TARGET_DATA']).
+message_field('CAMERA_TRACKING_IMAGE_STATUS', tracking_status, uint(8), [enum='CAMERA_TRACKING_STATUS_FLAGS']).
+message_field('CAMERA_TRACKING_IMAGE_STATUS', tracking_mode, uint(8), [enum='CAMERA_TRACKING_MODE']).
+message_field('CAMERA_TRACKING_IMAGE_STATUS', target_data, uint(8), [enum='CAMERA_TRACKING_TARGET_DATA']).
 message_field('CAMERA_TRACKING_IMAGE_STATUS', point_x, float, [invalid='NaN']).
 message_field('CAMERA_TRACKING_IMAGE_STATUS', point_y, float, [invalid='NaN']).
 message_field('CAMERA_TRACKING_IMAGE_STATUS', radius, float, [invalid='NaN']).
@@ -8426,9 +8437,9 @@ message_field('CAMERA_TRACKING_IMAGE_STATUS', rec_top_x, float, [invalid='NaN'])
 message_field('CAMERA_TRACKING_IMAGE_STATUS', rec_top_y, float, [invalid='NaN']).
 message_field('CAMERA_TRACKING_IMAGE_STATUS', rec_bottom_x, float, [invalid='NaN']).
 message_field('CAMERA_TRACKING_IMAGE_STATUS', rec_bottom_y, float, [invalid='NaN']).
-message_field('CAMERA_TRACKING_GEO_STATUS', tracking_status, uint8_t, [enum='CAMERA_TRACKING_STATUS_FLAGS']).
-message_field('CAMERA_TRACKING_GEO_STATUS', lat, int32_t, [units=degE7]).
-message_field('CAMERA_TRACKING_GEO_STATUS', lon, int32_t, [units=degE7]).
+message_field('CAMERA_TRACKING_GEO_STATUS', tracking_status, uint(8), [enum='CAMERA_TRACKING_STATUS_FLAGS']).
+message_field('CAMERA_TRACKING_GEO_STATUS', lat, int(32), [units=degE7]).
+message_field('CAMERA_TRACKING_GEO_STATUS', lon, int(32), [units=degE7]).
 message_field('CAMERA_TRACKING_GEO_STATUS', alt, float, [units=m]).
 message_field('CAMERA_TRACKING_GEO_STATUS', h_acc, float, [units=m, invalid='NaN']).
 message_field('CAMERA_TRACKING_GEO_STATUS', v_acc, float, [units=m, invalid='NaN']).
@@ -8439,749 +8450,757 @@ message_field('CAMERA_TRACKING_GEO_STATUS', vel_acc, float, [units='m/s', invali
 message_field('CAMERA_TRACKING_GEO_STATUS', dist, float, [units=m, invalid='NaN']).
 message_field('CAMERA_TRACKING_GEO_STATUS', hdg, float, [units=rad, invalid='NaN']).
 message_field('CAMERA_TRACKING_GEO_STATUS', hdg_acc, float, [units=rad, invalid='NaN']).
-message_field('GIMBAL_MANAGER_INFORMATION', time_boot_ms, uint32_t, [units=ms]).
-message_field('GIMBAL_MANAGER_INFORMATION', cap_flags, uint32_t, [enum='GIMBAL_MANAGER_CAP_FLAGS', display=bitmask]).
-message_field('GIMBAL_MANAGER_INFORMATION', gimbal_device_id, uint8_t, [instance=true]).
+message_field('GIMBAL_MANAGER_INFORMATION', time_boot_ms, uint(32), [units=ms]).
+message_field('GIMBAL_MANAGER_INFORMATION', cap_flags, uint(32), [enum='GIMBAL_MANAGER_CAP_FLAGS', display=bitmask]).
+message_field('GIMBAL_MANAGER_INFORMATION', gimbal_device_id, uint(8), [instance=true]).
 message_field('GIMBAL_MANAGER_INFORMATION', roll_min, float, [units=rad]).
 message_field('GIMBAL_MANAGER_INFORMATION', roll_max, float, [units=rad]).
 message_field('GIMBAL_MANAGER_INFORMATION', pitch_min, float, [units=rad]).
 message_field('GIMBAL_MANAGER_INFORMATION', pitch_max, float, [units=rad]).
 message_field('GIMBAL_MANAGER_INFORMATION', yaw_min, float, [units=rad]).
 message_field('GIMBAL_MANAGER_INFORMATION', yaw_max, float, [units=rad]).
-message_field('GIMBAL_MANAGER_STATUS', time_boot_ms, uint32_t, [units=ms]).
-message_field('GIMBAL_MANAGER_STATUS', flags, uint32_t, [enum='GIMBAL_MANAGER_FLAGS', display=bitmask]).
-message_field('GIMBAL_MANAGER_STATUS', gimbal_device_id, uint8_t, [instance=true]).
-message_field('GIMBAL_MANAGER_STATUS', primary_control_sysid, uint8_t, []).
-message_field('GIMBAL_MANAGER_STATUS', primary_control_compid, uint8_t, []).
-message_field('GIMBAL_MANAGER_STATUS', secondary_control_sysid, uint8_t, []).
-message_field('GIMBAL_MANAGER_STATUS', secondary_control_compid, uint8_t, []).
-message_field('GIMBAL_MANAGER_SET_ATTITUDE', target_system, uint8_t, []).
-message_field('GIMBAL_MANAGER_SET_ATTITUDE', target_component, uint8_t, []).
-message_field('GIMBAL_MANAGER_SET_ATTITUDE', flags, uint32_t, [enum='GIMBAL_MANAGER_FLAGS']).
-message_field('GIMBAL_MANAGER_SET_ATTITUDE', gimbal_device_id, uint8_t, [instance=true]).
-message_field('GIMBAL_MANAGER_SET_ATTITUDE', q, 'float[4]', []).
+message_field('GIMBAL_MANAGER_STATUS', time_boot_ms, uint(32), [units=ms]).
+message_field('GIMBAL_MANAGER_STATUS', flags, uint(32), [enum='GIMBAL_MANAGER_FLAGS', display=bitmask]).
+message_field('GIMBAL_MANAGER_STATUS', gimbal_device_id, uint(8), [instance=true]).
+message_field('GIMBAL_MANAGER_STATUS', primary_control_sysid, uint(8), []).
+message_field('GIMBAL_MANAGER_STATUS', primary_control_compid, uint(8), []).
+message_field('GIMBAL_MANAGER_STATUS', secondary_control_sysid, uint(8), []).
+message_field('GIMBAL_MANAGER_STATUS', secondary_control_compid, uint(8), []).
+message_field('GIMBAL_MANAGER_SET_ATTITUDE', target_system, uint(8), []).
+message_field('GIMBAL_MANAGER_SET_ATTITUDE', target_component, uint(8), []).
+message_field('GIMBAL_MANAGER_SET_ATTITUDE', flags, uint(32), [enum='GIMBAL_MANAGER_FLAGS']).
+message_field('GIMBAL_MANAGER_SET_ATTITUDE', gimbal_device_id, uint(8), [instance=true]).
+message_field('GIMBAL_MANAGER_SET_ATTITUDE', q, float, []).
 message_field('GIMBAL_MANAGER_SET_ATTITUDE', angular_velocity_x, float, [units='rad/s', invalid='NaN']).
 message_field('GIMBAL_MANAGER_SET_ATTITUDE', angular_velocity_y, float, [units='rad/s', invalid='NaN']).
 message_field('GIMBAL_MANAGER_SET_ATTITUDE', angular_velocity_z, float, [units='rad/s', invalid='NaN']).
-message_field('GIMBAL_DEVICE_INFORMATION', time_boot_ms, uint32_t, [units=ms]).
-message_field('GIMBAL_DEVICE_INFORMATION', vendor_name, 'char[32]', []).
-message_field('GIMBAL_DEVICE_INFORMATION', model_name, 'char[32]', []).
-message_field('GIMBAL_DEVICE_INFORMATION', custom_name, 'char[32]', []).
-message_field('GIMBAL_DEVICE_INFORMATION', firmware_version, uint32_t, []).
-message_field('GIMBAL_DEVICE_INFORMATION', hardware_version, uint32_t, []).
-message_field('GIMBAL_DEVICE_INFORMATION', uid, uint64_t, [invalid='0']).
-message_field('GIMBAL_DEVICE_INFORMATION', cap_flags, uint16_t, [enum='GIMBAL_DEVICE_CAP_FLAGS', display=bitmask]).
-message_field('GIMBAL_DEVICE_INFORMATION', custom_cap_flags, uint16_t, [display=bitmask]).
+message_field('GIMBAL_DEVICE_INFORMATION', time_boot_ms, uint(32), [units=ms]).
+message_field('GIMBAL_DEVICE_INFORMATION', vendor_name, char, []).
+message_field('GIMBAL_DEVICE_INFORMATION', model_name, char, []).
+message_field('GIMBAL_DEVICE_INFORMATION', custom_name, char, []).
+message_field('GIMBAL_DEVICE_INFORMATION', firmware_version, uint(32), []).
+message_field('GIMBAL_DEVICE_INFORMATION', hardware_version, uint(32), []).
+message_field('GIMBAL_DEVICE_INFORMATION', uid, uint(64), [invalid='0']).
+message_field('GIMBAL_DEVICE_INFORMATION', cap_flags, uint(16), [enum='GIMBAL_DEVICE_CAP_FLAGS', display=bitmask]).
+message_field('GIMBAL_DEVICE_INFORMATION', custom_cap_flags, uint(16), [display=bitmask]).
 message_field('GIMBAL_DEVICE_INFORMATION', roll_min, float, [units=rad, invalid='NaN']).
 message_field('GIMBAL_DEVICE_INFORMATION', roll_max, float, [units=rad, invalid='NaN']).
 message_field('GIMBAL_DEVICE_INFORMATION', pitch_min, float, [units=rad, invalid='NaN']).
 message_field('GIMBAL_DEVICE_INFORMATION', pitch_max, float, [units=rad, invalid='NaN']).
 message_field('GIMBAL_DEVICE_INFORMATION', yaw_min, float, [units=rad, invalid='NaN']).
 message_field('GIMBAL_DEVICE_INFORMATION', yaw_max, float, [units=rad, invalid='NaN']).
-message_field('GIMBAL_DEVICE_INFORMATION', gimbal_device_id, uint8_t, [invalid='0']).
-message_field('GIMBAL_DEVICE_SET_ATTITUDE', target_system, uint8_t, []).
-message_field('GIMBAL_DEVICE_SET_ATTITUDE', target_component, uint8_t, []).
-message_field('GIMBAL_DEVICE_SET_ATTITUDE', flags, uint16_t, [enum='GIMBAL_DEVICE_FLAGS', display=bitmask]).
-message_field('GIMBAL_DEVICE_SET_ATTITUDE', q, 'float[4]', [invalid='[NaN]']).
+message_field('GIMBAL_DEVICE_INFORMATION', gimbal_device_id, uint(8), [invalid='0']).
+message_field('GIMBAL_DEVICE_SET_ATTITUDE', target_system, uint(8), []).
+message_field('GIMBAL_DEVICE_SET_ATTITUDE', target_component, uint(8), []).
+message_field('GIMBAL_DEVICE_SET_ATTITUDE', flags, uint(16), [enum='GIMBAL_DEVICE_FLAGS', display=bitmask]).
+message_field('GIMBAL_DEVICE_SET_ATTITUDE', q, float, [invalid='[NaN]']).
 message_field('GIMBAL_DEVICE_SET_ATTITUDE', angular_velocity_x, float, [units='rad/s', invalid='NaN']).
 message_field('GIMBAL_DEVICE_SET_ATTITUDE', angular_velocity_y, float, [units='rad/s', invalid='NaN']).
 message_field('GIMBAL_DEVICE_SET_ATTITUDE', angular_velocity_z, float, [units='rad/s', invalid='NaN']).
-message_field('GIMBAL_DEVICE_ATTITUDE_STATUS', target_system, uint8_t, []).
-message_field('GIMBAL_DEVICE_ATTITUDE_STATUS', target_component, uint8_t, []).
-message_field('GIMBAL_DEVICE_ATTITUDE_STATUS', time_boot_ms, uint32_t, [units=ms]).
-message_field('GIMBAL_DEVICE_ATTITUDE_STATUS', flags, uint16_t, [enum='GIMBAL_DEVICE_FLAGS', display=bitmask]).
-message_field('GIMBAL_DEVICE_ATTITUDE_STATUS', q, 'float[4]', []).
+message_field('GIMBAL_DEVICE_ATTITUDE_STATUS', target_system, uint(8), []).
+message_field('GIMBAL_DEVICE_ATTITUDE_STATUS', target_component, uint(8), []).
+message_field('GIMBAL_DEVICE_ATTITUDE_STATUS', time_boot_ms, uint(32), [units=ms]).
+message_field('GIMBAL_DEVICE_ATTITUDE_STATUS', flags, uint(16), [enum='GIMBAL_DEVICE_FLAGS', display=bitmask]).
+message_field('GIMBAL_DEVICE_ATTITUDE_STATUS', q, float, []).
 message_field('GIMBAL_DEVICE_ATTITUDE_STATUS', angular_velocity_x, float, [units='rad/s', invalid='NaN']).
 message_field('GIMBAL_DEVICE_ATTITUDE_STATUS', angular_velocity_y, float, [units='rad/s', invalid='NaN']).
 message_field('GIMBAL_DEVICE_ATTITUDE_STATUS', angular_velocity_z, float, [units='rad/s', invalid='NaN']).
-message_field('GIMBAL_DEVICE_ATTITUDE_STATUS', failure_flags, uint32_t, [enum='GIMBAL_DEVICE_ERROR_FLAGS', display=bitmask]).
+message_field('GIMBAL_DEVICE_ATTITUDE_STATUS', failure_flags, uint(32), [enum='GIMBAL_DEVICE_ERROR_FLAGS', display=bitmask]).
 message_field('GIMBAL_DEVICE_ATTITUDE_STATUS', delta_yaw, float, [units=rad, invalid='NAN']).
 message_field('GIMBAL_DEVICE_ATTITUDE_STATUS', delta_yaw_velocity, float, [units='rad/s', invalid='NAN']).
-message_field('GIMBAL_DEVICE_ATTITUDE_STATUS', gimbal_device_id, uint8_t, [invalid='0']).
-message_field('AUTOPILOT_STATE_FOR_GIMBAL_DEVICE', target_system, uint8_t, []).
-message_field('AUTOPILOT_STATE_FOR_GIMBAL_DEVICE', target_component, uint8_t, []).
-message_field('AUTOPILOT_STATE_FOR_GIMBAL_DEVICE', time_boot_us, uint64_t, [units=us]).
-message_field('AUTOPILOT_STATE_FOR_GIMBAL_DEVICE', q, 'float[4]', []).
-message_field('AUTOPILOT_STATE_FOR_GIMBAL_DEVICE', q_estimated_delay_us, uint32_t, [units=us, invalid='0']).
+message_field('GIMBAL_DEVICE_ATTITUDE_STATUS', gimbal_device_id, uint(8), [invalid='0']).
+message_field('AUTOPILOT_STATE_FOR_GIMBAL_DEVICE', target_system, uint(8), []).
+message_field('AUTOPILOT_STATE_FOR_GIMBAL_DEVICE', target_component, uint(8), []).
+message_field('AUTOPILOT_STATE_FOR_GIMBAL_DEVICE', time_boot_us, uint(64), [units=us]).
+message_field('AUTOPILOT_STATE_FOR_GIMBAL_DEVICE', q, float, []).
+message_field('AUTOPILOT_STATE_FOR_GIMBAL_DEVICE', q_estimated_delay_us, uint(32), [units=us, invalid='0']).
 message_field('AUTOPILOT_STATE_FOR_GIMBAL_DEVICE', vx, float, [units='m/s', invalid='NaN']).
 message_field('AUTOPILOT_STATE_FOR_GIMBAL_DEVICE', vy, float, [units='m/s', invalid='NaN']).
 message_field('AUTOPILOT_STATE_FOR_GIMBAL_DEVICE', vz, float, [units='m/s', invalid='NaN']).
-message_field('AUTOPILOT_STATE_FOR_GIMBAL_DEVICE', v_estimated_delay_us, uint32_t, [units=us, invalid='0']).
+message_field('AUTOPILOT_STATE_FOR_GIMBAL_DEVICE', v_estimated_delay_us, uint(32), [units=us, invalid='0']).
 message_field('AUTOPILOT_STATE_FOR_GIMBAL_DEVICE', feed_forward_angular_velocity_z, float, [units='rad/s', invalid='NaN']).
-message_field('AUTOPILOT_STATE_FOR_GIMBAL_DEVICE', estimator_status, uint16_t, [enum='ESTIMATOR_STATUS_FLAGS', display=bitmask]).
-message_field('AUTOPILOT_STATE_FOR_GIMBAL_DEVICE', landed_state, uint8_t, [enum='MAV_LANDED_STATE', invalid='MAV_LANDED_STATE_UNDEFINED']).
+message_field('AUTOPILOT_STATE_FOR_GIMBAL_DEVICE', estimator_status, uint(16), [enum='ESTIMATOR_STATUS_FLAGS', display=bitmask]).
+message_field('AUTOPILOT_STATE_FOR_GIMBAL_DEVICE', landed_state, uint(8), [enum='MAV_LANDED_STATE', invalid='MAV_LANDED_STATE_UNDEFINED']).
 message_field('AUTOPILOT_STATE_FOR_GIMBAL_DEVICE', angular_velocity_z, float, [units='rad/s', invalid='NaN']).
-message_field('GIMBAL_MANAGER_SET_PITCHYAW', target_system, uint8_t, []).
-message_field('GIMBAL_MANAGER_SET_PITCHYAW', target_component, uint8_t, []).
-message_field('GIMBAL_MANAGER_SET_PITCHYAW', flags, uint32_t, [enum='GIMBAL_MANAGER_FLAGS']).
-message_field('GIMBAL_MANAGER_SET_PITCHYAW', gimbal_device_id, uint8_t, [instance=true]).
+message_field('GIMBAL_MANAGER_SET_PITCHYAW', target_system, uint(8), []).
+message_field('GIMBAL_MANAGER_SET_PITCHYAW', target_component, uint(8), []).
+message_field('GIMBAL_MANAGER_SET_PITCHYAW', flags, uint(32), [enum='GIMBAL_MANAGER_FLAGS']).
+message_field('GIMBAL_MANAGER_SET_PITCHYAW', gimbal_device_id, uint(8), [instance=true]).
 message_field('GIMBAL_MANAGER_SET_PITCHYAW', pitch, float, [units=rad, invalid='NaN']).
 message_field('GIMBAL_MANAGER_SET_PITCHYAW', yaw, float, [units=rad, invalid='NaN']).
 message_field('GIMBAL_MANAGER_SET_PITCHYAW', pitch_rate, float, [units='rad/s', invalid='NaN']).
 message_field('GIMBAL_MANAGER_SET_PITCHYAW', yaw_rate, float, [units='rad/s', invalid='NaN']).
-message_field('GIMBAL_MANAGER_SET_MANUAL_CONTROL', target_system, uint8_t, []).
-message_field('GIMBAL_MANAGER_SET_MANUAL_CONTROL', target_component, uint8_t, []).
-message_field('GIMBAL_MANAGER_SET_MANUAL_CONTROL', flags, uint32_t, [enum='GIMBAL_MANAGER_FLAGS']).
-message_field('GIMBAL_MANAGER_SET_MANUAL_CONTROL', gimbal_device_id, uint8_t, [instance=true]).
+message_field('GIMBAL_MANAGER_SET_MANUAL_CONTROL', target_system, uint(8), []).
+message_field('GIMBAL_MANAGER_SET_MANUAL_CONTROL', target_component, uint(8), []).
+message_field('GIMBAL_MANAGER_SET_MANUAL_CONTROL', flags, uint(32), [enum='GIMBAL_MANAGER_FLAGS']).
+message_field('GIMBAL_MANAGER_SET_MANUAL_CONTROL', gimbal_device_id, uint(8), [instance=true]).
 message_field('GIMBAL_MANAGER_SET_MANUAL_CONTROL', pitch, float, [invalid='NaN']).
 message_field('GIMBAL_MANAGER_SET_MANUAL_CONTROL', yaw, float, [invalid='NaN']).
 message_field('GIMBAL_MANAGER_SET_MANUAL_CONTROL', pitch_rate, float, [invalid='NaN']).
 message_field('GIMBAL_MANAGER_SET_MANUAL_CONTROL', yaw_rate, float, [invalid='NaN']).
-message_field('ESC_INFO', index, uint8_t, [instance=true]).
-message_field('ESC_INFO', time_usec, uint64_t, [units=us]).
-message_field('ESC_INFO', counter, uint16_t, []).
-message_field('ESC_INFO', count, uint8_t, []).
-message_field('ESC_INFO', connection_type, uint8_t, [enum='ESC_CONNECTION_TYPE']).
-message_field('ESC_INFO', info, uint8_t, [display=bitmask]).
-message_field('ESC_INFO', failure_flags, 'uint16_t[4]', [enum='ESC_FAILURE_FLAGS', display=bitmask]).
-message_field('ESC_INFO', error_count, 'uint32_t[4]', []).
-message_field('ESC_INFO', temperature, 'int16_t[4]', [units=cdegC, invalid='[INT16_MAX]']).
-message_field('ESC_STATUS', index, uint8_t, [instance=true]).
-message_field('ESC_STATUS', time_usec, uint64_t, [units=us]).
-message_field('ESC_STATUS', rpm, 'int32_t[4]', [units=rpm]).
-message_field('ESC_STATUS', voltage, 'float[4]', [units='V']).
-message_field('ESC_STATUS', current, 'float[4]', [units='A']).
-message_field('WIFI_CONFIG_AP', ssid, 'char[32]', []).
-message_field('WIFI_CONFIG_AP', password, 'char[64]', []).
-message_field('WIFI_CONFIG_AP', mode, int8_t, [enum='WIFI_CONFIG_AP_MODE']).
-message_field('WIFI_CONFIG_AP', response, int8_t, [enum='WIFI_CONFIG_AP_RESPONSE']).
-message_field('AIS_VESSEL', 'MMSI', uint32_t, []).
-message_field('AIS_VESSEL', lat, int32_t, [units=degE7]).
-message_field('AIS_VESSEL', lon, int32_t, [units=degE7]).
-message_field('AIS_VESSEL', 'COG', uint16_t, [units=cdeg]).
-message_field('AIS_VESSEL', heading, uint16_t, [units=cdeg]).
-message_field('AIS_VESSEL', velocity, uint16_t, [units='cm/s']).
-message_field('AIS_VESSEL', turn_rate, int8_t, [units='cdeg/s']).
-message_field('AIS_VESSEL', navigational_status, uint8_t, [enum='AIS_NAV_STATUS']).
-message_field('AIS_VESSEL', type, uint8_t, [enum='AIS_TYPE']).
-message_field('AIS_VESSEL', dimension_bow, uint16_t, [units=m]).
-message_field('AIS_VESSEL', dimension_stern, uint16_t, [units=m]).
-message_field('AIS_VESSEL', dimension_port, uint8_t, [units=m]).
-message_field('AIS_VESSEL', dimension_starboard, uint8_t, [units=m]).
-message_field('AIS_VESSEL', callsign, 'char[7]', []).
-message_field('AIS_VESSEL', name, 'char[20]', []).
-message_field('AIS_VESSEL', tslc, uint16_t, [units=s]).
-message_field('AIS_VESSEL', flags, uint16_t, [enum='AIS_FLAGS', display=bitmask]).
-message_field('UAVCAN_NODE_STATUS', time_usec, uint64_t, [units=us]).
-message_field('UAVCAN_NODE_STATUS', uptime_sec, uint32_t, [units=s]).
-message_field('UAVCAN_NODE_STATUS', health, uint8_t, [enum='UAVCAN_NODE_HEALTH']).
-message_field('UAVCAN_NODE_STATUS', mode, uint8_t, [enum='UAVCAN_NODE_MODE']).
-message_field('UAVCAN_NODE_STATUS', sub_mode, uint8_t, []).
-message_field('UAVCAN_NODE_STATUS', vendor_specific_status_code, uint16_t, []).
-message_field('UAVCAN_NODE_INFO', time_usec, uint64_t, [units=us]).
-message_field('UAVCAN_NODE_INFO', uptime_sec, uint32_t, [units=s]).
-message_field('UAVCAN_NODE_INFO', name, 'char[80]', []).
-message_field('UAVCAN_NODE_INFO', hw_version_major, uint8_t, []).
-message_field('UAVCAN_NODE_INFO', hw_version_minor, uint8_t, []).
-message_field('UAVCAN_NODE_INFO', hw_unique_id, 'uint8_t[16]', []).
-message_field('UAVCAN_NODE_INFO', sw_version_major, uint8_t, []).
-message_field('UAVCAN_NODE_INFO', sw_version_minor, uint8_t, []).
-message_field('UAVCAN_NODE_INFO', sw_vcs_commit, uint32_t, [invalid='0']).
-message_field('PARAM_EXT_REQUEST_READ', target_system, uint8_t, []).
-message_field('PARAM_EXT_REQUEST_READ', target_component, uint8_t, []).
-message_field('PARAM_EXT_REQUEST_READ', param_id, 'char[16]', []).
-message_field('PARAM_EXT_REQUEST_READ', param_index, int16_t, [invalid='-1']).
-message_field('PARAM_EXT_REQUEST_LIST', target_system, uint8_t, []).
-message_field('PARAM_EXT_REQUEST_LIST', target_component, uint8_t, []).
-message_field('PARAM_EXT_VALUE', param_id, 'char[16]', []).
-message_field('PARAM_EXT_VALUE', param_value, 'char[128]', []).
-message_field('PARAM_EXT_VALUE', param_type, uint8_t, [enum='MAV_PARAM_EXT_TYPE']).
-message_field('PARAM_EXT_VALUE', param_count, uint16_t, []).
-message_field('PARAM_EXT_VALUE', param_index, uint16_t, []).
-message_field('PARAM_EXT_SET', target_system, uint8_t, []).
-message_field('PARAM_EXT_SET', target_component, uint8_t, []).
-message_field('PARAM_EXT_SET', param_id, 'char[16]', []).
-message_field('PARAM_EXT_SET', param_value, 'char[128]', []).
-message_field('PARAM_EXT_SET', param_type, uint8_t, [enum='MAV_PARAM_EXT_TYPE']).
-message_field('PARAM_EXT_ACK', param_id, 'char[16]', []).
-message_field('PARAM_EXT_ACK', param_value, 'char[128]', []).
-message_field('PARAM_EXT_ACK', param_type, uint8_t, [enum='MAV_PARAM_EXT_TYPE']).
-message_field('PARAM_EXT_ACK', param_result, uint8_t, [enum='PARAM_ACK']).
-message_field('OBSTACLE_DISTANCE', time_usec, uint64_t, [units=us]).
-message_field('OBSTACLE_DISTANCE', sensor_type, uint8_t, [enum='MAV_DISTANCE_SENSOR']).
-message_field('OBSTACLE_DISTANCE', distances, 'uint16_t[72]', [units=cm, invalid='[UINT16_MAX]']).
-message_field('OBSTACLE_DISTANCE', increment, uint8_t, [units=deg]).
-message_field('OBSTACLE_DISTANCE', min_distance, uint16_t, [units=cm]).
-message_field('OBSTACLE_DISTANCE', max_distance, uint16_t, [units=cm]).
+message_field('ESC_INFO', index, uint(8), [instance=true]).
+message_field('ESC_INFO', time_usec, uint(64), [units=us]).
+message_field('ESC_INFO', counter, uint(16), []).
+message_field('ESC_INFO', count, uint(8), []).
+message_field('ESC_INFO', connection_type, uint(8), [enum='ESC_CONNECTION_TYPE']).
+message_field('ESC_INFO', info, uint(8), [display=bitmask]).
+message_field('ESC_INFO', failure_flags, uint(16), [enum='ESC_FAILURE_FLAGS', display=bitmask]).
+message_field('ESC_INFO', error_count, uint(32), []).
+message_field('ESC_INFO', temperature, int(16), [units=cdegC, invalid='[INT16_MAX]']).
+message_field('ESC_STATUS', index, uint(8), [instance=true]).
+message_field('ESC_STATUS', time_usec, uint(64), [units=us]).
+message_field('ESC_STATUS', rpm, int(32), [units=rpm]).
+message_field('ESC_STATUS', voltage, float, [units='V']).
+message_field('ESC_STATUS', current, float, [units='A']).
+message_field('WIFI_CONFIG_AP', ssid, char, []).
+message_field('WIFI_CONFIG_AP', password, char, []).
+message_field('WIFI_CONFIG_AP', mode, int(8), [enum='WIFI_CONFIG_AP_MODE']).
+message_field('WIFI_CONFIG_AP', response, int(8), [enum='WIFI_CONFIG_AP_RESPONSE']).
+message_field('AIS_VESSEL', 'MMSI', uint(32), []).
+message_field('AIS_VESSEL', lat, int(32), [units=degE7]).
+message_field('AIS_VESSEL', lon, int(32), [units=degE7]).
+message_field('AIS_VESSEL', 'COG', uint(16), [units=cdeg]).
+message_field('AIS_VESSEL', heading, uint(16), [units=cdeg]).
+message_field('AIS_VESSEL', velocity, uint(16), [units='cm/s']).
+message_field('AIS_VESSEL', turn_rate, int(8), [units='cdeg/s']).
+message_field('AIS_VESSEL', navigational_status, uint(8), [enum='AIS_NAV_STATUS']).
+message_field('AIS_VESSEL', type, uint(8), [enum='AIS_TYPE']).
+message_field('AIS_VESSEL', dimension_bow, uint(16), [units=m]).
+message_field('AIS_VESSEL', dimension_stern, uint(16), [units=m]).
+message_field('AIS_VESSEL', dimension_port, uint(8), [units=m]).
+message_field('AIS_VESSEL', dimension_starboard, uint(8), [units=m]).
+message_field('AIS_VESSEL', callsign, char, []).
+message_field('AIS_VESSEL', name, char, []).
+message_field('AIS_VESSEL', tslc, uint(16), [units=s]).
+message_field('AIS_VESSEL', flags, uint(16), [enum='AIS_FLAGS', display=bitmask]).
+message_field('UAVCAN_NODE_STATUS', time_usec, uint(64), [units=us]).
+message_field('UAVCAN_NODE_STATUS', uptime_sec, uint(32), [units=s]).
+message_field('UAVCAN_NODE_STATUS', health, uint(8), [enum='UAVCAN_NODE_HEALTH']).
+message_field('UAVCAN_NODE_STATUS', mode, uint(8), [enum='UAVCAN_NODE_MODE']).
+message_field('UAVCAN_NODE_STATUS', sub_mode, uint(8), []).
+message_field('UAVCAN_NODE_STATUS', vendor_specific_status_code, uint(16), []).
+message_field('UAVCAN_NODE_INFO', time_usec, uint(64), [units=us]).
+message_field('UAVCAN_NODE_INFO', uptime_sec, uint(32), [units=s]).
+message_field('UAVCAN_NODE_INFO', name, char, []).
+message_field('UAVCAN_NODE_INFO', hw_version_major, uint(8), []).
+message_field('UAVCAN_NODE_INFO', hw_version_minor, uint(8), []).
+message_field('UAVCAN_NODE_INFO', hw_unique_id, uint(8), []).
+message_field('UAVCAN_NODE_INFO', sw_version_major, uint(8), []).
+message_field('UAVCAN_NODE_INFO', sw_version_minor, uint(8), []).
+message_field('UAVCAN_NODE_INFO', sw_vcs_commit, uint(32), [invalid='0']).
+message_field('PARAM_EXT_REQUEST_READ', target_system, uint(8), []).
+message_field('PARAM_EXT_REQUEST_READ', target_component, uint(8), []).
+message_field('PARAM_EXT_REQUEST_READ', param_id, char, []).
+message_field('PARAM_EXT_REQUEST_READ', param_index, int(16), [invalid='-1']).
+message_field('PARAM_EXT_REQUEST_LIST', target_system, uint(8), []).
+message_field('PARAM_EXT_REQUEST_LIST', target_component, uint(8), []).
+message_field('PARAM_EXT_VALUE', param_id, char, []).
+message_field('PARAM_EXT_VALUE', param_value, char, []).
+message_field('PARAM_EXT_VALUE', param_type, uint(8), [enum='MAV_PARAM_EXT_TYPE']).
+message_field('PARAM_EXT_VALUE', param_count, uint(16), []).
+message_field('PARAM_EXT_VALUE', param_index, uint(16), []).
+message_field('PARAM_EXT_SET', target_system, uint(8), []).
+message_field('PARAM_EXT_SET', target_component, uint(8), []).
+message_field('PARAM_EXT_SET', param_id, char, []).
+message_field('PARAM_EXT_SET', param_value, char, []).
+message_field('PARAM_EXT_SET', param_type, uint(8), [enum='MAV_PARAM_EXT_TYPE']).
+message_field('PARAM_EXT_ACK', param_id, char, []).
+message_field('PARAM_EXT_ACK', param_value, char, []).
+message_field('PARAM_EXT_ACK', param_type, uint(8), [enum='MAV_PARAM_EXT_TYPE']).
+message_field('PARAM_EXT_ACK', param_result, uint(8), [enum='PARAM_ACK']).
+message_field('OBSTACLE_DISTANCE', time_usec, uint(64), [units=us]).
+message_field('OBSTACLE_DISTANCE', sensor_type, uint(8), [enum='MAV_DISTANCE_SENSOR']).
+message_field('OBSTACLE_DISTANCE', distances, uint(16), [units=cm, invalid='[UINT16_MAX]']).
+message_field('OBSTACLE_DISTANCE', increment, uint(8), [units=deg]).
+message_field('OBSTACLE_DISTANCE', min_distance, uint(16), [units=cm]).
+message_field('OBSTACLE_DISTANCE', max_distance, uint(16), [units=cm]).
 message_field('OBSTACLE_DISTANCE', increment_f, float, [units=deg]).
 message_field('OBSTACLE_DISTANCE', angle_offset, float, [units=deg]).
-message_field('OBSTACLE_DISTANCE', frame, uint8_t, [enum='MAV_FRAME']).
-message_field('ODOMETRY', time_usec, uint64_t, [units=us]).
-message_field('ODOMETRY', frame_id, uint8_t, [enum='MAV_FRAME']).
-message_field('ODOMETRY', child_frame_id, uint8_t, [enum='MAV_FRAME']).
+message_field('OBSTACLE_DISTANCE', frame, uint(8), [enum='MAV_FRAME']).
+message_field('ODOMETRY', time_usec, uint(64), [units=us]).
+message_field('ODOMETRY', frame_id, uint(8), [enum='MAV_FRAME']).
+message_field('ODOMETRY', child_frame_id, uint(8), [enum='MAV_FRAME']).
 message_field('ODOMETRY', x, float, [units=m]).
 message_field('ODOMETRY', y, float, [units=m]).
 message_field('ODOMETRY', z, float, [units=m]).
-message_field('ODOMETRY', q, 'float[4]', []).
+message_field('ODOMETRY', q, float, []).
 message_field('ODOMETRY', vx, float, [units='m/s']).
 message_field('ODOMETRY', vy, float, [units='m/s']).
 message_field('ODOMETRY', vz, float, [units='m/s']).
 message_field('ODOMETRY', rollspeed, float, [units='rad/s']).
 message_field('ODOMETRY', pitchspeed, float, [units='rad/s']).
 message_field('ODOMETRY', yawspeed, float, [units='rad/s']).
-message_field('ODOMETRY', pose_covariance, 'float[21]', [invalid='[NaN:]']).
-message_field('ODOMETRY', velocity_covariance, 'float[21]', [invalid='[NaN:]']).
-message_field('ODOMETRY', reset_counter, uint8_t, []).
-message_field('ODOMETRY', estimator_type, uint8_t, [enum='MAV_ESTIMATOR_TYPE']).
-message_field('ODOMETRY', quality, int8_t, [units='%', invalid='0']).
-message_field('TRAJECTORY_REPRESENTATION_WAYPOINTS', time_usec, uint64_t, [units=us]).
-message_field('TRAJECTORY_REPRESENTATION_WAYPOINTS', valid_points, uint8_t, []).
-message_field('TRAJECTORY_REPRESENTATION_WAYPOINTS', pos_x, 'float[5]', [units=m, invalid='[NaN]']).
-message_field('TRAJECTORY_REPRESENTATION_WAYPOINTS', pos_y, 'float[5]', [units=m, invalid='[NaN]']).
-message_field('TRAJECTORY_REPRESENTATION_WAYPOINTS', pos_z, 'float[5]', [units=m, invalid='[NaN]']).
-message_field('TRAJECTORY_REPRESENTATION_WAYPOINTS', vel_x, 'float[5]', [units='m/s', invalid='[NaN]']).
-message_field('TRAJECTORY_REPRESENTATION_WAYPOINTS', vel_y, 'float[5]', [units='m/s', invalid='[NaN]']).
-message_field('TRAJECTORY_REPRESENTATION_WAYPOINTS', vel_z, 'float[5]', [units='m/s', invalid='[NaN]']).
-message_field('TRAJECTORY_REPRESENTATION_WAYPOINTS', acc_x, 'float[5]', [units='m/s/s', invalid='[NaN]']).
-message_field('TRAJECTORY_REPRESENTATION_WAYPOINTS', acc_y, 'float[5]', [units='m/s/s', invalid='[NaN]']).
-message_field('TRAJECTORY_REPRESENTATION_WAYPOINTS', acc_z, 'float[5]', [units='m/s/s', invalid='[NaN]']).
-message_field('TRAJECTORY_REPRESENTATION_WAYPOINTS', pos_yaw, 'float[5]', [units=rad, invalid='[NaN]']).
-message_field('TRAJECTORY_REPRESENTATION_WAYPOINTS', vel_yaw, 'float[5]', [units='rad/s', invalid='[NaN]']).
-message_field('TRAJECTORY_REPRESENTATION_WAYPOINTS', command, 'uint16_t[5]', [enum='MAV_CMD', invalid='[UINT16_MAX]']).
-message_field('TRAJECTORY_REPRESENTATION_BEZIER', time_usec, uint64_t, [units=us]).
-message_field('TRAJECTORY_REPRESENTATION_BEZIER', valid_points, uint8_t, []).
-message_field('TRAJECTORY_REPRESENTATION_BEZIER', pos_x, 'float[5]', [units=m, invalid='[NaN]']).
-message_field('TRAJECTORY_REPRESENTATION_BEZIER', pos_y, 'float[5]', [units=m, invalid='[NaN]']).
-message_field('TRAJECTORY_REPRESENTATION_BEZIER', pos_z, 'float[5]', [units=m, invalid='[NaN]']).
-message_field('TRAJECTORY_REPRESENTATION_BEZIER', delta, 'float[5]', [units=s, invalid='[NaN]']).
-message_field('TRAJECTORY_REPRESENTATION_BEZIER', pos_yaw, 'float[5]', [units=rad, invalid='[NaN]']).
-message_field('CELLULAR_STATUS', status, uint8_t, [enum='CELLULAR_STATUS_FLAG']).
-message_field('CELLULAR_STATUS', failure_reason, uint8_t, [enum='CELLULAR_NETWORK_FAILED_REASON']).
-message_field('CELLULAR_STATUS', type, uint8_t, [enum='CELLULAR_NETWORK_RADIO_TYPE']).
-message_field('CELLULAR_STATUS', quality, uint8_t, [invalid='UINT8_MAX']).
-message_field('CELLULAR_STATUS', mcc, uint16_t, [invalid='UINT16_MAX']).
-message_field('CELLULAR_STATUS', mnc, uint16_t, [invalid='UINT16_MAX']).
-message_field('CELLULAR_STATUS', lac, uint16_t, [invalid='0']).
-message_field('ISBD_LINK_STATUS', timestamp, uint64_t, [units=us]).
-message_field('ISBD_LINK_STATUS', last_heartbeat, uint64_t, [units=us]).
-message_field('ISBD_LINK_STATUS', failed_sessions, uint16_t, []).
-message_field('ISBD_LINK_STATUS', successful_sessions, uint16_t, []).
-message_field('ISBD_LINK_STATUS', signal_quality, uint8_t, []).
-message_field('ISBD_LINK_STATUS', ring_pending, uint8_t, []).
-message_field('ISBD_LINK_STATUS', tx_session_pending, uint8_t, []).
-message_field('ISBD_LINK_STATUS', rx_session_pending, uint8_t, []).
-message_field('CELLULAR_CONFIG', enable_lte, uint8_t, []).
-message_field('CELLULAR_CONFIG', enable_pin, uint8_t, []).
-message_field('CELLULAR_CONFIG', pin, 'char[16]', []).
-message_field('CELLULAR_CONFIG', new_pin, 'char[16]', []).
-message_field('CELLULAR_CONFIG', apn, 'char[32]', []).
-message_field('CELLULAR_CONFIG', puk, 'char[16]', []).
-message_field('CELLULAR_CONFIG', roaming, uint8_t, []).
-message_field('CELLULAR_CONFIG', response, uint8_t, [enum='CELLULAR_CONFIG_RESPONSE']).
-message_field('RAW_RPM', index, uint8_t, []).
+message_field('ODOMETRY', pose_covariance, float, [invalid='[NaN:]']).
+message_field('ODOMETRY', velocity_covariance, float, [invalid='[NaN:]']).
+message_field('ODOMETRY', reset_counter, uint(8), []).
+message_field('ODOMETRY', estimator_type, uint(8), [enum='MAV_ESTIMATOR_TYPE']).
+message_field('ODOMETRY', quality, int(8), [units='%', invalid='0']).
+message_field('TRAJECTORY_REPRESENTATION_WAYPOINTS', time_usec, uint(64), [units=us]).
+message_field('TRAJECTORY_REPRESENTATION_WAYPOINTS', valid_points, uint(8), []).
+message_field('TRAJECTORY_REPRESENTATION_WAYPOINTS', pos_x, float, [units=m, invalid='[NaN]']).
+message_field('TRAJECTORY_REPRESENTATION_WAYPOINTS', pos_y, float, [units=m, invalid='[NaN]']).
+message_field('TRAJECTORY_REPRESENTATION_WAYPOINTS', pos_z, float, [units=m, invalid='[NaN]']).
+message_field('TRAJECTORY_REPRESENTATION_WAYPOINTS', vel_x, float, [units='m/s', invalid='[NaN]']).
+message_field('TRAJECTORY_REPRESENTATION_WAYPOINTS', vel_y, float, [units='m/s', invalid='[NaN]']).
+message_field('TRAJECTORY_REPRESENTATION_WAYPOINTS', vel_z, float, [units='m/s', invalid='[NaN]']).
+message_field('TRAJECTORY_REPRESENTATION_WAYPOINTS', acc_x, float, [units='m/s/s', invalid='[NaN]']).
+message_field('TRAJECTORY_REPRESENTATION_WAYPOINTS', acc_y, float, [units='m/s/s', invalid='[NaN]']).
+message_field('TRAJECTORY_REPRESENTATION_WAYPOINTS', acc_z, float, [units='m/s/s', invalid='[NaN]']).
+message_field('TRAJECTORY_REPRESENTATION_WAYPOINTS', pos_yaw, float, [units=rad, invalid='[NaN]']).
+message_field('TRAJECTORY_REPRESENTATION_WAYPOINTS', vel_yaw, float, [units='rad/s', invalid='[NaN]']).
+message_field('TRAJECTORY_REPRESENTATION_WAYPOINTS', command, uint(16), [enum='MAV_CMD', invalid='[UINT16_MAX]']).
+message_field('TRAJECTORY_REPRESENTATION_BEZIER', time_usec, uint(64), [units=us]).
+message_field('TRAJECTORY_REPRESENTATION_BEZIER', valid_points, uint(8), []).
+message_field('TRAJECTORY_REPRESENTATION_BEZIER', pos_x, float, [units=m, invalid='[NaN]']).
+message_field('TRAJECTORY_REPRESENTATION_BEZIER', pos_y, float, [units=m, invalid='[NaN]']).
+message_field('TRAJECTORY_REPRESENTATION_BEZIER', pos_z, float, [units=m, invalid='[NaN]']).
+message_field('TRAJECTORY_REPRESENTATION_BEZIER', delta, float, [units=s, invalid='[NaN]']).
+message_field('TRAJECTORY_REPRESENTATION_BEZIER', pos_yaw, float, [units=rad, invalid='[NaN]']).
+message_field('CELLULAR_STATUS', status, uint(8), [enum='CELLULAR_STATUS_FLAG']).
+message_field('CELLULAR_STATUS', failure_reason, uint(8), [enum='CELLULAR_NETWORK_FAILED_REASON']).
+message_field('CELLULAR_STATUS', type, uint(8), [enum='CELLULAR_NETWORK_RADIO_TYPE']).
+message_field('CELLULAR_STATUS', quality, uint(8), [invalid='UINT8_MAX']).
+message_field('CELLULAR_STATUS', mcc, uint(16), [invalid='UINT16_MAX']).
+message_field('CELLULAR_STATUS', mnc, uint(16), [invalid='UINT16_MAX']).
+message_field('CELLULAR_STATUS', lac, uint(16), [invalid='0']).
+message_field('ISBD_LINK_STATUS', timestamp, uint(64), [units=us]).
+message_field('ISBD_LINK_STATUS', last_heartbeat, uint(64), [units=us]).
+message_field('ISBD_LINK_STATUS', failed_sessions, uint(16), []).
+message_field('ISBD_LINK_STATUS', successful_sessions, uint(16), []).
+message_field('ISBD_LINK_STATUS', signal_quality, uint(8), []).
+message_field('ISBD_LINK_STATUS', ring_pending, uint(8), []).
+message_field('ISBD_LINK_STATUS', tx_session_pending, uint(8), []).
+message_field('ISBD_LINK_STATUS', rx_session_pending, uint(8), []).
+message_field('CELLULAR_CONFIG', enable_lte, uint(8), []).
+message_field('CELLULAR_CONFIG', enable_pin, uint(8), []).
+message_field('CELLULAR_CONFIG', pin, char, []).
+message_field('CELLULAR_CONFIG', new_pin, char, []).
+message_field('CELLULAR_CONFIG', apn, char, []).
+message_field('CELLULAR_CONFIG', puk, char, []).
+message_field('CELLULAR_CONFIG', roaming, uint(8), []).
+message_field('CELLULAR_CONFIG', response, uint(8), [enum='CELLULAR_CONFIG_RESPONSE']).
+message_field('RAW_RPM', index, uint(8), []).
 message_field('RAW_RPM', frequency, float, [units=rpm]).
-message_field('UTM_GLOBAL_POSITION', time, uint64_t, [units=us]).
-message_field('UTM_GLOBAL_POSITION', uas_id, 'uint8_t[18]', []).
-message_field('UTM_GLOBAL_POSITION', lat, int32_t, [units=degE7]).
-message_field('UTM_GLOBAL_POSITION', lon, int32_t, [units=degE7]).
-message_field('UTM_GLOBAL_POSITION', alt, int32_t, [units=mm]).
-message_field('UTM_GLOBAL_POSITION', relative_alt, int32_t, [units=mm]).
-message_field('UTM_GLOBAL_POSITION', vx, int16_t, [units='cm/s']).
-message_field('UTM_GLOBAL_POSITION', vy, int16_t, [units='cm/s']).
-message_field('UTM_GLOBAL_POSITION', vz, int16_t, [units='cm/s']).
-message_field('UTM_GLOBAL_POSITION', h_acc, uint16_t, [units=mm]).
-message_field('UTM_GLOBAL_POSITION', v_acc, uint16_t, [units=mm]).
-message_field('UTM_GLOBAL_POSITION', vel_acc, uint16_t, [units='cm/s']).
-message_field('UTM_GLOBAL_POSITION', next_lat, int32_t, [units=degE7]).
-message_field('UTM_GLOBAL_POSITION', next_lon, int32_t, [units=degE7]).
-message_field('UTM_GLOBAL_POSITION', next_alt, int32_t, [units=mm]).
-message_field('UTM_GLOBAL_POSITION', update_rate, uint16_t, [units=cs, invalid='0']).
-message_field('UTM_GLOBAL_POSITION', flight_state, uint8_t, [enum='UTM_FLIGHT_STATE']).
-message_field('UTM_GLOBAL_POSITION', flags, uint8_t, [enum='UTM_DATA_AVAIL_FLAGS', display=bitmask]).
-message_field('DEBUG_FLOAT_ARRAY', time_usec, uint64_t, [units=us]).
-message_field('DEBUG_FLOAT_ARRAY', name, 'char[10]', []).
-message_field('DEBUG_FLOAT_ARRAY', array_id, uint16_t, [instance=true]).
-message_field('DEBUG_FLOAT_ARRAY', data, 'float[58]', []).
-message_field('ORBIT_EXECUTION_STATUS', time_usec, uint64_t, [units=us]).
+message_field('UTM_GLOBAL_POSITION', time, uint(64), [units=us]).
+message_field('UTM_GLOBAL_POSITION', uas_id, uint(8), []).
+message_field('UTM_GLOBAL_POSITION', lat, int(32), [units=degE7]).
+message_field('UTM_GLOBAL_POSITION', lon, int(32), [units=degE7]).
+message_field('UTM_GLOBAL_POSITION', alt, int(32), [units=mm]).
+message_field('UTM_GLOBAL_POSITION', relative_alt, int(32), [units=mm]).
+message_field('UTM_GLOBAL_POSITION', vx, int(16), [units='cm/s']).
+message_field('UTM_GLOBAL_POSITION', vy, int(16), [units='cm/s']).
+message_field('UTM_GLOBAL_POSITION', vz, int(16), [units='cm/s']).
+message_field('UTM_GLOBAL_POSITION', h_acc, uint(16), [units=mm]).
+message_field('UTM_GLOBAL_POSITION', v_acc, uint(16), [units=mm]).
+message_field('UTM_GLOBAL_POSITION', vel_acc, uint(16), [units='cm/s']).
+message_field('UTM_GLOBAL_POSITION', next_lat, int(32), [units=degE7]).
+message_field('UTM_GLOBAL_POSITION', next_lon, int(32), [units=degE7]).
+message_field('UTM_GLOBAL_POSITION', next_alt, int(32), [units=mm]).
+message_field('UTM_GLOBAL_POSITION', update_rate, uint(16), [units=cs, invalid='0']).
+message_field('UTM_GLOBAL_POSITION', flight_state, uint(8), [enum='UTM_FLIGHT_STATE']).
+message_field('UTM_GLOBAL_POSITION', flags, uint(8), [enum='UTM_DATA_AVAIL_FLAGS', display=bitmask]).
+message_field('DEBUG_FLOAT_ARRAY', time_usec, uint(64), [units=us]).
+message_field('DEBUG_FLOAT_ARRAY', name, char, []).
+message_field('DEBUG_FLOAT_ARRAY', array_id, uint(16), [instance=true]).
+message_field('DEBUG_FLOAT_ARRAY', data, float, []).
+message_field('ORBIT_EXECUTION_STATUS', time_usec, uint(64), [units=us]).
 message_field('ORBIT_EXECUTION_STATUS', radius, float, [units=m]).
-message_field('ORBIT_EXECUTION_STATUS', frame, uint8_t, [enum='MAV_FRAME']).
-message_field('ORBIT_EXECUTION_STATUS', x, int32_t, []).
-message_field('ORBIT_EXECUTION_STATUS', y, int32_t, []).
+message_field('ORBIT_EXECUTION_STATUS', frame, uint(8), [enum='MAV_FRAME']).
+message_field('ORBIT_EXECUTION_STATUS', x, int(32), []).
+message_field('ORBIT_EXECUTION_STATUS', y, int(32), []).
 message_field('ORBIT_EXECUTION_STATUS', z, float, [units=m]).
-message_field('SMART_BATTERY_INFO', id, uint8_t, [instance=true]).
-message_field('SMART_BATTERY_INFO', battery_function, uint8_t, [enum='MAV_BATTERY_FUNCTION']).
-message_field('SMART_BATTERY_INFO', type, uint8_t, [enum='MAV_BATTERY_TYPE']).
-message_field('SMART_BATTERY_INFO', capacity_full_specification, int32_t, [units=mAh, invalid='-1']).
-message_field('SMART_BATTERY_INFO', capacity_full, int32_t, [units=mAh, invalid='-1']).
-message_field('SMART_BATTERY_INFO', cycle_count, uint16_t, [invalid='UINT16_MAX']).
-message_field('SMART_BATTERY_INFO', serial_number, 'char[16]', [invalid='[0]']).
-message_field('SMART_BATTERY_INFO', device_name, 'char[50]', [invalid='[0]']).
-message_field('SMART_BATTERY_INFO', weight, uint16_t, [units=g, invalid='0']).
-message_field('SMART_BATTERY_INFO', discharge_minimum_voltage, uint16_t, [units=mV, invalid='UINT16_MAX']).
-message_field('SMART_BATTERY_INFO', charging_minimum_voltage, uint16_t, [units=mV, invalid='UINT16_MAX']).
-message_field('SMART_BATTERY_INFO', resting_minimum_voltage, uint16_t, [units=mV, invalid='UINT16_MAX']).
-message_field('SMART_BATTERY_INFO', charging_maximum_voltage, uint16_t, [units=mV, invalid='0']).
-message_field('SMART_BATTERY_INFO', cells_in_series, uint8_t, [invalid='0']).
-message_field('SMART_BATTERY_INFO', discharge_maximum_current, uint32_t, [units=mA, invalid='0']).
-message_field('SMART_BATTERY_INFO', discharge_maximum_burst_current, uint32_t, [units=mA, invalid='0']).
-message_field('SMART_BATTERY_INFO', manufacture_date, 'char[11]', [invalid='[0]']).
-message_field('GENERATOR_STATUS', status, uint64_t, [display=bitmask, enum='MAV_GENERATOR_STATUS_FLAG']).
-message_field('GENERATOR_STATUS', generator_speed, uint16_t, [units=rpm, invalid='UINT16_MAX']).
+message_field('SMART_BATTERY_INFO', id, uint(8), [instance=true]).
+message_field('SMART_BATTERY_INFO', battery_function, uint(8), [enum='MAV_BATTERY_FUNCTION']).
+message_field('SMART_BATTERY_INFO', type, uint(8), [enum='MAV_BATTERY_TYPE']).
+message_field('SMART_BATTERY_INFO', capacity_full_specification, int(32), [units=mAh, invalid='-1']).
+message_field('SMART_BATTERY_INFO', capacity_full, int(32), [units=mAh, invalid='-1']).
+message_field('SMART_BATTERY_INFO', cycle_count, uint(16), [invalid='UINT16_MAX']).
+message_field('SMART_BATTERY_INFO', serial_number, char, [invalid='[0]']).
+message_field('SMART_BATTERY_INFO', device_name, char, [invalid='[0]']).
+message_field('SMART_BATTERY_INFO', weight, uint(16), [units=g, invalid='0']).
+message_field('SMART_BATTERY_INFO', discharge_minimum_voltage, uint(16), [units=mV, invalid='UINT16_MAX']).
+message_field('SMART_BATTERY_INFO', charging_minimum_voltage, uint(16), [units=mV, invalid='UINT16_MAX']).
+message_field('SMART_BATTERY_INFO', resting_minimum_voltage, uint(16), [units=mV, invalid='UINT16_MAX']).
+message_field('SMART_BATTERY_INFO', charging_maximum_voltage, uint(16), [units=mV, invalid='0']).
+message_field('SMART_BATTERY_INFO', cells_in_series, uint(8), [invalid='0']).
+message_field('SMART_BATTERY_INFO', discharge_maximum_current, uint(32), [units=mA, invalid='0']).
+message_field('SMART_BATTERY_INFO', discharge_maximum_burst_current, uint(32), [units=mA, invalid='0']).
+message_field('SMART_BATTERY_INFO', manufacture_date, char, [invalid='[0]']).
+message_field('GENERATOR_STATUS', status, uint(64), [display=bitmask, enum='MAV_GENERATOR_STATUS_FLAG']).
+message_field('GENERATOR_STATUS', generator_speed, uint(16), [units=rpm, invalid='UINT16_MAX']).
 message_field('GENERATOR_STATUS', battery_current, float, [units='A', invalid='NaN']).
 message_field('GENERATOR_STATUS', load_current, float, [units='A', invalid='NaN']).
 message_field('GENERATOR_STATUS', power_generated, float, [units='W', invalid='NaN']).
 message_field('GENERATOR_STATUS', bus_voltage, float, [units='V']).
-message_field('GENERATOR_STATUS', rectifier_temperature, int16_t, [units=degC, invalid='INT16_MAX']).
+message_field('GENERATOR_STATUS', rectifier_temperature, int(16), [units=degC, invalid='INT16_MAX']).
 message_field('GENERATOR_STATUS', bat_current_setpoint, float, [units='A', invalid='NaN']).
-message_field('GENERATOR_STATUS', generator_temperature, int16_t, [units=degC, invalid='INT16_MAX']).
-message_field('GENERATOR_STATUS', runtime, uint32_t, [units=s, invalid='UINT32_MAX']).
-message_field('GENERATOR_STATUS', time_until_maintenance, int32_t, [units=s, invalid='INT32_MAX']).
-message_field('ACTUATOR_OUTPUT_STATUS', time_usec, uint64_t, [units=us]).
-message_field('ACTUATOR_OUTPUT_STATUS', active, uint32_t, [display=bitmask]).
-message_field('ACTUATOR_OUTPUT_STATUS', actuator, 'float[32]', []).
-message_field('TIME_ESTIMATE_TO_TARGET', safe_return, int32_t, [units=s]).
-message_field('TIME_ESTIMATE_TO_TARGET', land, int32_t, [units=s]).
-message_field('TIME_ESTIMATE_TO_TARGET', mission_next_item, int32_t, [units=s, invalid='-1']).
-message_field('TIME_ESTIMATE_TO_TARGET', mission_end, int32_t, [units=s, invalid='-1']).
-message_field('TIME_ESTIMATE_TO_TARGET', commanded_action, int32_t, [units=s, invalid='-1']).
-message_field('TUNNEL', target_system, uint8_t, []).
-message_field('TUNNEL', target_component, uint8_t, []).
-message_field('TUNNEL', payload_type, uint16_t, [enum='MAV_TUNNEL_PAYLOAD_TYPE']).
-message_field('TUNNEL', payload_length, uint8_t, []).
-message_field('TUNNEL', payload, 'uint8_t[128]', []).
-message_field('CAN_FRAME', target_system, uint8_t, []).
-message_field('CAN_FRAME', target_component, uint8_t, []).
-message_field('CAN_FRAME', bus, uint8_t, []).
-message_field('CAN_FRAME', len, uint8_t, []).
-message_field('CAN_FRAME', id, uint32_t, []).
-message_field('CAN_FRAME', data, 'uint8_t[8]', []).
-message_field('ONBOARD_COMPUTER_STATUS', time_usec, uint64_t, [units=us]).
-message_field('ONBOARD_COMPUTER_STATUS', uptime, uint32_t, [units=ms]).
-message_field('ONBOARD_COMPUTER_STATUS', type, uint8_t, []).
-message_field('ONBOARD_COMPUTER_STATUS', cpu_cores, 'uint8_t[8]', [invalid='[UINT8_MAX]']).
-message_field('ONBOARD_COMPUTER_STATUS', cpu_combined, 'uint8_t[10]', [invalid='[UINT8_MAX]']).
-message_field('ONBOARD_COMPUTER_STATUS', gpu_cores, 'uint8_t[4]', [invalid='[UINT8_MAX]']).
-message_field('ONBOARD_COMPUTER_STATUS', gpu_combined, 'uint8_t[10]', [invalid='[UINT8_MAX]']).
-message_field('ONBOARD_COMPUTER_STATUS', temperature_board, int8_t, [units=degC, invalid='INT8_MAX']).
-message_field('ONBOARD_COMPUTER_STATUS', temperature_core, 'int8_t[8]', [units=degC, invalid='[INT8_MAX]']).
-message_field('ONBOARD_COMPUTER_STATUS', fan_speed, 'int16_t[4]', [units=rpm, invalid='[INT16_MAX]']).
-message_field('ONBOARD_COMPUTER_STATUS', ram_usage, uint32_t, [units='MiB', invalid='UINT32_MAX']).
-message_field('ONBOARD_COMPUTER_STATUS', ram_total, uint32_t, [units='MiB', invalid='UINT32_MAX']).
-message_field('ONBOARD_COMPUTER_STATUS', storage_type, 'uint32_t[4]', [invalid='[UINT32_MAX]']).
-message_field('ONBOARD_COMPUTER_STATUS', storage_usage, 'uint32_t[4]', [units='MiB', invalid='[UINT32_MAX]']).
-message_field('ONBOARD_COMPUTER_STATUS', storage_total, 'uint32_t[4]', [units='MiB', invalid='[UINT32_MAX]']).
-message_field('ONBOARD_COMPUTER_STATUS', link_type, 'uint32_t[6]', []).
-message_field('ONBOARD_COMPUTER_STATUS', link_tx_rate, 'uint32_t[6]', [units='KiB/s', invalid='[UINT32_MAX]']).
-message_field('ONBOARD_COMPUTER_STATUS', link_rx_rate, 'uint32_t[6]', [units='KiB/s', invalid='[UINT32_MAX]']).
-message_field('ONBOARD_COMPUTER_STATUS', link_tx_max, 'uint32_t[6]', [units='KiB/s', invalid='[UINT32_MAX]']).
-message_field('ONBOARD_COMPUTER_STATUS', link_rx_max, 'uint32_t[6]', [units='KiB/s', invalid='[UINT32_MAX]']).
-message_field('COMPONENT_INFORMATION', time_boot_ms, uint32_t, [units=ms]).
-message_field('COMPONENT_INFORMATION', general_metadata_file_crc, uint32_t, []).
-message_field('COMPONENT_INFORMATION', general_metadata_uri, 'char[100]', []).
-message_field('COMPONENT_INFORMATION', peripherals_metadata_file_crc, uint32_t, []).
-message_field('COMPONENT_INFORMATION', peripherals_metadata_uri, 'char[100]', []).
-message_field('COMPONENT_METADATA', time_boot_ms, uint32_t, [units=ms]).
-message_field('COMPONENT_METADATA', file_crc, uint32_t, []).
-message_field('COMPONENT_METADATA', uri, 'char[100]', []).
-message_field('PLAY_TUNE_V2', target_system, uint8_t, []).
-message_field('PLAY_TUNE_V2', target_component, uint8_t, []).
-message_field('PLAY_TUNE_V2', format, uint32_t, [enum='TUNE_FORMAT', display=bitmask]).
-message_field('PLAY_TUNE_V2', tune, 'char[248]', []).
-message_field('SUPPORTED_TUNES', target_system, uint8_t, []).
-message_field('SUPPORTED_TUNES', target_component, uint8_t, []).
-message_field('SUPPORTED_TUNES', format, uint32_t, [enum='TUNE_FORMAT', display=bitmask]).
-message_field('EVENT', destination_component, uint8_t, []).
-message_field('EVENT', destination_system, uint8_t, []).
-message_field('EVENT', id, uint32_t, []).
-message_field('EVENT', event_time_boot_ms, uint32_t, [units=ms]).
-message_field('EVENT', sequence, uint16_t, []).
-message_field('EVENT', log_levels, uint8_t, []).
-message_field('EVENT', arguments, 'uint8_t[40]', []).
-message_field('CURRENT_EVENT_SEQUENCE', sequence, uint16_t, []).
-message_field('CURRENT_EVENT_SEQUENCE', flags, uint8_t, [enum='MAV_EVENT_CURRENT_SEQUENCE_FLAGS', display=bitmask]).
-message_field('REQUEST_EVENT', target_system, uint8_t, []).
-message_field('REQUEST_EVENT', target_component, uint8_t, []).
-message_field('REQUEST_EVENT', first_sequence, uint16_t, []).
-message_field('REQUEST_EVENT', last_sequence, uint16_t, []).
-message_field('RESPONSE_EVENT_ERROR', target_system, uint8_t, []).
-message_field('RESPONSE_EVENT_ERROR', target_component, uint8_t, []).
-message_field('RESPONSE_EVENT_ERROR', sequence, uint16_t, []).
-message_field('RESPONSE_EVENT_ERROR', sequence_oldest_available, uint16_t, []).
-message_field('RESPONSE_EVENT_ERROR', reason, uint8_t, [enum='MAV_EVENT_ERROR_REASON']).
-message_field('CANFD_FRAME', target_system, uint8_t, []).
-message_field('CANFD_FRAME', target_component, uint8_t, []).
-message_field('CANFD_FRAME', bus, uint8_t, []).
-message_field('CANFD_FRAME', len, uint8_t, []).
-message_field('CANFD_FRAME', id, uint32_t, []).
-message_field('CANFD_FRAME', data, 'uint8_t[64]', []).
-message_field('CAN_FILTER_MODIFY', target_system, uint8_t, []).
-message_field('CAN_FILTER_MODIFY', target_component, uint8_t, []).
-message_field('CAN_FILTER_MODIFY', bus, uint8_t, []).
-message_field('CAN_FILTER_MODIFY', operation, uint8_t, [enum='CAN_FILTER_OP']).
-message_field('CAN_FILTER_MODIFY', num_ids, uint8_t, []).
-message_field('CAN_FILTER_MODIFY', ids, 'uint16_t[16]', []).
-message_field('WHEEL_DISTANCE', time_usec, uint64_t, [units=us]).
-message_field('WHEEL_DISTANCE', count, uint8_t, []).
-message_field('WHEEL_DISTANCE', distance, 'double[16]', [units=m]).
-message_field('WINCH_STATUS', time_usec, uint64_t, [units=us]).
+message_field('GENERATOR_STATUS', generator_temperature, int(16), [units=degC, invalid='INT16_MAX']).
+message_field('GENERATOR_STATUS', runtime, uint(32), [units=s, invalid='UINT32_MAX']).
+message_field('GENERATOR_STATUS', time_until_maintenance, int(32), [units=s, invalid='INT32_MAX']).
+message_field('ACTUATOR_OUTPUT_STATUS', time_usec, uint(64), [units=us]).
+message_field('ACTUATOR_OUTPUT_STATUS', active, uint(32), [display=bitmask]).
+message_field('ACTUATOR_OUTPUT_STATUS', actuator, float, []).
+message_field('TIME_ESTIMATE_TO_TARGET', safe_return, int(32), [units=s]).
+message_field('TIME_ESTIMATE_TO_TARGET', land, int(32), [units=s]).
+message_field('TIME_ESTIMATE_TO_TARGET', mission_next_item, int(32), [units=s, invalid='-1']).
+message_field('TIME_ESTIMATE_TO_TARGET', mission_end, int(32), [units=s, invalid='-1']).
+message_field('TIME_ESTIMATE_TO_TARGET', commanded_action, int(32), [units=s, invalid='-1']).
+message_field('TUNNEL', target_system, uint(8), []).
+message_field('TUNNEL', target_component, uint(8), []).
+message_field('TUNNEL', payload_type, uint(16), [enum='MAV_TUNNEL_PAYLOAD_TYPE']).
+message_field('TUNNEL', payload_length, uint(8), []).
+message_field('TUNNEL', payload, uint(8), []).
+message_field('CAN_FRAME', target_system, uint(8), []).
+message_field('CAN_FRAME', target_component, uint(8), []).
+message_field('CAN_FRAME', bus, uint(8), []).
+message_field('CAN_FRAME', len, uint(8), []).
+message_field('CAN_FRAME', id, uint(32), []).
+message_field('CAN_FRAME', data, uint(8), []).
+message_field('ONBOARD_COMPUTER_STATUS', time_usec, uint(64), [units=us]).
+message_field('ONBOARD_COMPUTER_STATUS', uptime, uint(32), [units=ms]).
+message_field('ONBOARD_COMPUTER_STATUS', type, uint(8), []).
+message_field('ONBOARD_COMPUTER_STATUS', cpu_cores, uint(8), [invalid='[UINT8_MAX]']).
+message_field('ONBOARD_COMPUTER_STATUS', cpu_combined, uint(8), [invalid='[UINT8_MAX]']).
+message_field('ONBOARD_COMPUTER_STATUS', gpu_cores, uint(8), [invalid='[UINT8_MAX]']).
+message_field('ONBOARD_COMPUTER_STATUS', gpu_combined, uint(8), [invalid='[UINT8_MAX]']).
+message_field('ONBOARD_COMPUTER_STATUS', temperature_board, int(8), [units=degC, invalid='INT8_MAX']).
+message_field('ONBOARD_COMPUTER_STATUS', temperature_core, int(8), [units=degC, invalid='[INT8_MAX]']).
+message_field('ONBOARD_COMPUTER_STATUS', fan_speed, int(16), [units=rpm, invalid='[INT16_MAX]']).
+message_field('ONBOARD_COMPUTER_STATUS', ram_usage, uint(32), [units='MiB', invalid='UINT32_MAX']).
+message_field('ONBOARD_COMPUTER_STATUS', ram_total, uint(32), [units='MiB', invalid='UINT32_MAX']).
+message_field('ONBOARD_COMPUTER_STATUS', storage_type, uint(32), [invalid='[UINT32_MAX]']).
+message_field('ONBOARD_COMPUTER_STATUS', storage_usage, uint(32), [units='MiB', invalid='[UINT32_MAX]']).
+message_field('ONBOARD_COMPUTER_STATUS', storage_total, uint(32), [units='MiB', invalid='[UINT32_MAX]']).
+message_field('ONBOARD_COMPUTER_STATUS', link_type, uint(32), []).
+message_field('ONBOARD_COMPUTER_STATUS', link_tx_rate, uint(32), [units='KiB/s', invalid='[UINT32_MAX]']).
+message_field('ONBOARD_COMPUTER_STATUS', link_rx_rate, uint(32), [units='KiB/s', invalid='[UINT32_MAX]']).
+message_field('ONBOARD_COMPUTER_STATUS', link_tx_max, uint(32), [units='KiB/s', invalid='[UINT32_MAX]']).
+message_field('ONBOARD_COMPUTER_STATUS', link_rx_max, uint(32), [units='KiB/s', invalid='[UINT32_MAX]']).
+message_field('COMPONENT_INFORMATION', time_boot_ms, uint(32), [units=ms]).
+message_field('COMPONENT_INFORMATION', general_metadata_file_crc, uint(32), []).
+message_field('COMPONENT_INFORMATION', general_metadata_uri, char, []).
+message_field('COMPONENT_INFORMATION', peripherals_metadata_file_crc, uint(32), []).
+message_field('COMPONENT_INFORMATION', peripherals_metadata_uri, char, []).
+message_field('COMPONENT_METADATA', time_boot_ms, uint(32), [units=ms]).
+message_field('COMPONENT_METADATA', file_crc, uint(32), []).
+message_field('COMPONENT_METADATA', uri, char, []).
+message_field('PLAY_TUNE_V2', target_system, uint(8), []).
+message_field('PLAY_TUNE_V2', target_component, uint(8), []).
+message_field('PLAY_TUNE_V2', format, uint(32), [enum='TUNE_FORMAT', display=bitmask]).
+message_field('PLAY_TUNE_V2', tune, char, []).
+message_field('SUPPORTED_TUNES', target_system, uint(8), []).
+message_field('SUPPORTED_TUNES', target_component, uint(8), []).
+message_field('SUPPORTED_TUNES', format, uint(32), [enum='TUNE_FORMAT', display=bitmask]).
+message_field('EVENT', destination_component, uint(8), []).
+message_field('EVENT', destination_system, uint(8), []).
+message_field('EVENT', id, uint(32), []).
+message_field('EVENT', event_time_boot_ms, uint(32), [units=ms]).
+message_field('EVENT', sequence, uint(16), []).
+message_field('EVENT', log_levels, uint(8), []).
+message_field('EVENT', arguments, uint(8), []).
+message_field('CURRENT_EVENT_SEQUENCE', sequence, uint(16), []).
+message_field('CURRENT_EVENT_SEQUENCE', flags, uint(8), [enum='MAV_EVENT_CURRENT_SEQUENCE_FLAGS', display=bitmask]).
+message_field('REQUEST_EVENT', target_system, uint(8), []).
+message_field('REQUEST_EVENT', target_component, uint(8), []).
+message_field('REQUEST_EVENT', first_sequence, uint(16), []).
+message_field('REQUEST_EVENT', last_sequence, uint(16), []).
+message_field('RESPONSE_EVENT_ERROR', target_system, uint(8), []).
+message_field('RESPONSE_EVENT_ERROR', target_component, uint(8), []).
+message_field('RESPONSE_EVENT_ERROR', sequence, uint(16), []).
+message_field('RESPONSE_EVENT_ERROR', sequence_oldest_available, uint(16), []).
+message_field('RESPONSE_EVENT_ERROR', reason, uint(8), [enum='MAV_EVENT_ERROR_REASON']).
+message_field('CANFD_FRAME', target_system, uint(8), []).
+message_field('CANFD_FRAME', target_component, uint(8), []).
+message_field('CANFD_FRAME', bus, uint(8), []).
+message_field('CANFD_FRAME', len, uint(8), []).
+message_field('CANFD_FRAME', id, uint(32), []).
+message_field('CANFD_FRAME', data, uint(8), []).
+message_field('CAN_FILTER_MODIFY', target_system, uint(8), []).
+message_field('CAN_FILTER_MODIFY', target_component, uint(8), []).
+message_field('CAN_FILTER_MODIFY', bus, uint(8), []).
+message_field('CAN_FILTER_MODIFY', operation, uint(8), [enum='CAN_FILTER_OP']).
+message_field('CAN_FILTER_MODIFY', num_ids, uint(8), []).
+message_field('CAN_FILTER_MODIFY', ids, uint(16), []).
+message_field('WHEEL_DISTANCE', time_usec, uint(64), [units=us]).
+message_field('WHEEL_DISTANCE', count, uint(8), []).
+message_field('WHEEL_DISTANCE', distance, double, [units=m]).
+message_field('WINCH_STATUS', time_usec, uint(64), [units=us]).
 message_field('WINCH_STATUS', line_length, float, [units=m, invalid='NaN']).
 message_field('WINCH_STATUS', speed, float, [units='m/s', invalid='NaN']).
 message_field('WINCH_STATUS', tension, float, [units=kg, invalid='NaN']).
 message_field('WINCH_STATUS', voltage, float, [units='V', invalid='NaN']).
 message_field('WINCH_STATUS', current, float, [units='A', invalid='NaN']).
-message_field('WINCH_STATUS', temperature, int16_t, [units=degC, invalid='INT16_MAX']).
-message_field('WINCH_STATUS', status, uint32_t, [display=bitmask, enum='MAV_WINCH_STATUS_FLAG']).
-message_field('OPEN_DRONE_ID_BASIC_ID', target_system, uint8_t, []).
-message_field('OPEN_DRONE_ID_BASIC_ID', target_component, uint8_t, []).
-message_field('OPEN_DRONE_ID_BASIC_ID', id_or_mac, 'uint8_t[20]', []).
-message_field('OPEN_DRONE_ID_BASIC_ID', id_type, uint8_t, [enum='MAV_ODID_ID_TYPE']).
-message_field('OPEN_DRONE_ID_BASIC_ID', ua_type, uint8_t, [enum='MAV_ODID_UA_TYPE']).
-message_field('OPEN_DRONE_ID_BASIC_ID', uas_id, 'uint8_t[20]', []).
-message_field('OPEN_DRONE_ID_LOCATION', target_system, uint8_t, []).
-message_field('OPEN_DRONE_ID_LOCATION', target_component, uint8_t, []).
-message_field('OPEN_DRONE_ID_LOCATION', id_or_mac, 'uint8_t[20]', []).
-message_field('OPEN_DRONE_ID_LOCATION', status, uint8_t, [enum='MAV_ODID_STATUS']).
-message_field('OPEN_DRONE_ID_LOCATION', direction, uint16_t, [units=cdeg, invalid='36100']).
-message_field('OPEN_DRONE_ID_LOCATION', speed_horizontal, uint16_t, [units='cm/s']).
-message_field('OPEN_DRONE_ID_LOCATION', speed_vertical, int16_t, [units='cm/s']).
-message_field('OPEN_DRONE_ID_LOCATION', latitude, int32_t, [units=degE7, invalid='0']).
-message_field('OPEN_DRONE_ID_LOCATION', longitude, int32_t, [units=degE7, invalid='0']).
+message_field('WINCH_STATUS', temperature, int(16), [units=degC, invalid='INT16_MAX']).
+message_field('WINCH_STATUS', status, uint(32), [display=bitmask, enum='MAV_WINCH_STATUS_FLAG']).
+message_field('OPEN_DRONE_ID_BASIC_ID', target_system, uint(8), []).
+message_field('OPEN_DRONE_ID_BASIC_ID', target_component, uint(8), []).
+message_field('OPEN_DRONE_ID_BASIC_ID', id_or_mac, uint(8), []).
+message_field('OPEN_DRONE_ID_BASIC_ID', id_type, uint(8), [enum='MAV_ODID_ID_TYPE']).
+message_field('OPEN_DRONE_ID_BASIC_ID', ua_type, uint(8), [enum='MAV_ODID_UA_TYPE']).
+message_field('OPEN_DRONE_ID_BASIC_ID', uas_id, uint(8), []).
+message_field('OPEN_DRONE_ID_LOCATION', target_system, uint(8), []).
+message_field('OPEN_DRONE_ID_LOCATION', target_component, uint(8), []).
+message_field('OPEN_DRONE_ID_LOCATION', id_or_mac, uint(8), []).
+message_field('OPEN_DRONE_ID_LOCATION', status, uint(8), [enum='MAV_ODID_STATUS']).
+message_field('OPEN_DRONE_ID_LOCATION', direction, uint(16), [units=cdeg, invalid='36100']).
+message_field('OPEN_DRONE_ID_LOCATION', speed_horizontal, uint(16), [units='cm/s']).
+message_field('OPEN_DRONE_ID_LOCATION', speed_vertical, int(16), [units='cm/s']).
+message_field('OPEN_DRONE_ID_LOCATION', latitude, int(32), [units=degE7, invalid='0']).
+message_field('OPEN_DRONE_ID_LOCATION', longitude, int(32), [units=degE7, invalid='0']).
 message_field('OPEN_DRONE_ID_LOCATION', altitude_barometric, float, [units=m, invalid='-1000']).
 message_field('OPEN_DRONE_ID_LOCATION', altitude_geodetic, float, [units=m, invalid='-1000']).
-message_field('OPEN_DRONE_ID_LOCATION', height_reference, uint8_t, [enum='MAV_ODID_HEIGHT_REF']).
+message_field('OPEN_DRONE_ID_LOCATION', height_reference, uint(8), [enum='MAV_ODID_HEIGHT_REF']).
 message_field('OPEN_DRONE_ID_LOCATION', height, float, [units=m, invalid='-1000']).
-message_field('OPEN_DRONE_ID_LOCATION', horizontal_accuracy, uint8_t, [enum='MAV_ODID_HOR_ACC']).
-message_field('OPEN_DRONE_ID_LOCATION', vertical_accuracy, uint8_t, [enum='MAV_ODID_VER_ACC']).
-message_field('OPEN_DRONE_ID_LOCATION', barometer_accuracy, uint8_t, [enum='MAV_ODID_VER_ACC']).
-message_field('OPEN_DRONE_ID_LOCATION', speed_accuracy, uint8_t, [enum='MAV_ODID_SPEED_ACC']).
+message_field('OPEN_DRONE_ID_LOCATION', horizontal_accuracy, uint(8), [enum='MAV_ODID_HOR_ACC']).
+message_field('OPEN_DRONE_ID_LOCATION', vertical_accuracy, uint(8), [enum='MAV_ODID_VER_ACC']).
+message_field('OPEN_DRONE_ID_LOCATION', barometer_accuracy, uint(8), [enum='MAV_ODID_VER_ACC']).
+message_field('OPEN_DRONE_ID_LOCATION', speed_accuracy, uint(8), [enum='MAV_ODID_SPEED_ACC']).
 message_field('OPEN_DRONE_ID_LOCATION', timestamp, float, [units=s, invalid='0xFFFF']).
-message_field('OPEN_DRONE_ID_LOCATION', timestamp_accuracy, uint8_t, [enum='MAV_ODID_TIME_ACC']).
-message_field('OPEN_DRONE_ID_AUTHENTICATION', target_system, uint8_t, []).
-message_field('OPEN_DRONE_ID_AUTHENTICATION', target_component, uint8_t, []).
-message_field('OPEN_DRONE_ID_AUTHENTICATION', id_or_mac, 'uint8_t[20]', []).
-message_field('OPEN_DRONE_ID_AUTHENTICATION', authentication_type, uint8_t, [enum='MAV_ODID_AUTH_TYPE']).
-message_field('OPEN_DRONE_ID_AUTHENTICATION', data_page, uint8_t, []).
-message_field('OPEN_DRONE_ID_AUTHENTICATION', last_page_index, uint8_t, []).
-message_field('OPEN_DRONE_ID_AUTHENTICATION', length, uint8_t, [units=bytes]).
-message_field('OPEN_DRONE_ID_AUTHENTICATION', timestamp, uint32_t, [units=s]).
-message_field('OPEN_DRONE_ID_AUTHENTICATION', authentication_data, 'uint8_t[23]', []).
-message_field('OPEN_DRONE_ID_SELF_ID', target_system, uint8_t, []).
-message_field('OPEN_DRONE_ID_SELF_ID', target_component, uint8_t, []).
-message_field('OPEN_DRONE_ID_SELF_ID', id_or_mac, 'uint8_t[20]', []).
-message_field('OPEN_DRONE_ID_SELF_ID', description_type, uint8_t, [enum='MAV_ODID_DESC_TYPE']).
-message_field('OPEN_DRONE_ID_SELF_ID', description, 'char[23]', []).
-message_field('OPEN_DRONE_ID_SYSTEM', target_system, uint8_t, []).
-message_field('OPEN_DRONE_ID_SYSTEM', target_component, uint8_t, []).
-message_field('OPEN_DRONE_ID_SYSTEM', id_or_mac, 'uint8_t[20]', []).
-message_field('OPEN_DRONE_ID_SYSTEM', operator_location_type, uint8_t, [enum='MAV_ODID_OPERATOR_LOCATION_TYPE']).
-message_field('OPEN_DRONE_ID_SYSTEM', classification_type, uint8_t, [enum='MAV_ODID_CLASSIFICATION_TYPE']).
-message_field('OPEN_DRONE_ID_SYSTEM', operator_latitude, int32_t, [units=degE7, invalid='0']).
-message_field('OPEN_DRONE_ID_SYSTEM', operator_longitude, int32_t, [units=degE7, invalid='0']).
-message_field('OPEN_DRONE_ID_SYSTEM', area_count, uint16_t, []).
-message_field('OPEN_DRONE_ID_SYSTEM', area_radius, uint16_t, [units=m]).
+message_field('OPEN_DRONE_ID_LOCATION', timestamp_accuracy, uint(8), [enum='MAV_ODID_TIME_ACC']).
+message_field('OPEN_DRONE_ID_AUTHENTICATION', target_system, uint(8), []).
+message_field('OPEN_DRONE_ID_AUTHENTICATION', target_component, uint(8), []).
+message_field('OPEN_DRONE_ID_AUTHENTICATION', id_or_mac, uint(8), []).
+message_field('OPEN_DRONE_ID_AUTHENTICATION', authentication_type, uint(8), [enum='MAV_ODID_AUTH_TYPE']).
+message_field('OPEN_DRONE_ID_AUTHENTICATION', data_page, uint(8), []).
+message_field('OPEN_DRONE_ID_AUTHENTICATION', last_page_index, uint(8), []).
+message_field('OPEN_DRONE_ID_AUTHENTICATION', length, uint(8), [units=bytes]).
+message_field('OPEN_DRONE_ID_AUTHENTICATION', timestamp, uint(32), [units=s]).
+message_field('OPEN_DRONE_ID_AUTHENTICATION', authentication_data, uint(8), []).
+message_field('OPEN_DRONE_ID_SELF_ID', target_system, uint(8), []).
+message_field('OPEN_DRONE_ID_SELF_ID', target_component, uint(8), []).
+message_field('OPEN_DRONE_ID_SELF_ID', id_or_mac, uint(8), []).
+message_field('OPEN_DRONE_ID_SELF_ID', description_type, uint(8), [enum='MAV_ODID_DESC_TYPE']).
+message_field('OPEN_DRONE_ID_SELF_ID', description, char, []).
+message_field('OPEN_DRONE_ID_SYSTEM', target_system, uint(8), []).
+message_field('OPEN_DRONE_ID_SYSTEM', target_component, uint(8), []).
+message_field('OPEN_DRONE_ID_SYSTEM', id_or_mac, uint(8), []).
+message_field('OPEN_DRONE_ID_SYSTEM', operator_location_type, uint(8), [enum='MAV_ODID_OPERATOR_LOCATION_TYPE']).
+message_field('OPEN_DRONE_ID_SYSTEM', classification_type, uint(8), [enum='MAV_ODID_CLASSIFICATION_TYPE']).
+message_field('OPEN_DRONE_ID_SYSTEM', operator_latitude, int(32), [units=degE7, invalid='0']).
+message_field('OPEN_DRONE_ID_SYSTEM', operator_longitude, int(32), [units=degE7, invalid='0']).
+message_field('OPEN_DRONE_ID_SYSTEM', area_count, uint(16), []).
+message_field('OPEN_DRONE_ID_SYSTEM', area_radius, uint(16), [units=m]).
 message_field('OPEN_DRONE_ID_SYSTEM', area_ceiling, float, [units=m, invalid='-1000']).
 message_field('OPEN_DRONE_ID_SYSTEM', area_floor, float, [units=m, invalid='-1000']).
-message_field('OPEN_DRONE_ID_SYSTEM', category_eu, uint8_t, [enum='MAV_ODID_CATEGORY_EU']).
-message_field('OPEN_DRONE_ID_SYSTEM', class_eu, uint8_t, [enum='MAV_ODID_CLASS_EU']).
+message_field('OPEN_DRONE_ID_SYSTEM', category_eu, uint(8), [enum='MAV_ODID_CATEGORY_EU']).
+message_field('OPEN_DRONE_ID_SYSTEM', class_eu, uint(8), [enum='MAV_ODID_CLASS_EU']).
 message_field('OPEN_DRONE_ID_SYSTEM', operator_altitude_geo, float, [units=m, invalid='-1000']).
-message_field('OPEN_DRONE_ID_SYSTEM', timestamp, uint32_t, [units=s]).
-message_field('OPEN_DRONE_ID_OPERATOR_ID', target_system, uint8_t, []).
-message_field('OPEN_DRONE_ID_OPERATOR_ID', target_component, uint8_t, []).
-message_field('OPEN_DRONE_ID_OPERATOR_ID', id_or_mac, 'uint8_t[20]', []).
-message_field('OPEN_DRONE_ID_OPERATOR_ID', operator_id_type, uint8_t, [enum='MAV_ODID_OPERATOR_ID_TYPE']).
-message_field('OPEN_DRONE_ID_OPERATOR_ID', operator_id, 'char[20]', []).
-message_field('OPEN_DRONE_ID_MESSAGE_PACK', target_system, uint8_t, []).
-message_field('OPEN_DRONE_ID_MESSAGE_PACK', target_component, uint8_t, []).
-message_field('OPEN_DRONE_ID_MESSAGE_PACK', id_or_mac, 'uint8_t[20]', []).
-message_field('OPEN_DRONE_ID_MESSAGE_PACK', single_message_size, uint8_t, [units=bytes]).
-message_field('OPEN_DRONE_ID_MESSAGE_PACK', msg_pack_size, uint8_t, []).
-message_field('OPEN_DRONE_ID_MESSAGE_PACK', messages, 'uint8_t[225]', []).
-message_field('OPEN_DRONE_ID_ARM_STATUS', status, uint8_t, [enum='MAV_ODID_ARM_STATUS']).
-message_field('OPEN_DRONE_ID_ARM_STATUS', error, 'char[50]', []).
-message_field('OPEN_DRONE_ID_SYSTEM_UPDATE', target_system, uint8_t, []).
-message_field('OPEN_DRONE_ID_SYSTEM_UPDATE', target_component, uint8_t, []).
-message_field('OPEN_DRONE_ID_SYSTEM_UPDATE', operator_latitude, int32_t, [units=degE7, invalid='0']).
-message_field('OPEN_DRONE_ID_SYSTEM_UPDATE', operator_longitude, int32_t, [units=degE7, invalid='0']).
+message_field('OPEN_DRONE_ID_SYSTEM', timestamp, uint(32), [units=s]).
+message_field('OPEN_DRONE_ID_OPERATOR_ID', target_system, uint(8), []).
+message_field('OPEN_DRONE_ID_OPERATOR_ID', target_component, uint(8), []).
+message_field('OPEN_DRONE_ID_OPERATOR_ID', id_or_mac, uint(8), []).
+message_field('OPEN_DRONE_ID_OPERATOR_ID', operator_id_type, uint(8), [enum='MAV_ODID_OPERATOR_ID_TYPE']).
+message_field('OPEN_DRONE_ID_OPERATOR_ID', operator_id, char, []).
+message_field('OPEN_DRONE_ID_MESSAGE_PACK', target_system, uint(8), []).
+message_field('OPEN_DRONE_ID_MESSAGE_PACK', target_component, uint(8), []).
+message_field('OPEN_DRONE_ID_MESSAGE_PACK', id_or_mac, uint(8), []).
+message_field('OPEN_DRONE_ID_MESSAGE_PACK', single_message_size, uint(8), [units=bytes]).
+message_field('OPEN_DRONE_ID_MESSAGE_PACK', msg_pack_size, uint(8), []).
+message_field('OPEN_DRONE_ID_MESSAGE_PACK', messages, uint(8), []).
+message_field('OPEN_DRONE_ID_ARM_STATUS', status, uint(8), [enum='MAV_ODID_ARM_STATUS']).
+message_field('OPEN_DRONE_ID_ARM_STATUS', error, char, []).
+message_field('OPEN_DRONE_ID_SYSTEM_UPDATE', target_system, uint(8), []).
+message_field('OPEN_DRONE_ID_SYSTEM_UPDATE', target_component, uint(8), []).
+message_field('OPEN_DRONE_ID_SYSTEM_UPDATE', operator_latitude, int(32), [units=degE7, invalid='0']).
+message_field('OPEN_DRONE_ID_SYSTEM_UPDATE', operator_longitude, int(32), [units=degE7, invalid='0']).
 message_field('OPEN_DRONE_ID_SYSTEM_UPDATE', operator_altitude_geo, float, [units=m, invalid='-1000']).
-message_field('OPEN_DRONE_ID_SYSTEM_UPDATE', timestamp, uint32_t, [units=s]).
-message_field('HYGROMETER_SENSOR', id, uint8_t, [instance=true]).
-message_field('HYGROMETER_SENSOR', temperature, int16_t, [units=cdegC]).
-message_field('HYGROMETER_SENSOR', humidity, uint16_t, [units='c%']).
-message_field('PARAM_ACK_TRANSACTION', target_system, uint8_t, []).
-message_field('PARAM_ACK_TRANSACTION', target_component, uint8_t, []).
-message_field('PARAM_ACK_TRANSACTION', param_id, 'char[16]', []).
+message_field('OPEN_DRONE_ID_SYSTEM_UPDATE', timestamp, uint(32), [units=s]).
+message_field('HYGROMETER_SENSOR', id, uint(8), [instance=true]).
+message_field('HYGROMETER_SENSOR', temperature, int(16), [units=cdegC]).
+message_field('HYGROMETER_SENSOR', humidity, uint(16), [units='c%']).
+message_field('PARAM_ACK_TRANSACTION', target_system, uint(8), []).
+message_field('PARAM_ACK_TRANSACTION', target_component, uint(8), []).
+message_field('PARAM_ACK_TRANSACTION', param_id, char, []).
 message_field('PARAM_ACK_TRANSACTION', param_value, float, []).
-message_field('PARAM_ACK_TRANSACTION', param_type, uint8_t, [enum='MAV_PARAM_TYPE']).
-message_field('PARAM_ACK_TRANSACTION', param_result, uint8_t, [enum='PARAM_ACK']).
-message_field('AIRSPEED', id, uint8_t, [instance=true]).
+message_field('PARAM_ACK_TRANSACTION', param_type, uint(8), [enum='MAV_PARAM_TYPE']).
+message_field('PARAM_ACK_TRANSACTION', param_result, uint(8), [enum='PARAM_ACK']).
+message_field('AIRSPEED', id, uint(8), [instance=true]).
 message_field('AIRSPEED', airspeed, float, [units='m/s']).
-message_field('AIRSPEED', temperature, int16_t, [units=cdegC]).
+message_field('AIRSPEED', temperature, int(16), [units=cdegC]).
 message_field('AIRSPEED', raw_press, float, [units=hPa]).
-message_field('AIRSPEED', flags, uint8_t, [enum='AIRSPEED_SENSOR_FLAGS']).
-message_field('WIFI_NETWORK_INFO', ssid, 'char[32]', []).
-message_field('WIFI_NETWORK_INFO', channel_id, uint8_t, []).
-message_field('WIFI_NETWORK_INFO', signal_quality, uint8_t, [units='%']).
-message_field('WIFI_NETWORK_INFO', data_rate, uint16_t, [units='MiB/s']).
-message_field('WIFI_NETWORK_INFO', security, uint8_t, [enum='WIFI_NETWORK_SECURITY']).
-message_field('FIGURE_EIGHT_EXECUTION_STATUS', time_usec, uint64_t, [units=us]).
+message_field('AIRSPEED', flags, uint(8), [enum='AIRSPEED_SENSOR_FLAGS']).
+message_field('WIFI_NETWORK_INFO', ssid, char, []).
+message_field('WIFI_NETWORK_INFO', channel_id, uint(8), []).
+message_field('WIFI_NETWORK_INFO', signal_quality, uint(8), [units='%']).
+message_field('WIFI_NETWORK_INFO', data_rate, uint(16), [units='MiB/s']).
+message_field('WIFI_NETWORK_INFO', security, uint(8), [enum='WIFI_NETWORK_SECURITY']).
+message_field('SET_VELOCITY_LIMITS', target_system, uint(8), []).
+message_field('SET_VELOCITY_LIMITS', target_component, uint(8), []).
+message_field('SET_VELOCITY_LIMITS', horizontal_speed_limit, float, [default='NaN', units='m/s']).
+message_field('SET_VELOCITY_LIMITS', vertical_speed_limit, float, [default='NaN', units='m/s']).
+message_field('SET_VELOCITY_LIMITS', yaw_rate_limit, float, [default='NaN', units='rad/s']).
+message_field('VELOCITY_LIMITS', horizontal_speed_limit, float, [default='NaN', units='m/s']).
+message_field('VELOCITY_LIMITS', vertical_speed_limit, float, [default='NaN', units='m/s']).
+message_field('VELOCITY_LIMITS', yaw_rate_limit, float, [default='NaN', units='rad/s']).
+message_field('FIGURE_EIGHT_EXECUTION_STATUS', time_usec, uint(64), [units=us]).
 message_field('FIGURE_EIGHT_EXECUTION_STATUS', major_radius, float, [units=m]).
 message_field('FIGURE_EIGHT_EXECUTION_STATUS', minor_radius, float, [units=m]).
 message_field('FIGURE_EIGHT_EXECUTION_STATUS', orientation, float, [units=rad]).
-message_field('FIGURE_EIGHT_EXECUTION_STATUS', frame, uint8_t, [enum='MAV_FRAME']).
-message_field('FIGURE_EIGHT_EXECUTION_STATUS', x, int32_t, []).
-message_field('FIGURE_EIGHT_EXECUTION_STATUS', y, int32_t, []).
+message_field('FIGURE_EIGHT_EXECUTION_STATUS', frame, uint(8), [enum='MAV_FRAME']).
+message_field('FIGURE_EIGHT_EXECUTION_STATUS', x, int(32), []).
+message_field('FIGURE_EIGHT_EXECUTION_STATUS', y, int(32), []).
 message_field('FIGURE_EIGHT_EXECUTION_STATUS', z, float, [units=m]).
-message_field('BATTERY_STATUS_V2', id, uint8_t, [instance=true]).
-message_field('BATTERY_STATUS_V2', temperature, int16_t, [units=cdegC, invalid='INT16_MAX']).
+message_field('BATTERY_STATUS_V2', id, uint(8), [instance=true]).
+message_field('BATTERY_STATUS_V2', temperature, int(16), [units=cdegC, invalid='INT16_MAX']).
 message_field('BATTERY_STATUS_V2', voltage, float, [units='V', invalid='NaN']).
 message_field('BATTERY_STATUS_V2', current, float, [units='A', invalid='NaN']).
 message_field('BATTERY_STATUS_V2', capacity_consumed, float, [units='Ah', invalid='NaN']).
 message_field('BATTERY_STATUS_V2', capacity_remaining, float, [units='Ah', invalid='NaN']).
-message_field('BATTERY_STATUS_V2', percent_remaining, uint8_t, [units='%', invalid='UINT8_MAX']).
-message_field('BATTERY_STATUS_V2', status_flags, uint32_t, [display=bitmask, enum='MAV_BATTERY_STATUS_FLAGS']).
-message_field('COMPONENT_INFORMATION_BASIC', time_boot_ms, uint32_t, [units=ms]).
-message_field('COMPONENT_INFORMATION_BASIC', capabilities, uint64_t, [enum='MAV_PROTOCOL_CAPABILITY', display=bitmask]).
-message_field('COMPONENT_INFORMATION_BASIC', vendor_name, 'char[32]', []).
-message_field('COMPONENT_INFORMATION_BASIC', model_name, 'char[32]', []).
-message_field('COMPONENT_INFORMATION_BASIC', software_version, 'char[24]', []).
-message_field('COMPONENT_INFORMATION_BASIC', hardware_version, 'char[24]', []).
-message_field('COMPONENT_INFORMATION_BASIC', serial_number, 'char[32]', []).
-message_field('GROUP_START', group_id, uint32_t, []).
-message_field('GROUP_START', mission_checksum, uint32_t, []).
-message_field('GROUP_START', time_usec, uint64_t, [units=us]).
-message_field('GROUP_END', group_id, uint32_t, []).
-message_field('GROUP_END', mission_checksum, uint32_t, []).
-message_field('GROUP_END', time_usec, uint64_t, [units=us]).
-message_field('AVAILABLE_MODES', number_modes, uint8_t, []).
-message_field('AVAILABLE_MODES', mode_index, uint8_t, []).
-message_field('AVAILABLE_MODES', standard_mode, uint8_t, [enum='MAV_STANDARD_MODE']).
-message_field('AVAILABLE_MODES', custom_mode, uint32_t, []).
-message_field('AVAILABLE_MODES', properties, uint32_t, [enum='MAV_MODE_PROPERTY']).
-message_field('AVAILABLE_MODES', mode_name, 'char[35]', []).
-message_field('CURRENT_MODE', standard_mode, uint8_t, [enum='MAV_STANDARD_MODE']).
-message_field('CURRENT_MODE', custom_mode, uint32_t, []).
-message_field('CURRENT_MODE', intended_custom_mode, uint32_t, [invalid='0']).
-message_field('AVAILABLE_MODES_MONITOR', seq, uint8_t, []).
-message_field('TARGET_ABSOLUTE', timestamp, uint64_t, [units=us]).
-message_field('TARGET_ABSOLUTE', id, uint8_t, []).
-message_field('TARGET_ABSOLUTE', sensor_capabilities, uint8_t, [enum='TARGET_ABSOLUTE_SENSOR_CAPABILITY_FLAGS', display=bitmask]).
-message_field('TARGET_ABSOLUTE', lat, int32_t, [units=degE7]).
-message_field('TARGET_ABSOLUTE', lon, int32_t, [units=degE7]).
+message_field('BATTERY_STATUS_V2', percent_remaining, uint(8), [units='%', invalid='UINT8_MAX']).
+message_field('BATTERY_STATUS_V2', status_flags, uint(32), [display=bitmask, enum='MAV_BATTERY_STATUS_FLAGS']).
+message_field('COMPONENT_INFORMATION_BASIC', time_boot_ms, uint(32), [units=ms]).
+message_field('COMPONENT_INFORMATION_BASIC', capabilities, uint(64), [enum='MAV_PROTOCOL_CAPABILITY', display=bitmask]).
+message_field('COMPONENT_INFORMATION_BASIC', vendor_name, char, []).
+message_field('COMPONENT_INFORMATION_BASIC', model_name, char, []).
+message_field('COMPONENT_INFORMATION_BASIC', software_version, char, []).
+message_field('COMPONENT_INFORMATION_BASIC', hardware_version, char, []).
+message_field('COMPONENT_INFORMATION_BASIC', serial_number, char, []).
+message_field('GROUP_START', group_id, uint(32), []).
+message_field('GROUP_START', mission_checksum, uint(32), []).
+message_field('GROUP_START', time_usec, uint(64), [units=us]).
+message_field('GROUP_END', group_id, uint(32), []).
+message_field('GROUP_END', mission_checksum, uint(32), []).
+message_field('GROUP_END', time_usec, uint(64), [units=us]).
+message_field('AVAILABLE_MODES', number_modes, uint(8), []).
+message_field('AVAILABLE_MODES', mode_index, uint(8), []).
+message_field('AVAILABLE_MODES', standard_mode, uint(8), [enum='MAV_STANDARD_MODE']).
+message_field('AVAILABLE_MODES', custom_mode, uint(32), []).
+message_field('AVAILABLE_MODES', properties, uint(32), [enum='MAV_MODE_PROPERTY']).
+message_field('AVAILABLE_MODES', mode_name, char, []).
+message_field('CURRENT_MODE', standard_mode, uint(8), [enum='MAV_STANDARD_MODE']).
+message_field('CURRENT_MODE', custom_mode, uint(32), []).
+message_field('CURRENT_MODE', intended_custom_mode, uint(32), [invalid='0']).
+message_field('AVAILABLE_MODES_MONITOR', seq, uint(8), []).
+message_field('TARGET_ABSOLUTE', timestamp, uint(64), [units=us]).
+message_field('TARGET_ABSOLUTE', id, uint(8), []).
+message_field('TARGET_ABSOLUTE', sensor_capabilities, uint(8), [enum='TARGET_ABSOLUTE_SENSOR_CAPABILITY_FLAGS', display=bitmask]).
+message_field('TARGET_ABSOLUTE', lat, int(32), [units=degE7]).
+message_field('TARGET_ABSOLUTE', lon, int(32), [units=degE7]).
 message_field('TARGET_ABSOLUTE', alt, float, [units=m]).
-message_field('TARGET_ABSOLUTE', vel, 'float[3]', [units='m/s', invalid='[0]']).
-message_field('TARGET_ABSOLUTE', acc, 'float[3]', [units='m/s/s', invalid='[0]']).
-message_field('TARGET_ABSOLUTE', q_target, 'float[4]', [invalid='[0]']).
-message_field('TARGET_ABSOLUTE', rates, 'float[3]', [units='rad/s', invalid='[0]']).
-message_field('TARGET_ABSOLUTE', position_std, 'float[2]', [units=m]).
-message_field('TARGET_ABSOLUTE', vel_std, 'float[3]', [units='m/s']).
-message_field('TARGET_ABSOLUTE', acc_std, 'float[3]', [units='m/s/s']).
-message_field('TARGET_RELATIVE', timestamp, uint64_t, [units=us]).
-message_field('TARGET_RELATIVE', id, uint8_t, [instance=true]).
-message_field('TARGET_RELATIVE', frame, uint8_t, [enum='TARGET_OBS_FRAME']).
+message_field('TARGET_ABSOLUTE', vel, float, [units='m/s', invalid='[0]']).
+message_field('TARGET_ABSOLUTE', acc, float, [units='m/s/s', invalid='[0]']).
+message_field('TARGET_ABSOLUTE', q_target, float, [invalid='[0]']).
+message_field('TARGET_ABSOLUTE', rates, float, [units='rad/s', invalid='[0]']).
+message_field('TARGET_ABSOLUTE', position_std, float, [units=m]).
+message_field('TARGET_ABSOLUTE', vel_std, float, [units='m/s']).
+message_field('TARGET_ABSOLUTE', acc_std, float, [units='m/s/s']).
+message_field('TARGET_RELATIVE', timestamp, uint(64), [units=us]).
+message_field('TARGET_RELATIVE', id, uint(8), [instance=true]).
+message_field('TARGET_RELATIVE', frame, uint(8), [enum='TARGET_OBS_FRAME']).
 message_field('TARGET_RELATIVE', x, float, [units=m]).
 message_field('TARGET_RELATIVE', y, float, [units=m]).
 message_field('TARGET_RELATIVE', z, float, [units=m]).
-message_field('TARGET_RELATIVE', pos_std, 'float[3]', [units=m]).
+message_field('TARGET_RELATIVE', pos_std, float, [units=m]).
 message_field('TARGET_RELATIVE', yaw_std, float, [units=rad]).
-message_field('TARGET_RELATIVE', q_target, 'float[4]', []).
-message_field('TARGET_RELATIVE', q_sensor, 'float[4]', []).
-message_field('TARGET_RELATIVE', type, uint8_t, [enum='LANDING_TARGET_TYPE']).
-message_field('ICAROUS_HEARTBEAT', status, uint8_t, [enum='ICAROUS_FMS_STATE']).
-message_field('ICAROUS_KINEMATIC_BANDS', numBands, int8_t, []).
-message_field('ICAROUS_KINEMATIC_BANDS', type1, uint8_t, [enum='ICAROUS_TRACK_BAND_TYPES']).
+message_field('TARGET_RELATIVE', q_target, float, []).
+message_field('TARGET_RELATIVE', q_sensor, float, []).
+message_field('TARGET_RELATIVE', type, uint(8), [enum='LANDING_TARGET_TYPE']).
+message_field('ICAROUS_HEARTBEAT', status, uint(8), [enum='ICAROUS_FMS_STATE']).
+message_field('ICAROUS_KINEMATIC_BANDS', numBands, int(8), []).
+message_field('ICAROUS_KINEMATIC_BANDS', type1, uint(8), [enum='ICAROUS_TRACK_BAND_TYPES']).
 message_field('ICAROUS_KINEMATIC_BANDS', min1, float, [units=deg]).
 message_field('ICAROUS_KINEMATIC_BANDS', max1, float, [units=deg]).
-message_field('ICAROUS_KINEMATIC_BANDS', type2, uint8_t, [enum='ICAROUS_TRACK_BAND_TYPES']).
+message_field('ICAROUS_KINEMATIC_BANDS', type2, uint(8), [enum='ICAROUS_TRACK_BAND_TYPES']).
 message_field('ICAROUS_KINEMATIC_BANDS', min2, float, [units=deg]).
 message_field('ICAROUS_KINEMATIC_BANDS', max2, float, [units=deg]).
-message_field('ICAROUS_KINEMATIC_BANDS', type3, uint8_t, [enum='ICAROUS_TRACK_BAND_TYPES']).
+message_field('ICAROUS_KINEMATIC_BANDS', type3, uint(8), [enum='ICAROUS_TRACK_BAND_TYPES']).
 message_field('ICAROUS_KINEMATIC_BANDS', min3, float, [units=deg]).
 message_field('ICAROUS_KINEMATIC_BANDS', max3, float, [units=deg]).
-message_field('ICAROUS_KINEMATIC_BANDS', type4, uint8_t, [enum='ICAROUS_TRACK_BAND_TYPES']).
+message_field('ICAROUS_KINEMATIC_BANDS', type4, uint(8), [enum='ICAROUS_TRACK_BAND_TYPES']).
 message_field('ICAROUS_KINEMATIC_BANDS', min4, float, [units=deg]).
 message_field('ICAROUS_KINEMATIC_BANDS', max4, float, [units=deg]).
-message_field('ICAROUS_KINEMATIC_BANDS', type5, uint8_t, [enum='ICAROUS_TRACK_BAND_TYPES']).
+message_field('ICAROUS_KINEMATIC_BANDS', type5, uint(8), [enum='ICAROUS_TRACK_BAND_TYPES']).
 message_field('ICAROUS_KINEMATIC_BANDS', min5, float, [units=deg]).
 message_field('ICAROUS_KINEMATIC_BANDS', max5, float, [units=deg]).
-message_field('HEARTBEAT', type, uint8_t, [enum='MAV_TYPE']).
-message_field('HEARTBEAT', autopilot, uint8_t, [enum='MAV_AUTOPILOT']).
-message_field('HEARTBEAT', base_mode, uint8_t, [enum='MAV_MODE_FLAG', display=bitmask]).
-message_field('HEARTBEAT', custom_mode, uint32_t, []).
-message_field('HEARTBEAT', system_status, uint8_t, [enum='MAV_STATE']).
-message_field('HEARTBEAT', mavlink_version, uint8_t_mavlink_version, []).
-message_field('PROTOCOL_VERSION', version, uint16_t, []).
-message_field('PROTOCOL_VERSION', min_version, uint16_t, []).
-message_field('PROTOCOL_VERSION', max_version, uint16_t, []).
-message_field('PROTOCOL_VERSION', spec_version_hash, 'uint8_t[8]', []).
-message_field('PROTOCOL_VERSION', library_version_hash, 'uint8_t[8]', []).
-message_field('ARRAY_TEST_0', v1, uint8_t, []).
-message_field('ARRAY_TEST_0', ar_i8, 'int8_t[4]', []).
-message_field('ARRAY_TEST_0', ar_u8, 'uint8_t[4]', []).
-message_field('ARRAY_TEST_0', ar_u16, 'uint16_t[4]', []).
-message_field('ARRAY_TEST_0', ar_u32, 'uint32_t[4]', []).
-message_field('ARRAY_TEST_1', ar_u32, 'uint32_t[4]', []).
-message_field('ARRAY_TEST_3', v, uint8_t, []).
-message_field('ARRAY_TEST_3', ar_u32, 'uint32_t[4]', []).
-message_field('ARRAY_TEST_4', ar_u32, 'uint32_t[4]', []).
-message_field('ARRAY_TEST_4', v, uint8_t, []).
-message_field('ARRAY_TEST_5', c1, 'char[5]', []).
-message_field('ARRAY_TEST_5', c2, 'char[5]', []).
-message_field('ARRAY_TEST_6', v1, uint8_t, []).
-message_field('ARRAY_TEST_6', v2, uint16_t, []).
-message_field('ARRAY_TEST_6', v3, uint32_t, []).
-message_field('ARRAY_TEST_6', ar_u32, 'uint32_t[2]', []).
-message_field('ARRAY_TEST_6', ar_i32, 'int32_t[2]', []).
-message_field('ARRAY_TEST_6', ar_u16, 'uint16_t[2]', []).
-message_field('ARRAY_TEST_6', ar_i16, 'int16_t[2]', []).
-message_field('ARRAY_TEST_6', ar_u8, 'uint8_t[2]', []).
-message_field('ARRAY_TEST_6', ar_i8, 'int8_t[2]', []).
-message_field('ARRAY_TEST_6', ar_c, 'char[32]', []).
-message_field('ARRAY_TEST_6', ar_d, 'double[2]', []).
-message_field('ARRAY_TEST_6', ar_f, 'float[2]', []).
-message_field('ARRAY_TEST_7', ar_d, 'double[2]', []).
-message_field('ARRAY_TEST_7', ar_f, 'float[2]', []).
-message_field('ARRAY_TEST_7', ar_u32, 'uint32_t[2]', []).
-message_field('ARRAY_TEST_7', ar_i32, 'int32_t[2]', []).
-message_field('ARRAY_TEST_7', ar_u16, 'uint16_t[2]', []).
-message_field('ARRAY_TEST_7', ar_i16, 'int16_t[2]', []).
-message_field('ARRAY_TEST_7', ar_u8, 'uint8_t[2]', []).
-message_field('ARRAY_TEST_7', ar_i8, 'int8_t[2]', []).
-message_field('ARRAY_TEST_7', ar_c, 'char[32]', []).
-message_field('ARRAY_TEST_8', v3, uint32_t, []).
-message_field('ARRAY_TEST_8', ar_d, 'double[2]', []).
-message_field('ARRAY_TEST_8', ar_u16, 'uint16_t[2]', []).
+message_field('HEARTBEAT', type, uint(8), [enum='MAV_TYPE']).
+message_field('HEARTBEAT', autopilot, uint(8), [enum='MAV_AUTOPILOT']).
+message_field('HEARTBEAT', base_mode, uint(8), [enum='MAV_MODE_FLAG', display=bitmask]).
+message_field('HEARTBEAT', custom_mode, uint(32), []).
+message_field('HEARTBEAT', system_status, uint(8), [enum='MAV_STATE']).
+message_field('HEARTBEAT', mavlink_version, uint(8), []).
+message_field('PROTOCOL_VERSION', version, uint(16), []).
+message_field('PROTOCOL_VERSION', min_version, uint(16), []).
+message_field('PROTOCOL_VERSION', max_version, uint(16), []).
+message_field('PROTOCOL_VERSION', spec_version_hash, uint(8), []).
+message_field('PROTOCOL_VERSION', library_version_hash, uint(8), []).
+message_field('ARRAY_TEST_0', v1, uint(8), []).
+message_field('ARRAY_TEST_0', ar_i8, int(8), []).
+message_field('ARRAY_TEST_0', ar_u8, uint(8), []).
+message_field('ARRAY_TEST_0', ar_u16, uint(16), []).
+message_field('ARRAY_TEST_0', ar_u32, uint(32), []).
+message_field('ARRAY_TEST_1', ar_u32, uint(32), []).
+message_field('ARRAY_TEST_3', v, uint(8), []).
+message_field('ARRAY_TEST_3', ar_u32, uint(32), []).
+message_field('ARRAY_TEST_4', ar_u32, uint(32), []).
+message_field('ARRAY_TEST_4', v, uint(8), []).
+message_field('ARRAY_TEST_5', c1, char, []).
+message_field('ARRAY_TEST_5', c2, char, []).
+message_field('ARRAY_TEST_6', v1, uint(8), []).
+message_field('ARRAY_TEST_6', v2, uint(16), []).
+message_field('ARRAY_TEST_6', v3, uint(32), []).
+message_field('ARRAY_TEST_6', ar_u32, uint(32), []).
+message_field('ARRAY_TEST_6', ar_i32, int(32), []).
+message_field('ARRAY_TEST_6', ar_u16, uint(16), []).
+message_field('ARRAY_TEST_6', ar_i16, int(16), []).
+message_field('ARRAY_TEST_6', ar_u8, uint(8), []).
+message_field('ARRAY_TEST_6', ar_i8, int(8), []).
+message_field('ARRAY_TEST_6', ar_c, char, []).
+message_field('ARRAY_TEST_6', ar_d, double, []).
+message_field('ARRAY_TEST_6', ar_f, float, []).
+message_field('ARRAY_TEST_7', ar_d, double, []).
+message_field('ARRAY_TEST_7', ar_f, float, []).
+message_field('ARRAY_TEST_7', ar_u32, uint(32), []).
+message_field('ARRAY_TEST_7', ar_i32, int(32), []).
+message_field('ARRAY_TEST_7', ar_u16, uint(16), []).
+message_field('ARRAY_TEST_7', ar_i16, int(16), []).
+message_field('ARRAY_TEST_7', ar_u8, uint(8), []).
+message_field('ARRAY_TEST_7', ar_i8, int(8), []).
+message_field('ARRAY_TEST_7', ar_c, char, []).
+message_field('ARRAY_TEST_8', v3, uint(32), []).
+message_field('ARRAY_TEST_8', ar_d, double, []).
+message_field('ARRAY_TEST_8', ar_u16, uint(16), []).
 message_field('TEST_TYPES', c, char, []).
-message_field('TEST_TYPES', s, 'char[10]', []).
-message_field('TEST_TYPES', u8, uint8_t, []).
-message_field('TEST_TYPES', u16, uint16_t, []).
-message_field('TEST_TYPES', u32, uint32_t, [print_format='0x%08x']).
-message_field('TEST_TYPES', u64, uint64_t, []).
-message_field('TEST_TYPES', s8, int8_t, []).
-message_field('TEST_TYPES', s16, int16_t, []).
-message_field('TEST_TYPES', s32, int32_t, []).
-message_field('TEST_TYPES', s64, int64_t, []).
+message_field('TEST_TYPES', s, char, []).
+message_field('TEST_TYPES', u8, uint(8), []).
+message_field('TEST_TYPES', u16, uint(16), []).
+message_field('TEST_TYPES', u32, uint(32), [print_format='0x%08x']).
+message_field('TEST_TYPES', u64, uint(64), []).
+message_field('TEST_TYPES', s8, int(8), []).
+message_field('TEST_TYPES', s16, int(16), []).
+message_field('TEST_TYPES', s32, int(32), []).
+message_field('TEST_TYPES', s64, int(64), []).
 message_field('TEST_TYPES', f, float, []).
 message_field('TEST_TYPES', d, double, []).
-message_field('TEST_TYPES', u8_array, 'uint8_t[3]', []).
-message_field('TEST_TYPES', u16_array, 'uint16_t[3]', []).
-message_field('TEST_TYPES', u32_array, 'uint32_t[3]', []).
-message_field('TEST_TYPES', u64_array, 'uint64_t[3]', []).
-message_field('TEST_TYPES', s8_array, 'int8_t[3]', []).
-message_field('TEST_TYPES', s16_array, 'int16_t[3]', []).
-message_field('TEST_TYPES', s32_array, 'int32_t[3]', []).
-message_field('TEST_TYPES', s64_array, 'int64_t[3]', []).
-message_field('TEST_TYPES', f_array, 'float[3]', []).
-message_field('TEST_TYPES', d_array, 'double[3]', []).
-message_field('NAV_FILTER_BIAS', usec, uint64_t, []).
+message_field('TEST_TYPES', u8_array, uint(8), []).
+message_field('TEST_TYPES', u16_array, uint(16), []).
+message_field('TEST_TYPES', u32_array, uint(32), []).
+message_field('TEST_TYPES', u64_array, uint(64), []).
+message_field('TEST_TYPES', s8_array, int(8), []).
+message_field('TEST_TYPES', s16_array, int(16), []).
+message_field('TEST_TYPES', s32_array, int(32), []).
+message_field('TEST_TYPES', s64_array, int(64), []).
+message_field('TEST_TYPES', f_array, float, []).
+message_field('TEST_TYPES', d_array, double, []).
+message_field('NAV_FILTER_BIAS', usec, uint(64), []).
 message_field('NAV_FILTER_BIAS', accel_0, float, []).
 message_field('NAV_FILTER_BIAS', accel_1, float, []).
 message_field('NAV_FILTER_BIAS', accel_2, float, []).
 message_field('NAV_FILTER_BIAS', gyro_0, float, []).
 message_field('NAV_FILTER_BIAS', gyro_1, float, []).
 message_field('NAV_FILTER_BIAS', gyro_2, float, []).
-message_field('RADIO_CALIBRATION', aileron, 'uint16_t[3]', []).
-message_field('RADIO_CALIBRATION', elevator, 'uint16_t[3]', []).
-message_field('RADIO_CALIBRATION', rudder, 'uint16_t[3]', []).
-message_field('RADIO_CALIBRATION', gyro, 'uint16_t[2]', []).
-message_field('RADIO_CALIBRATION', pitch, 'uint16_t[5]', []).
-message_field('RADIO_CALIBRATION', throttle, 'uint16_t[5]', []).
-message_field('UALBERTA_SYS_STATUS', mode, uint8_t, []).
-message_field('UALBERTA_SYS_STATUS', nav_mode, uint8_t, []).
-message_field('UALBERTA_SYS_STATUS', pilot, uint8_t, []).
-message_field('UAVIONIX_ADSB_OUT_CFG', 'ICAO', uint32_t, []).
-message_field('UAVIONIX_ADSB_OUT_CFG', callsign, 'char[9]', []).
-message_field('UAVIONIX_ADSB_OUT_CFG', emitterType, uint8_t, [enum='ADSB_EMITTER_TYPE']).
-message_field('UAVIONIX_ADSB_OUT_CFG', aircraftSize, uint8_t, [enum='UAVIONIX_ADSB_OUT_CFG_AIRCRAFT_SIZE']).
-message_field('UAVIONIX_ADSB_OUT_CFG', gpsOffsetLat, uint8_t, [enum='UAVIONIX_ADSB_OUT_CFG_GPS_OFFSET_LAT']).
-message_field('UAVIONIX_ADSB_OUT_CFG', gpsOffsetLon, uint8_t, [enum='UAVIONIX_ADSB_OUT_CFG_GPS_OFFSET_LON']).
-message_field('UAVIONIX_ADSB_OUT_CFG', stallSpeed, uint16_t, [units='cm/s']).
-message_field('UAVIONIX_ADSB_OUT_CFG', rfSelect, uint8_t, [enum='UAVIONIX_ADSB_OUT_RF_SELECT', display=bitmask]).
-message_field('UAVIONIX_ADSB_OUT_DYNAMIC', utcTime, uint32_t, [units=s]).
-message_field('UAVIONIX_ADSB_OUT_DYNAMIC', gpsLat, int32_t, [units=degE7]).
-message_field('UAVIONIX_ADSB_OUT_DYNAMIC', gpsLon, int32_t, [units=degE7]).
-message_field('UAVIONIX_ADSB_OUT_DYNAMIC', gpsAlt, int32_t, [units=mm]).
-message_field('UAVIONIX_ADSB_OUT_DYNAMIC', gpsFix, uint8_t, [enum='UAVIONIX_ADSB_OUT_DYNAMIC_GPS_FIX']).
-message_field('UAVIONIX_ADSB_OUT_DYNAMIC', numSats, uint8_t, []).
-message_field('UAVIONIX_ADSB_OUT_DYNAMIC', baroAltMSL, int32_t, [units=mbar]).
-message_field('UAVIONIX_ADSB_OUT_DYNAMIC', accuracyHor, uint32_t, [units=mm]).
-message_field('UAVIONIX_ADSB_OUT_DYNAMIC', accuracyVert, uint16_t, [units=cm]).
-message_field('UAVIONIX_ADSB_OUT_DYNAMIC', accuracyVel, uint16_t, [units='mm/s']).
-message_field('UAVIONIX_ADSB_OUT_DYNAMIC', velVert, int16_t, [units='cm/s']).
-message_field('UAVIONIX_ADSB_OUT_DYNAMIC', velNS, int16_t, [units='cm/s']).
-message_field('UAVIONIX_ADSB_OUT_DYNAMIC', 'VelEW', int16_t, [units='cm/s']).
-message_field('UAVIONIX_ADSB_OUT_DYNAMIC', emergencyStatus, uint8_t, [enum='UAVIONIX_ADSB_EMERGENCY_STATUS']).
-message_field('UAVIONIX_ADSB_OUT_DYNAMIC', state, uint16_t, [enum='UAVIONIX_ADSB_OUT_DYNAMIC_STATE', display=bitmask]).
-message_field('UAVIONIX_ADSB_OUT_DYNAMIC', squawk, uint16_t, []).
-message_field('UAVIONIX_ADSB_TRANSCEIVER_HEALTH_REPORT', rfHealth, uint8_t, [enum='UAVIONIX_ADSB_RF_HEALTH', display=bitmask]).
-message_field('STORM32_GIMBAL_MANAGER_INFORMATION', gimbal_id, uint8_t, [instance=true]).
-message_field('STORM32_GIMBAL_MANAGER_INFORMATION', device_cap_flags, uint32_t, [enum='GIMBAL_DEVICE_CAP_FLAGS', display=bitmask]).
-message_field('STORM32_GIMBAL_MANAGER_INFORMATION', manager_cap_flags, uint32_t, [enum='MAV_STORM32_GIMBAL_MANAGER_CAP_FLAGS', display=bitmask]).
+message_field('RADIO_CALIBRATION', aileron, uint(16), []).
+message_field('RADIO_CALIBRATION', elevator, uint(16), []).
+message_field('RADIO_CALIBRATION', rudder, uint(16), []).
+message_field('RADIO_CALIBRATION', gyro, uint(16), []).
+message_field('RADIO_CALIBRATION', pitch, uint(16), []).
+message_field('RADIO_CALIBRATION', throttle, uint(16), []).
+message_field('UALBERTA_SYS_STATUS', mode, uint(8), []).
+message_field('UALBERTA_SYS_STATUS', nav_mode, uint(8), []).
+message_field('UALBERTA_SYS_STATUS', pilot, uint(8), []).
+message_field('UAVIONIX_ADSB_OUT_CFG', 'ICAO', uint(32), []).
+message_field('UAVIONIX_ADSB_OUT_CFG', callsign, char, []).
+message_field('UAVIONIX_ADSB_OUT_CFG', emitterType, uint(8), [enum='ADSB_EMITTER_TYPE']).
+message_field('UAVIONIX_ADSB_OUT_CFG', aircraftSize, uint(8), [enum='UAVIONIX_ADSB_OUT_CFG_AIRCRAFT_SIZE']).
+message_field('UAVIONIX_ADSB_OUT_CFG', gpsOffsetLat, uint(8), [enum='UAVIONIX_ADSB_OUT_CFG_GPS_OFFSET_LAT']).
+message_field('UAVIONIX_ADSB_OUT_CFG', gpsOffsetLon, uint(8), [enum='UAVIONIX_ADSB_OUT_CFG_GPS_OFFSET_LON']).
+message_field('UAVIONIX_ADSB_OUT_CFG', stallSpeed, uint(16), [units='cm/s']).
+message_field('UAVIONIX_ADSB_OUT_CFG', rfSelect, uint(8), [enum='UAVIONIX_ADSB_OUT_RF_SELECT', display=bitmask]).
+message_field('UAVIONIX_ADSB_OUT_DYNAMIC', utcTime, uint(32), [units=s]).
+message_field('UAVIONIX_ADSB_OUT_DYNAMIC', gpsLat, int(32), [units=degE7]).
+message_field('UAVIONIX_ADSB_OUT_DYNAMIC', gpsLon, int(32), [units=degE7]).
+message_field('UAVIONIX_ADSB_OUT_DYNAMIC', gpsAlt, int(32), [units=mm]).
+message_field('UAVIONIX_ADSB_OUT_DYNAMIC', gpsFix, uint(8), [enum='UAVIONIX_ADSB_OUT_DYNAMIC_GPS_FIX']).
+message_field('UAVIONIX_ADSB_OUT_DYNAMIC', numSats, uint(8), []).
+message_field('UAVIONIX_ADSB_OUT_DYNAMIC', baroAltMSL, int(32), [units=mbar]).
+message_field('UAVIONIX_ADSB_OUT_DYNAMIC', accuracyHor, uint(32), [units=mm]).
+message_field('UAVIONIX_ADSB_OUT_DYNAMIC', accuracyVert, uint(16), [units=cm]).
+message_field('UAVIONIX_ADSB_OUT_DYNAMIC', accuracyVel, uint(16), [units='mm/s']).
+message_field('UAVIONIX_ADSB_OUT_DYNAMIC', velVert, int(16), [units='cm/s']).
+message_field('UAVIONIX_ADSB_OUT_DYNAMIC', velNS, int(16), [units='cm/s']).
+message_field('UAVIONIX_ADSB_OUT_DYNAMIC', 'VelEW', int(16), [units='cm/s']).
+message_field('UAVIONIX_ADSB_OUT_DYNAMIC', emergencyStatus, uint(8), [enum='UAVIONIX_ADSB_EMERGENCY_STATUS']).
+message_field('UAVIONIX_ADSB_OUT_DYNAMIC', state, uint(16), [enum='UAVIONIX_ADSB_OUT_DYNAMIC_STATE', display=bitmask]).
+message_field('UAVIONIX_ADSB_OUT_DYNAMIC', squawk, uint(16), []).
+message_field('UAVIONIX_ADSB_TRANSCEIVER_HEALTH_REPORT', rfHealth, uint(8), [enum='UAVIONIX_ADSB_RF_HEALTH', display=bitmask]).
+message_field('STORM32_GIMBAL_MANAGER_INFORMATION', gimbal_id, uint(8), [instance=true]).
+message_field('STORM32_GIMBAL_MANAGER_INFORMATION', device_cap_flags, uint(32), [enum='GIMBAL_DEVICE_CAP_FLAGS', display=bitmask]).
+message_field('STORM32_GIMBAL_MANAGER_INFORMATION', manager_cap_flags, uint(32), [enum='MAV_STORM32_GIMBAL_MANAGER_CAP_FLAGS', display=bitmask]).
 message_field('STORM32_GIMBAL_MANAGER_INFORMATION', roll_min, float, [units=rad, invalid='NaN']).
 message_field('STORM32_GIMBAL_MANAGER_INFORMATION', roll_max, float, [units=rad, invalid='NaN']).
 message_field('STORM32_GIMBAL_MANAGER_INFORMATION', pitch_min, float, [units=rad, invalid='NaN']).
 message_field('STORM32_GIMBAL_MANAGER_INFORMATION', pitch_max, float, [units=rad, invalid='NaN']).
 message_field('STORM32_GIMBAL_MANAGER_INFORMATION', yaw_min, float, [units=rad, invalid='NaN']).
 message_field('STORM32_GIMBAL_MANAGER_INFORMATION', yaw_max, float, [units=rad, invalid='NaN']).
-message_field('STORM32_GIMBAL_MANAGER_STATUS', gimbal_id, uint8_t, [instance=true]).
-message_field('STORM32_GIMBAL_MANAGER_STATUS', supervisor, uint8_t, [enum='MAV_STORM32_GIMBAL_MANAGER_CLIENT']).
-message_field('STORM32_GIMBAL_MANAGER_STATUS', device_flags, uint16_t, [enum='GIMBAL_DEVICE_FLAGS']).
-message_field('STORM32_GIMBAL_MANAGER_STATUS', manager_flags, uint16_t, [enum='MAV_STORM32_GIMBAL_MANAGER_FLAGS']).
-message_field('STORM32_GIMBAL_MANAGER_STATUS', profile, uint8_t, [enum='MAV_STORM32_GIMBAL_MANAGER_PROFILE']).
-message_field('STORM32_GIMBAL_MANAGER_CONTROL', target_system, uint8_t, []).
-message_field('STORM32_GIMBAL_MANAGER_CONTROL', target_component, uint8_t, []).
-message_field('STORM32_GIMBAL_MANAGER_CONTROL', gimbal_id, uint8_t, [instance=true]).
-message_field('STORM32_GIMBAL_MANAGER_CONTROL', client, uint8_t, [enum='MAV_STORM32_GIMBAL_MANAGER_CLIENT']).
-message_field('STORM32_GIMBAL_MANAGER_CONTROL', device_flags, uint16_t, [enum='GIMBAL_DEVICE_FLAGS', invalid='UINT16_MAX']).
-message_field('STORM32_GIMBAL_MANAGER_CONTROL', manager_flags, uint16_t, [enum='MAV_STORM32_GIMBAL_MANAGER_FLAGS', invalid='0']).
-message_field('STORM32_GIMBAL_MANAGER_CONTROL', q, 'float[4]', [invalid='[NaN:]']).
+message_field('STORM32_GIMBAL_MANAGER_STATUS', gimbal_id, uint(8), [instance=true]).
+message_field('STORM32_GIMBAL_MANAGER_STATUS', supervisor, uint(8), [enum='MAV_STORM32_GIMBAL_MANAGER_CLIENT']).
+message_field('STORM32_GIMBAL_MANAGER_STATUS', device_flags, uint(16), [enum='GIMBAL_DEVICE_FLAGS']).
+message_field('STORM32_GIMBAL_MANAGER_STATUS', manager_flags, uint(16), [enum='MAV_STORM32_GIMBAL_MANAGER_FLAGS']).
+message_field('STORM32_GIMBAL_MANAGER_STATUS', profile, uint(8), [enum='MAV_STORM32_GIMBAL_MANAGER_PROFILE']).
+message_field('STORM32_GIMBAL_MANAGER_CONTROL', target_system, uint(8), []).
+message_field('STORM32_GIMBAL_MANAGER_CONTROL', target_component, uint(8), []).
+message_field('STORM32_GIMBAL_MANAGER_CONTROL', gimbal_id, uint(8), [instance=true]).
+message_field('STORM32_GIMBAL_MANAGER_CONTROL', client, uint(8), [enum='MAV_STORM32_GIMBAL_MANAGER_CLIENT']).
+message_field('STORM32_GIMBAL_MANAGER_CONTROL', device_flags, uint(16), [enum='GIMBAL_DEVICE_FLAGS', invalid='UINT16_MAX']).
+message_field('STORM32_GIMBAL_MANAGER_CONTROL', manager_flags, uint(16), [enum='MAV_STORM32_GIMBAL_MANAGER_FLAGS', invalid='0']).
+message_field('STORM32_GIMBAL_MANAGER_CONTROL', q, float, [invalid='[NaN:]']).
 message_field('STORM32_GIMBAL_MANAGER_CONTROL', angular_velocity_x, float, [units='rad/s', invalid='NaN']).
 message_field('STORM32_GIMBAL_MANAGER_CONTROL', angular_velocity_y, float, [units='rad/s', invalid='NaN']).
 message_field('STORM32_GIMBAL_MANAGER_CONTROL', angular_velocity_z, float, [units='rad/s', invalid='NaN']).
-message_field('STORM32_GIMBAL_MANAGER_CONTROL_PITCHYAW', target_system, uint8_t, []).
-message_field('STORM32_GIMBAL_MANAGER_CONTROL_PITCHYAW', target_component, uint8_t, []).
-message_field('STORM32_GIMBAL_MANAGER_CONTROL_PITCHYAW', gimbal_id, uint8_t, [instance=true]).
-message_field('STORM32_GIMBAL_MANAGER_CONTROL_PITCHYAW', client, uint8_t, [enum='MAV_STORM32_GIMBAL_MANAGER_CLIENT']).
-message_field('STORM32_GIMBAL_MANAGER_CONTROL_PITCHYAW', device_flags, uint16_t, [enum='GIMBAL_DEVICE_FLAGS', invalid='UINT16_MAX']).
-message_field('STORM32_GIMBAL_MANAGER_CONTROL_PITCHYAW', manager_flags, uint16_t, [enum='MAV_STORM32_GIMBAL_MANAGER_FLAGS', invalid='0']).
+message_field('STORM32_GIMBAL_MANAGER_CONTROL_PITCHYAW', target_system, uint(8), []).
+message_field('STORM32_GIMBAL_MANAGER_CONTROL_PITCHYAW', target_component, uint(8), []).
+message_field('STORM32_GIMBAL_MANAGER_CONTROL_PITCHYAW', gimbal_id, uint(8), [instance=true]).
+message_field('STORM32_GIMBAL_MANAGER_CONTROL_PITCHYAW', client, uint(8), [enum='MAV_STORM32_GIMBAL_MANAGER_CLIENT']).
+message_field('STORM32_GIMBAL_MANAGER_CONTROL_PITCHYAW', device_flags, uint(16), [enum='GIMBAL_DEVICE_FLAGS', invalid='UINT16_MAX']).
+message_field('STORM32_GIMBAL_MANAGER_CONTROL_PITCHYAW', manager_flags, uint(16), [enum='MAV_STORM32_GIMBAL_MANAGER_FLAGS', invalid='0']).
 message_field('STORM32_GIMBAL_MANAGER_CONTROL_PITCHYAW', pitch, float, [units=rad, invalid='NaN']).
 message_field('STORM32_GIMBAL_MANAGER_CONTROL_PITCHYAW', yaw, float, [units=rad, invalid='NaN']).
 message_field('STORM32_GIMBAL_MANAGER_CONTROL_PITCHYAW', pitch_rate, float, [units='rad/s', invalid='NaN']).
 message_field('STORM32_GIMBAL_MANAGER_CONTROL_PITCHYAW', yaw_rate, float, [units='rad/s', invalid='NaN']).
-message_field('STORM32_GIMBAL_MANAGER_CORRECT_ROLL', target_system, uint8_t, []).
-message_field('STORM32_GIMBAL_MANAGER_CORRECT_ROLL', target_component, uint8_t, []).
-message_field('STORM32_GIMBAL_MANAGER_CORRECT_ROLL', gimbal_id, uint8_t, [instance=true]).
-message_field('STORM32_GIMBAL_MANAGER_CORRECT_ROLL', client, uint8_t, [enum='MAV_STORM32_GIMBAL_MANAGER_CLIENT']).
+message_field('STORM32_GIMBAL_MANAGER_CORRECT_ROLL', target_system, uint(8), []).
+message_field('STORM32_GIMBAL_MANAGER_CORRECT_ROLL', target_component, uint(8), []).
+message_field('STORM32_GIMBAL_MANAGER_CORRECT_ROLL', gimbal_id, uint(8), [instance=true]).
+message_field('STORM32_GIMBAL_MANAGER_CORRECT_ROLL', client, uint(8), [enum='MAV_STORM32_GIMBAL_MANAGER_CLIENT']).
 message_field('STORM32_GIMBAL_MANAGER_CORRECT_ROLL', roll, float, [units=rad]).
-message_field('QSHOT_STATUS', mode, uint16_t, [enum='MAV_QSHOT_MODE']).
-message_field('QSHOT_STATUS', shot_state, uint16_t, []).
-message_field('RADIO_RC_CHANNELS', count, uint8_t, []).
-message_field('RADIO_RC_CHANNELS', flags, uint8_t, [enum='RADIO_RC_CHANNELS_FLAGS', display=bitmask]).
-message_field('RADIO_RC_CHANNELS', channels, 'int16_t[24]', []).
-message_field('RADIO_LINK_STATS', flags, uint8_t, [enum='RADIO_LINK_STATS_FLAGS', display=bitmask]).
-message_field('RADIO_LINK_STATS', rx_LQ, uint8_t, [units='c%', invalid='UINT8_MAX']).
-message_field('RADIO_LINK_STATS', rx_rssi1, uint8_t, [invalid='UINT8_MAX']).
-message_field('RADIO_LINK_STATS', rx_snr1, int8_t, [invalid='INT8_MAX']).
-message_field('RADIO_LINK_STATS', rx_rssi2, uint8_t, [invalid='UINT8_MAX']).
-message_field('RADIO_LINK_STATS', rx_snr2, int8_t, [invalid='INT8_MAX']).
-message_field('RADIO_LINK_STATS', rx_receive_antenna, uint8_t, [invalid='UINT8_MAX']).
-message_field('RADIO_LINK_STATS', rx_transmit_antenna, uint8_t, [invalid='UINT8_MAX']).
-message_field('RADIO_LINK_STATS', tx_LQ, uint8_t, [units='c%', invalid='UINT8_MAX']).
-message_field('RADIO_LINK_STATS', tx_rssi1, uint8_t, [invalid='UINT8_MAX']).
-message_field('RADIO_LINK_STATS', tx_snr1, int8_t, [invalid='INT8_MAX']).
-message_field('RADIO_LINK_STATS', tx_rssi2, uint8_t, [invalid='UINT8_MAX']).
-message_field('RADIO_LINK_STATS', tx_snr2, int8_t, [invalid='INT8_MAX']).
-message_field('RADIO_LINK_STATS', tx_receive_antenna, uint8_t, [invalid='UINT8_MAX']).
-message_field('RADIO_LINK_STATS', tx_transmit_antenna, uint8_t, [invalid='UINT8_MAX']).
-message_field('FRSKY_PASSTHROUGH_ARRAY', time_boot_ms, uint32_t, [units=ms]).
-message_field('FRSKY_PASSTHROUGH_ARRAY', count, uint8_t, []).
-message_field('FRSKY_PASSTHROUGH_ARRAY', packet_buf, 'uint8_t[240]', []).
-message_field('PARAM_VALUE_ARRAY', param_count, uint16_t, []).
-message_field('PARAM_VALUE_ARRAY', param_index_first, uint16_t, []).
-message_field('PARAM_VALUE_ARRAY', param_array_len, uint8_t, []).
-message_field('PARAM_VALUE_ARRAY', flags, uint16_t, []).
-message_field('PARAM_VALUE_ARRAY', packet_buf, 'uint8_t[248]', []).
-message_field('AVSS_PRS_SYS_STATUS', time_boot_ms, uint32_t, [units=ms]).
-message_field('AVSS_PRS_SYS_STATUS', error_status, uint32_t, []).
-message_field('AVSS_PRS_SYS_STATUS', battery_status, uint32_t, []).
-message_field('AVSS_PRS_SYS_STATUS', arm_status, uint8_t, []).
-message_field('AVSS_PRS_SYS_STATUS', charge_status, uint8_t, []).
-message_field('AVSS_DRONE_POSITION', time_boot_ms, uint32_t, [units=ms]).
-message_field('AVSS_DRONE_POSITION', lat, int32_t, [units=degE7]).
-message_field('AVSS_DRONE_POSITION', lon, int32_t, [units=degE7]).
-message_field('AVSS_DRONE_POSITION', alt, int32_t, [units=mm]).
+message_field('QSHOT_STATUS', mode, uint(16), [enum='MAV_QSHOT_MODE']).
+message_field('QSHOT_STATUS', shot_state, uint(16), []).
+message_field('RADIO_RC_CHANNELS', count, uint(8), []).
+message_field('RADIO_RC_CHANNELS', flags, uint(8), [enum='RADIO_RC_CHANNELS_FLAGS', display=bitmask]).
+message_field('RADIO_RC_CHANNELS', channels, int(16), []).
+message_field('RADIO_LINK_STATS', flags, uint(8), [enum='RADIO_LINK_STATS_FLAGS', display=bitmask]).
+message_field('RADIO_LINK_STATS', rx_LQ, uint(8), [units='c%', invalid='UINT8_MAX']).
+message_field('RADIO_LINK_STATS', rx_rssi1, uint(8), [invalid='UINT8_MAX']).
+message_field('RADIO_LINK_STATS', rx_snr1, int(8), [invalid='INT8_MAX']).
+message_field('RADIO_LINK_STATS', rx_rssi2, uint(8), [invalid='UINT8_MAX']).
+message_field('RADIO_LINK_STATS', rx_snr2, int(8), [invalid='INT8_MAX']).
+message_field('RADIO_LINK_STATS', rx_receive_antenna, uint(8), [invalid='UINT8_MAX']).
+message_field('RADIO_LINK_STATS', rx_transmit_antenna, uint(8), [invalid='UINT8_MAX']).
+message_field('RADIO_LINK_STATS', tx_LQ, uint(8), [units='c%', invalid='UINT8_MAX']).
+message_field('RADIO_LINK_STATS', tx_rssi1, uint(8), [invalid='UINT8_MAX']).
+message_field('RADIO_LINK_STATS', tx_snr1, int(8), [invalid='INT8_MAX']).
+message_field('RADIO_LINK_STATS', tx_rssi2, uint(8), [invalid='UINT8_MAX']).
+message_field('RADIO_LINK_STATS', tx_snr2, int(8), [invalid='INT8_MAX']).
+message_field('RADIO_LINK_STATS', tx_receive_antenna, uint(8), [invalid='UINT8_MAX']).
+message_field('RADIO_LINK_STATS', tx_transmit_antenna, uint(8), [invalid='UINT8_MAX']).
+message_field('FRSKY_PASSTHROUGH_ARRAY', time_boot_ms, uint(32), [units=ms]).
+message_field('FRSKY_PASSTHROUGH_ARRAY', count, uint(8), []).
+message_field('FRSKY_PASSTHROUGH_ARRAY', packet_buf, uint(8), []).
+message_field('PARAM_VALUE_ARRAY', param_count, uint(16), []).
+message_field('PARAM_VALUE_ARRAY', param_index_first, uint(16), []).
+message_field('PARAM_VALUE_ARRAY', param_array_len, uint(8), []).
+message_field('PARAM_VALUE_ARRAY', flags, uint(16), []).
+message_field('PARAM_VALUE_ARRAY', packet_buf, uint(8), []).
+message_field('AVSS_PRS_SYS_STATUS', time_boot_ms, uint(32), [units=ms]).
+message_field('AVSS_PRS_SYS_STATUS', error_status, uint(32), []).
+message_field('AVSS_PRS_SYS_STATUS', battery_status, uint(32), []).
+message_field('AVSS_PRS_SYS_STATUS', arm_status, uint(8), []).
+message_field('AVSS_PRS_SYS_STATUS', charge_status, uint(8), []).
+message_field('AVSS_DRONE_POSITION', time_boot_ms, uint(32), [units=ms]).
+message_field('AVSS_DRONE_POSITION', lat, int(32), [units=degE7]).
+message_field('AVSS_DRONE_POSITION', lon, int(32), [units=degE7]).
+message_field('AVSS_DRONE_POSITION', alt, int(32), [units=mm]).
 message_field('AVSS_DRONE_POSITION', ground_alt, float, [units=m]).
 message_field('AVSS_DRONE_POSITION', barometer_alt, float, [units=m]).
-message_field('AVSS_DRONE_IMU', time_boot_ms, uint32_t, [units=ms]).
+message_field('AVSS_DRONE_IMU', time_boot_ms, uint(32), [units=ms]).
 message_field('AVSS_DRONE_IMU', q1, float, []).
 message_field('AVSS_DRONE_IMU', q2, float, []).
 message_field('AVSS_DRONE_IMU', q3, float, []).
@@ -9192,35 +9211,35 @@ message_field('AVSS_DRONE_IMU', zacc, float, [units='m/s/s']).
 message_field('AVSS_DRONE_IMU', xgyro, float, [units='rad/s']).
 message_field('AVSS_DRONE_IMU', ygyro, float, [units='rad/s']).
 message_field('AVSS_DRONE_IMU', zgyro, float, [units='rad/s']).
-message_field('AVSS_DRONE_OPERATION_MODE', time_boot_ms, uint32_t, [units=ms]).
-message_field('AVSS_DRONE_OPERATION_MODE', 'M300_operation_mode', uint8_t, []).
-message_field('AVSS_DRONE_OPERATION_MODE', horsefly_operation_mode, uint8_t, []).
-message_field('CUBEPILOT_RAW_RC', rc_raw, 'uint8_t[32]', []).
-message_field('HERELINK_VIDEO_STREAM_INFORMATION', camera_id, uint8_t, []).
-message_field('HERELINK_VIDEO_STREAM_INFORMATION', status, uint8_t, []).
+message_field('AVSS_DRONE_OPERATION_MODE', time_boot_ms, uint(32), [units=ms]).
+message_field('AVSS_DRONE_OPERATION_MODE', 'M300_operation_mode', uint(8), []).
+message_field('AVSS_DRONE_OPERATION_MODE', horsefly_operation_mode, uint(8), []).
+message_field('CUBEPILOT_RAW_RC', rc_raw, uint(8), []).
+message_field('HERELINK_VIDEO_STREAM_INFORMATION', camera_id, uint(8), []).
+message_field('HERELINK_VIDEO_STREAM_INFORMATION', status, uint(8), []).
 message_field('HERELINK_VIDEO_STREAM_INFORMATION', framerate, float, [units='Hz']).
-message_field('HERELINK_VIDEO_STREAM_INFORMATION', resolution_h, uint16_t, [units=pix]).
-message_field('HERELINK_VIDEO_STREAM_INFORMATION', resolution_v, uint16_t, [units=pix]).
-message_field('HERELINK_VIDEO_STREAM_INFORMATION', bitrate, uint32_t, [units='bits/s']).
-message_field('HERELINK_VIDEO_STREAM_INFORMATION', rotation, uint16_t, [units=deg]).
-message_field('HERELINK_VIDEO_STREAM_INFORMATION', uri, 'char[230]', []).
-message_field('HERELINK_TELEM', rssi, uint8_t, []).
-message_field('HERELINK_TELEM', snr, int16_t, []).
-message_field('HERELINK_TELEM', rf_freq, uint32_t, []).
-message_field('HERELINK_TELEM', link_bw, uint32_t, []).
-message_field('HERELINK_TELEM', link_rate, uint32_t, []).
-message_field('HERELINK_TELEM', cpu_temp, int16_t, []).
-message_field('HERELINK_TELEM', board_temp, int16_t, []).
-message_field('CUBEPILOT_FIRMWARE_UPDATE_START', target_system, uint8_t, []).
-message_field('CUBEPILOT_FIRMWARE_UPDATE_START', target_component, uint8_t, []).
-message_field('CUBEPILOT_FIRMWARE_UPDATE_START', size, uint32_t, [units=bytes]).
-message_field('CUBEPILOT_FIRMWARE_UPDATE_START', crc, uint32_t, []).
-message_field('CUBEPILOT_FIRMWARE_UPDATE_RESP', target_system, uint8_t, []).
-message_field('CUBEPILOT_FIRMWARE_UPDATE_RESP', target_component, uint8_t, []).
-message_field('CUBEPILOT_FIRMWARE_UPDATE_RESP', offset, uint32_t, [units=bytes]).
-message_field('AIRLINK_AUTH', login, 'char[50]', []).
-message_field('AIRLINK_AUTH', password, 'char[50]', []).
-message_field('AIRLINK_AUTH_RESPONSE', resp_type, uint8_t, [enum='AIRLINK_AUTH_RESPONSE_TYPE']).
+message_field('HERELINK_VIDEO_STREAM_INFORMATION', resolution_h, uint(16), [units=pix]).
+message_field('HERELINK_VIDEO_STREAM_INFORMATION', resolution_v, uint(16), [units=pix]).
+message_field('HERELINK_VIDEO_STREAM_INFORMATION', bitrate, uint(32), [units='bits/s']).
+message_field('HERELINK_VIDEO_STREAM_INFORMATION', rotation, uint(16), [units=deg]).
+message_field('HERELINK_VIDEO_STREAM_INFORMATION', uri, char, []).
+message_field('HERELINK_TELEM', rssi, uint(8), []).
+message_field('HERELINK_TELEM', snr, int(16), []).
+message_field('HERELINK_TELEM', rf_freq, uint(32), []).
+message_field('HERELINK_TELEM', link_bw, uint(32), []).
+message_field('HERELINK_TELEM', link_rate, uint(32), []).
+message_field('HERELINK_TELEM', cpu_temp, int(16), []).
+message_field('HERELINK_TELEM', board_temp, int(16), []).
+message_field('CUBEPILOT_FIRMWARE_UPDATE_START', target_system, uint(8), []).
+message_field('CUBEPILOT_FIRMWARE_UPDATE_START', target_component, uint(8), []).
+message_field('CUBEPILOT_FIRMWARE_UPDATE_START', size, uint(32), [units=bytes]).
+message_field('CUBEPILOT_FIRMWARE_UPDATE_START', crc, uint(32), []).
+message_field('CUBEPILOT_FIRMWARE_UPDATE_RESP', target_system, uint(8), []).
+message_field('CUBEPILOT_FIRMWARE_UPDATE_RESP', target_component, uint(8), []).
+message_field('CUBEPILOT_FIRMWARE_UPDATE_RESP', offset, uint(32), [units=bytes]).
+message_field('AIRLINK_AUTH', login, char, []).
+message_field('AIRLINK_AUTH', password, char, []).
+message_field('AIRLINK_AUTH_RESPONSE', resp_type, uint(8), [enum='AIRLINK_AUTH_RESPONSE_TYPE']).
 
 :- dynamic message_field_len/3.
 
@@ -9237,8 +9256,25 @@ message_field_len('DEVICE_OP_READ', busname, 40).
 message_field_len('DEVICE_OP_READ_REPLY', data, 128).
 message_field_len('DEVICE_OP_WRITE', busname, 40).
 message_field_len('DEVICE_OP_WRITE', data, 128).
+message_field_len('VISION_POSITION_DELTA', angle_delta, 3).
+message_field_len('VISION_POSITION_DELTA', position_delta, 3).
+message_field_len('ESC_TELEMETRY_1_TO_4', temperature, 4).
+message_field_len('ESC_TELEMETRY_1_TO_4', voltage, 4).
+message_field_len('ESC_TELEMETRY_1_TO_4', current, 4).
+message_field_len('ESC_TELEMETRY_1_TO_4', totalcurrent, 4).
+message_field_len('ESC_TELEMETRY_1_TO_4', rpm, 4).
 message_field_len('ESC_TELEMETRY_1_TO_4', count, 4).
+message_field_len('ESC_TELEMETRY_5_TO_8', temperature, 4).
+message_field_len('ESC_TELEMETRY_5_TO_8', voltage, 4).
+message_field_len('ESC_TELEMETRY_5_TO_8', current, 4).
+message_field_len('ESC_TELEMETRY_5_TO_8', totalcurrent, 4).
+message_field_len('ESC_TELEMETRY_5_TO_8', rpm, 4).
 message_field_len('ESC_TELEMETRY_5_TO_8', count, 4).
+message_field_len('ESC_TELEMETRY_9_TO_12', temperature, 4).
+message_field_len('ESC_TELEMETRY_9_TO_12', voltage, 4).
+message_field_len('ESC_TELEMETRY_9_TO_12', current, 4).
+message_field_len('ESC_TELEMETRY_9_TO_12', totalcurrent, 4).
+message_field_len('ESC_TELEMETRY_9_TO_12', rpm, 4).
 message_field_len('ESC_TELEMETRY_9_TO_12', count, 4).
 message_field_len('OSD_PARAM_CONFIG', param_id, 16).
 message_field_len('OSD_PARAM_SHOW_CONFIG_REPLY', param_id, 16).
@@ -9250,37 +9286,61 @@ message_field_len('PARAM_VALUE', param_id, 16).
 message_field_len('PARAM_SET', param_id, 16).
 message_field_len('GPS_STATUS', satellite_prn, 20).
 message_field_len('GPS_STATUS', satellite_used, 20).
+message_field_len('GPS_STATUS', satellite_elevation, 20).
+message_field_len('GPS_STATUS', satellite_azimuth, 20).
+message_field_len('GPS_STATUS', satellite_snr, 20).
+message_field_len('ATTITUDE_QUATERNION', repr_offset_q, 4).
 message_field_len('PARAM_MAP_RC', param_id, 16).
 message_field_len('ATTITUDE_QUATERNION_COV', q, 4).
+message_field_len('ATTITUDE_QUATERNION_COV', covariance, 9).
+message_field_len('GLOBAL_POSITION_INT_COV', covariance, 36).
+message_field_len('LOCAL_POSITION_NED_COV', covariance, 45).
 message_field_len('SET_ATTITUDE_TARGET', q, 4).
 message_field_len('SET_ATTITUDE_TARGET', thrust_body, 3).
 message_field_len('ATTITUDE_TARGET', q, 4).
 message_field_len('HIL_ACTUATOR_CONTROLS', controls, 16).
+message_field_len('GLOBAL_VISION_POSITION_ESTIMATE', covariance, 21).
+message_field_len('VISION_POSITION_ESTIMATE', covariance, 21).
+message_field_len('VISION_SPEED_ESTIMATE', covariance, 9).
+message_field_len('VICON_POSITION_ESTIMATE', covariance, 21).
 message_field_len('FILE_TRANSFER_PROTOCOL', payload, 251).
 message_field_len('HIL_STATE_QUATERNION', attitude_quaternion, 4).
 message_field_len('LOG_DATA', data, 90).
 message_field_len('GPS_INJECT_DATA', data, 110).
 message_field_len('SERIAL_CONTROL', data, 70).
 message_field_len('ENCAPSULATED_DATA', data, 253).
+message_field_len('DISTANCE_SENSOR', quaternion, 4).
+message_field_len('TERRAIN_DATA', data, 16).
 message_field_len('ATT_POS_MOCAP', q, 4).
+message_field_len('ATT_POS_MOCAP', covariance, 21).
 message_field_len('SET_ACTUATOR_CONTROL_TARGET', controls, 8).
 message_field_len('ACTUATOR_CONTROL_TARGET', controls, 8).
 message_field_len('RESOURCE_REQUEST', uri, 120).
 message_field_len('RESOURCE_REQUEST', storage, 120).
+message_field_len('FOLLOW_TARGET', vel, 3).
+message_field_len('FOLLOW_TARGET', acc, 3).
+message_field_len('FOLLOW_TARGET', attitude_q, 4).
+message_field_len('FOLLOW_TARGET', rates, 3).
 message_field_len('FOLLOW_TARGET', position_cov, 3).
 message_field_len('CONTROL_SYSTEM_STATE', vel_variance, 3).
 message_field_len('CONTROL_SYSTEM_STATE', pos_variance, 3).
 message_field_len('CONTROL_SYSTEM_STATE', q, 4).
+message_field_len('BATTERY_STATUS', voltages, 10).
+message_field_len('BATTERY_STATUS', voltages_ext, 4).
 message_field_len('AUTOPILOT_VERSION', flight_custom_version, 8).
 message_field_len('AUTOPILOT_VERSION', middleware_custom_version, 8).
 message_field_len('AUTOPILOT_VERSION', os_custom_version, 8).
 message_field_len('AUTOPILOT_VERSION', uid2, 18).
 message_field_len('LANDING_TARGET', q, 4).
 message_field_len('GPS_RTCM_DATA', data, 180).
+message_field_len('HOME_POSITION', q, 4).
 message_field_len('SET_HOME_POSITION', q, 4).
 message_field_len('ADSB_VEHICLE', callsign, 9).
 message_field_len('V2_EXTENSION', payload, 249).
 message_field_len('MEMORY_VECT', value, 32).
+message_field_len('DEBUG_VECT', name, 10).
+message_field_len('NAMED_VALUE_FLOAT', name, 10).
+message_field_len('NAMED_VALUE_INT', name, 10).
 message_field_len('STATUSTEXT', text, 50).
 message_field_len('SETUP_SIGNING', secret_key, 32).
 message_field_len('PLAY_TUNE', tune, 30).
@@ -9300,9 +9360,15 @@ message_field_len('GIMBAL_MANAGER_SET_ATTITUDE', q, 4).
 message_field_len('GIMBAL_DEVICE_INFORMATION', vendor_name, 32).
 message_field_len('GIMBAL_DEVICE_INFORMATION', model_name, 32).
 message_field_len('GIMBAL_DEVICE_INFORMATION', custom_name, 32).
+message_field_len('GIMBAL_DEVICE_SET_ATTITUDE', q, 4).
 message_field_len('GIMBAL_DEVICE_ATTITUDE_STATUS', q, 4).
 message_field_len('AUTOPILOT_STATE_FOR_GIMBAL_DEVICE', q, 4).
+message_field_len('ESC_INFO', failure_flags, 4).
 message_field_len('ESC_INFO', error_count, 4).
+message_field_len('ESC_INFO', temperature, 4).
+message_field_len('ESC_STATUS', rpm, 4).
+message_field_len('ESC_STATUS', voltage, 4).
+message_field_len('ESC_STATUS', current, 4).
 message_field_len('WIFI_CONFIG_AP', ssid, 32).
 message_field_len('WIFI_CONFIG_AP', password, 64).
 message_field_len('AIS_VESSEL', callsign, 7).
@@ -9316,7 +9382,27 @@ message_field_len('PARAM_EXT_SET', param_id, 16).
 message_field_len('PARAM_EXT_SET', param_value, 128).
 message_field_len('PARAM_EXT_ACK', param_id, 16).
 message_field_len('PARAM_EXT_ACK', param_value, 128).
+message_field_len('OBSTACLE_DISTANCE', distances, 72).
 message_field_len('ODOMETRY', q, 4).
+message_field_len('ODOMETRY', pose_covariance, 21).
+message_field_len('ODOMETRY', velocity_covariance, 21).
+message_field_len('TRAJECTORY_REPRESENTATION_WAYPOINTS', pos_x, 5).
+message_field_len('TRAJECTORY_REPRESENTATION_WAYPOINTS', pos_y, 5).
+message_field_len('TRAJECTORY_REPRESENTATION_WAYPOINTS', pos_z, 5).
+message_field_len('TRAJECTORY_REPRESENTATION_WAYPOINTS', vel_x, 5).
+message_field_len('TRAJECTORY_REPRESENTATION_WAYPOINTS', vel_y, 5).
+message_field_len('TRAJECTORY_REPRESENTATION_WAYPOINTS', vel_z, 5).
+message_field_len('TRAJECTORY_REPRESENTATION_WAYPOINTS', acc_x, 5).
+message_field_len('TRAJECTORY_REPRESENTATION_WAYPOINTS', acc_y, 5).
+message_field_len('TRAJECTORY_REPRESENTATION_WAYPOINTS', acc_z, 5).
+message_field_len('TRAJECTORY_REPRESENTATION_WAYPOINTS', pos_yaw, 5).
+message_field_len('TRAJECTORY_REPRESENTATION_WAYPOINTS', vel_yaw, 5).
+message_field_len('TRAJECTORY_REPRESENTATION_WAYPOINTS', command, 5).
+message_field_len('TRAJECTORY_REPRESENTATION_BEZIER', pos_x, 5).
+message_field_len('TRAJECTORY_REPRESENTATION_BEZIER', pos_y, 5).
+message_field_len('TRAJECTORY_REPRESENTATION_BEZIER', pos_z, 5).
+message_field_len('TRAJECTORY_REPRESENTATION_BEZIER', delta, 5).
+message_field_len('TRAJECTORY_REPRESENTATION_BEZIER', pos_yaw, 5).
 message_field_len('CELLULAR_CONFIG', pin, 16).
 message_field_len('CELLULAR_CONFIG', new_pin, 16).
 message_field_len('CELLULAR_CONFIG', apn, 32).
@@ -9324,10 +9410,26 @@ message_field_len('CELLULAR_CONFIG', puk, 16).
 message_field_len('UTM_GLOBAL_POSITION', uas_id, 18).
 message_field_len('DEBUG_FLOAT_ARRAY', name, 10).
 message_field_len('DEBUG_FLOAT_ARRAY', data, 58).
+message_field_len('SMART_BATTERY_INFO', serial_number, 16).
+message_field_len('SMART_BATTERY_INFO', device_name, 50).
+message_field_len('SMART_BATTERY_INFO', manufacture_date, 11).
 message_field_len('ACTUATOR_OUTPUT_STATUS', actuator, 32).
 message_field_len('TUNNEL', payload, 128).
 message_field_len('CAN_FRAME', data, 8).
+message_field_len('ONBOARD_COMPUTER_STATUS', cpu_cores, 8).
+message_field_len('ONBOARD_COMPUTER_STATUS', cpu_combined, 10).
+message_field_len('ONBOARD_COMPUTER_STATUS', gpu_cores, 4).
+message_field_len('ONBOARD_COMPUTER_STATUS', gpu_combined, 10).
+message_field_len('ONBOARD_COMPUTER_STATUS', temperature_core, 8).
+message_field_len('ONBOARD_COMPUTER_STATUS', fan_speed, 4).
+message_field_len('ONBOARD_COMPUTER_STATUS', storage_type, 4).
+message_field_len('ONBOARD_COMPUTER_STATUS', storage_usage, 4).
+message_field_len('ONBOARD_COMPUTER_STATUS', storage_total, 4).
 message_field_len('ONBOARD_COMPUTER_STATUS', link_type, 6).
+message_field_len('ONBOARD_COMPUTER_STATUS', link_tx_rate, 6).
+message_field_len('ONBOARD_COMPUTER_STATUS', link_rx_rate, 6).
+message_field_len('ONBOARD_COMPUTER_STATUS', link_tx_max, 6).
+message_field_len('ONBOARD_COMPUTER_STATUS', link_rx_max, 6).
 message_field_len('COMPONENT_INFORMATION', general_metadata_uri, 100).
 message_field_len('COMPONENT_INFORMATION', peripherals_metadata_uri, 100).
 message_field_len('COMPONENT_METADATA', uri, 100).
@@ -9335,6 +9437,7 @@ message_field_len('PLAY_TUNE_V2', tune, 248).
 message_field_len('EVENT', arguments, 40).
 message_field_len('CANFD_FRAME', data, 64).
 message_field_len('CAN_FILTER_MODIFY', ids, 16).
+message_field_len('WHEEL_DISTANCE', distance, 16).
 message_field_len('OPEN_DRONE_ID_BASIC_ID', id_or_mac, 20).
 message_field_len('OPEN_DRONE_ID_BASIC_ID', uas_id, 20).
 message_field_len('OPEN_DRONE_ID_LOCATION', id_or_mac, 20).
@@ -9356,6 +9459,14 @@ message_field_len('COMPONENT_INFORMATION_BASIC', software_version, 24).
 message_field_len('COMPONENT_INFORMATION_BASIC', hardware_version, 24).
 message_field_len('COMPONENT_INFORMATION_BASIC', serial_number, 32).
 message_field_len('AVAILABLE_MODES', mode_name, 35).
+message_field_len('TARGET_ABSOLUTE', vel, 3).
+message_field_len('TARGET_ABSOLUTE', acc, 3).
+message_field_len('TARGET_ABSOLUTE', q_target, 4).
+message_field_len('TARGET_ABSOLUTE', rates, 3).
+message_field_len('TARGET_ABSOLUTE', position_std, 2).
+message_field_len('TARGET_ABSOLUTE', vel_std, 3).
+message_field_len('TARGET_ABSOLUTE', acc_std, 3).
+message_field_len('TARGET_RELATIVE', pos_std, 3).
 message_field_len('TARGET_RELATIVE', q_target, 4).
 message_field_len('TARGET_RELATIVE', q_sensor, 4).
 message_field_len('PROTOCOL_VERSION', spec_version_hash, 8).
@@ -9407,6 +9518,7 @@ message_field_len('RADIO_CALIBRATION', gyro, 2).
 message_field_len('RADIO_CALIBRATION', pitch, 5).
 message_field_len('RADIO_CALIBRATION', throttle, 5).
 message_field_len('UAVIONIX_ADSB_OUT_CFG', callsign, 9).
+message_field_len('STORM32_GIMBAL_MANAGER_CONTROL', q, 4).
 message_field_len('RADIO_RC_CHANNELS', channels, 24).
 message_field_len('FRSKY_PASSTHROUGH_ARRAY', packet_buf, 240).
 message_field_len('PARAM_VALUE_ARRAY', packet_buf, 248).
@@ -9414,1045 +9526,6 @@ message_field_len('CUBEPILOT_RAW_RC', rc_raw, 32).
 message_field_len('HERELINK_VIDEO_STREAM_INFORMATION', uri, 230).
 message_field_len('AIRLINK_AUTH', login, 50).
 message_field_len('AIRLINK_AUTH', password, 50).
-
-:- dynamic message_field_type/3.
-
-message_field_type('SENSOR_OFFSETS', mag_ofs_x, int(16)).
-message_field_type('SENSOR_OFFSETS', mag_ofs_y, int(16)).
-message_field_type('SENSOR_OFFSETS', mag_ofs_z, int(16)).
-message_field_type('SENSOR_OFFSETS', raw_press, int(32)).
-message_field_type('SENSOR_OFFSETS', raw_temp, int(32)).
-message_field_type('SENSOR_OFFSETS', gyro_cal_x, float).
-message_field_type('SENSOR_OFFSETS', gyro_cal_y, float).
-message_field_type('SENSOR_OFFSETS', gyro_cal_z, float).
-message_field_type('SENSOR_OFFSETS', accel_cal_x, float).
-message_field_type('SENSOR_OFFSETS', accel_cal_y, float).
-message_field_type('SENSOR_OFFSETS', accel_cal_z, float).
-message_field_type('SET_MAG_OFFSETS', target_system, uint(8)).
-message_field_type('SET_MAG_OFFSETS', target_component, uint(8)).
-message_field_type('SET_MAG_OFFSETS', mag_ofs_x, int(16)).
-message_field_type('SET_MAG_OFFSETS', mag_ofs_y, int(16)).
-message_field_type('SET_MAG_OFFSETS', mag_ofs_z, int(16)).
-message_field_type('MEMINFO', brkval, uint(16)).
-message_field_type('AP_ADC', adc1, uint(16)).
-message_field_type('AP_ADC', adc2, uint(16)).
-message_field_type('AP_ADC', adc3, uint(16)).
-message_field_type('AP_ADC', adc4, uint(16)).
-message_field_type('AP_ADC', adc5, uint(16)).
-message_field_type('AP_ADC', adc6, uint(16)).
-message_field_type('DIGICAM_CONFIGURE', target_system, uint(8)).
-message_field_type('DIGICAM_CONFIGURE', target_component, uint(8)).
-message_field_type('DIGICAM_CONFIGURE', mode, uint(8)).
-message_field_type('DIGICAM_CONFIGURE', shutter_speed, uint(16)).
-message_field_type('DIGICAM_CONFIGURE', aperture, uint(8)).
-message_field_type('DIGICAM_CONFIGURE', iso, uint(8)).
-message_field_type('DIGICAM_CONFIGURE', exposure_type, uint(8)).
-message_field_type('DIGICAM_CONFIGURE', command_id, uint(8)).
-message_field_type('DIGICAM_CONFIGURE', extra_param, uint(8)).
-message_field_type('DIGICAM_CONFIGURE', extra_value, float).
-message_field_type('DIGICAM_CONTROL', target_system, uint(8)).
-message_field_type('DIGICAM_CONTROL', target_component, uint(8)).
-message_field_type('DIGICAM_CONTROL', session, uint(8)).
-message_field_type('DIGICAM_CONTROL', zoom_pos, uint(8)).
-message_field_type('DIGICAM_CONTROL', zoom_step, int(8)).
-message_field_type('DIGICAM_CONTROL', focus_lock, uint(8)).
-message_field_type('DIGICAM_CONTROL', shot, uint(8)).
-message_field_type('DIGICAM_CONTROL', command_id, uint(8)).
-message_field_type('DIGICAM_CONTROL', extra_param, uint(8)).
-message_field_type('DIGICAM_CONTROL', extra_value, float).
-message_field_type('MOUNT_CONFIGURE', target_system, uint(8)).
-message_field_type('MOUNT_CONFIGURE', target_component, uint(8)).
-message_field_type('MOUNT_CONFIGURE', stab_roll, uint(8)).
-message_field_type('MOUNT_CONFIGURE', stab_pitch, uint(8)).
-message_field_type('MOUNT_CONFIGURE', stab_yaw, uint(8)).
-message_field_type('MOUNT_CONTROL', target_system, uint(8)).
-message_field_type('MOUNT_CONTROL', target_component, uint(8)).
-message_field_type('MOUNT_CONTROL', input_a, int(32)).
-message_field_type('MOUNT_CONTROL', input_b, int(32)).
-message_field_type('MOUNT_CONTROL', input_c, int(32)).
-message_field_type('MOUNT_CONTROL', save_position, uint(8)).
-message_field_type('MOUNT_STATUS', target_system, uint(8)).
-message_field_type('MOUNT_STATUS', target_component, uint(8)).
-message_field_type('FENCE_POINT', target_system, uint(8)).
-message_field_type('FENCE_POINT', target_component, uint(8)).
-message_field_type('FENCE_POINT', idx, uint(8)).
-message_field_type('FENCE_POINT', count, uint(8)).
-message_field_type('FENCE_FETCH_POINT', target_system, uint(8)).
-message_field_type('FENCE_FETCH_POINT', target_component, uint(8)).
-message_field_type('FENCE_FETCH_POINT', idx, uint(8)).
-message_field_type('AHRS', accel_weight, float).
-message_field_type('AHRS', renorm_val, float).
-message_field_type('AHRS', error_rp, float).
-message_field_type('AHRS', error_yaw, float).
-message_field_type('HWSTATUS', 'I2Cerr', uint(8)).
-message_field_type('RADIO', rssi, uint(8)).
-message_field_type('RADIO', remrssi, uint(8)).
-message_field_type('RADIO', noise, uint(8)).
-message_field_type('RADIO', remnoise, uint(8)).
-message_field_type('RADIO', rxerrors, uint(16)).
-message_field_type('RADIO', fixed, uint(16)).
-message_field_type('LIMITS_STATUS', breach_count, uint(16)).
-message_field_type('DATA16', type, uint(8)).
-message_field_type('DATA16', data, uint(8)).
-message_field_type('DATA32', type, uint(8)).
-message_field_type('DATA32', data, uint(8)).
-message_field_type('DATA64', type, uint(8)).
-message_field_type('DATA64', data, uint(8)).
-message_field_type('DATA96', type, uint(8)).
-message_field_type('DATA96', data, uint(8)).
-message_field_type('AIRSPEED_AUTOCAL', 'EAS2TAS', float).
-message_field_type('AIRSPEED_AUTOCAL', ratio, float).
-message_field_type('AIRSPEED_AUTOCAL', state_x, float).
-message_field_type('AIRSPEED_AUTOCAL', state_y, float).
-message_field_type('AIRSPEED_AUTOCAL', state_z, float).
-message_field_type('AIRSPEED_AUTOCAL', 'Pax', float).
-message_field_type('AIRSPEED_AUTOCAL', 'Pby', float).
-message_field_type('AIRSPEED_AUTOCAL', 'Pcz', float).
-message_field_type('RALLY_POINT', target_system, uint(8)).
-message_field_type('RALLY_POINT', target_component, uint(8)).
-message_field_type('RALLY_POINT', idx, uint(8)).
-message_field_type('RALLY_POINT', count, uint(8)).
-message_field_type('RALLY_FETCH_POINT', target_system, uint(8)).
-message_field_type('RALLY_FETCH_POINT', target_component, uint(8)).
-message_field_type('RALLY_FETCH_POINT', idx, uint(8)).
-message_field_type('COMPASSMOT_STATUS', 'CompensationX', float).
-message_field_type('COMPASSMOT_STATUS', 'CompensationY', float).
-message_field_type('COMPASSMOT_STATUS', 'CompensationZ', float).
-message_field_type('CAMERA_STATUS', target_system, uint(8)).
-message_field_type('CAMERA_STATUS', cam_idx, uint(8)).
-message_field_type('CAMERA_STATUS', img_idx, uint(16)).
-message_field_type('CAMERA_STATUS', p1, float).
-message_field_type('CAMERA_STATUS', p2, float).
-message_field_type('CAMERA_STATUS', p3, float).
-message_field_type('CAMERA_STATUS', p4, float).
-message_field_type('CAMERA_FEEDBACK', target_system, uint(8)).
-message_field_type('CAMERA_FEEDBACK', cam_idx, uint(8)).
-message_field_type('CAMERA_FEEDBACK', img_idx, uint(16)).
-message_field_type('CAMERA_FEEDBACK', completed_captures, uint(16)).
-message_field_type('AHRS3', v1, float).
-message_field_type('AHRS3', v2, float).
-message_field_type('AHRS3', v3, float).
-message_field_type('AHRS3', v4, float).
-message_field_type('AUTOPILOT_VERSION_REQUEST', target_system, uint(8)).
-message_field_type('AUTOPILOT_VERSION_REQUEST', target_component, uint(8)).
-message_field_type('REMOTE_LOG_DATA_BLOCK', target_system, uint(8)).
-message_field_type('REMOTE_LOG_DATA_BLOCK', target_component, uint(8)).
-message_field_type('REMOTE_LOG_DATA_BLOCK', data, uint(8)).
-message_field_type('REMOTE_LOG_BLOCK_STATUS', target_system, uint(8)).
-message_field_type('REMOTE_LOG_BLOCK_STATUS', target_component, uint(8)).
-message_field_type('REMOTE_LOG_BLOCK_STATUS', seqno, uint(32)).
-message_field_type('LED_CONTROL', target_system, uint(8)).
-message_field_type('LED_CONTROL', target_component, uint(8)).
-message_field_type('LED_CONTROL', instance, uint(8)).
-message_field_type('LED_CONTROL', pattern, uint(8)).
-message_field_type('LED_CONTROL', custom_len, uint(8)).
-message_field_type('LED_CONTROL', custom_bytes, uint(8)).
-message_field_type('MAG_CAL_PROGRESS', attempt, uint(8)).
-message_field_type('MAG_CAL_PROGRESS', completion_mask, uint(8)).
-message_field_type('MAG_CAL_PROGRESS', direction_x, float).
-message_field_type('MAG_CAL_PROGRESS', direction_y, float).
-message_field_type('MAG_CAL_PROGRESS', direction_z, float).
-message_field_type('EKF_STATUS_REPORT', velocity_variance, float).
-message_field_type('EKF_STATUS_REPORT', pos_horiz_variance, float).
-message_field_type('EKF_STATUS_REPORT', pos_vert_variance, float).
-message_field_type('EKF_STATUS_REPORT', compass_variance, float).
-message_field_type('EKF_STATUS_REPORT', terrain_alt_variance, float).
-message_field_type('EKF_STATUS_REPORT', airspeed_variance, float).
-message_field_type('PID_TUNING', desired, float).
-message_field_type('PID_TUNING', achieved, float).
-message_field_type('PID_TUNING', 'FF', float).
-message_field_type('PID_TUNING', 'P', float).
-message_field_type('PID_TUNING', 'I', float).
-message_field_type('PID_TUNING', 'D', float).
-message_field_type('PID_TUNING', 'SRate', float).
-message_field_type('PID_TUNING', 'PDmod', float).
-message_field_type('GIMBAL_REPORT', target_system, uint(8)).
-message_field_type('GIMBAL_REPORT', target_component, uint(8)).
-message_field_type('GIMBAL_CONTROL', target_system, uint(8)).
-message_field_type('GIMBAL_CONTROL', target_component, uint(8)).
-message_field_type('GIMBAL_TORQUE_CMD_REPORT', target_system, uint(8)).
-message_field_type('GIMBAL_TORQUE_CMD_REPORT', target_component, uint(8)).
-message_field_type('GIMBAL_TORQUE_CMD_REPORT', rl_torque_cmd, int(16)).
-message_field_type('GIMBAL_TORQUE_CMD_REPORT', el_torque_cmd, int(16)).
-message_field_type('GIMBAL_TORQUE_CMD_REPORT', az_torque_cmd, int(16)).
-message_field_type('GOPRO_GET_REQUEST', target_system, uint(8)).
-message_field_type('GOPRO_GET_REQUEST', target_component, uint(8)).
-message_field_type('GOPRO_GET_RESPONSE', value, uint(8)).
-message_field_type('GOPRO_SET_REQUEST', target_system, uint(8)).
-message_field_type('GOPRO_SET_REQUEST', target_component, uint(8)).
-message_field_type('GOPRO_SET_REQUEST', value, uint(8)).
-message_field_type('RPM', rpm1, float).
-message_field_type('RPM', rpm2, float).
-message_field_type('DEVICE_OP_READ', target_system, uint(8)).
-message_field_type('DEVICE_OP_READ', target_component, uint(8)).
-message_field_type('DEVICE_OP_READ', request_id, uint(32)).
-message_field_type('DEVICE_OP_READ', bus, uint(8)).
-message_field_type('DEVICE_OP_READ', address, uint(8)).
-message_field_type('DEVICE_OP_READ', busname, char).
-message_field_type('DEVICE_OP_READ', regstart, uint(8)).
-message_field_type('DEVICE_OP_READ', count, uint(8)).
-message_field_type('DEVICE_OP_READ', bank, uint(8)).
-message_field_type('DEVICE_OP_READ_REPLY', request_id, uint(32)).
-message_field_type('DEVICE_OP_READ_REPLY', result, uint(8)).
-message_field_type('DEVICE_OP_READ_REPLY', regstart, uint(8)).
-message_field_type('DEVICE_OP_READ_REPLY', count, uint(8)).
-message_field_type('DEVICE_OP_READ_REPLY', data, uint(8)).
-message_field_type('DEVICE_OP_READ_REPLY', bank, uint(8)).
-message_field_type('DEVICE_OP_WRITE', target_system, uint(8)).
-message_field_type('DEVICE_OP_WRITE', target_component, uint(8)).
-message_field_type('DEVICE_OP_WRITE', request_id, uint(32)).
-message_field_type('DEVICE_OP_WRITE', bus, uint(8)).
-message_field_type('DEVICE_OP_WRITE', address, uint(8)).
-message_field_type('DEVICE_OP_WRITE', busname, char).
-message_field_type('DEVICE_OP_WRITE', regstart, uint(8)).
-message_field_type('DEVICE_OP_WRITE', count, uint(8)).
-message_field_type('DEVICE_OP_WRITE', data, uint(8)).
-message_field_type('DEVICE_OP_WRITE', bank, uint(8)).
-message_field_type('DEVICE_OP_WRITE_REPLY', request_id, uint(32)).
-message_field_type('DEVICE_OP_WRITE_REPLY', result, uint(8)).
-message_field_type('ADAP_TUNING', error, float).
-message_field_type('ADAP_TUNING', theta, float).
-message_field_type('ADAP_TUNING', omega, float).
-message_field_type('ADAP_TUNING', sigma, float).
-message_field_type('ADAP_TUNING', theta_dot, float).
-message_field_type('ADAP_TUNING', omega_dot, float).
-message_field_type('ADAP_TUNING', sigma_dot, float).
-message_field_type('ADAP_TUNING', f, float).
-message_field_type('ADAP_TUNING', f_dot, float).
-message_field_type('ADAP_TUNING', u, float).
-message_field_type('ESC_TELEMETRY_1_TO_4', count, uint(16)).
-message_field_type('ESC_TELEMETRY_5_TO_8', count, uint(16)).
-message_field_type('ESC_TELEMETRY_9_TO_12', count, uint(16)).
-message_field_type('OSD_PARAM_CONFIG', target_system, uint(8)).
-message_field_type('OSD_PARAM_CONFIG', target_component, uint(8)).
-message_field_type('OSD_PARAM_CONFIG', request_id, uint(32)).
-message_field_type('OSD_PARAM_CONFIG', osd_screen, uint(8)).
-message_field_type('OSD_PARAM_CONFIG', osd_index, uint(8)).
-message_field_type('OSD_PARAM_CONFIG', param_id, char).
-message_field_type('OSD_PARAM_CONFIG', min_value, float).
-message_field_type('OSD_PARAM_CONFIG', max_value, float).
-message_field_type('OSD_PARAM_CONFIG', increment, float).
-message_field_type('OSD_PARAM_CONFIG_REPLY', request_id, uint(32)).
-message_field_type('OSD_PARAM_SHOW_CONFIG', target_system, uint(8)).
-message_field_type('OSD_PARAM_SHOW_CONFIG', target_component, uint(8)).
-message_field_type('OSD_PARAM_SHOW_CONFIG', request_id, uint(32)).
-message_field_type('OSD_PARAM_SHOW_CONFIG', osd_screen, uint(8)).
-message_field_type('OSD_PARAM_SHOW_CONFIG', osd_index, uint(8)).
-message_field_type('OSD_PARAM_SHOW_CONFIG_REPLY', request_id, uint(32)).
-message_field_type('OSD_PARAM_SHOW_CONFIG_REPLY', param_id, char).
-message_field_type('OSD_PARAM_SHOW_CONFIG_REPLY', min_value, float).
-message_field_type('OSD_PARAM_SHOW_CONFIG_REPLY', max_value, float).
-message_field_type('OSD_PARAM_SHOW_CONFIG_REPLY', increment, float).
-message_field_type('WATER_DEPTH', healthy, uint(8)).
-message_field_type('COMMAND_INT_STAMPED', utc_time, uint(32)).
-message_field_type('COMMAND_INT_STAMPED', vehicle_timestamp, uint(64)).
-message_field_type('COMMAND_INT_STAMPED', target_system, uint(8)).
-message_field_type('COMMAND_INT_STAMPED', target_component, uint(8)).
-message_field_type('COMMAND_INT_STAMPED', current, uint(8)).
-message_field_type('COMMAND_INT_STAMPED', autocontinue, uint(8)).
-message_field_type('COMMAND_INT_STAMPED', param1, float).
-message_field_type('COMMAND_INT_STAMPED', param2, float).
-message_field_type('COMMAND_INT_STAMPED', param3, float).
-message_field_type('COMMAND_INT_STAMPED', param4, float).
-message_field_type('COMMAND_INT_STAMPED', x, int(32)).
-message_field_type('COMMAND_INT_STAMPED', y, int(32)).
-message_field_type('COMMAND_INT_STAMPED', z, float).
-message_field_type('COMMAND_LONG_STAMPED', utc_time, uint(32)).
-message_field_type('COMMAND_LONG_STAMPED', vehicle_timestamp, uint(64)).
-message_field_type('COMMAND_LONG_STAMPED', target_system, uint(8)).
-message_field_type('COMMAND_LONG_STAMPED', target_component, uint(8)).
-message_field_type('COMMAND_LONG_STAMPED', confirmation, uint(8)).
-message_field_type('COMMAND_LONG_STAMPED', param1, float).
-message_field_type('COMMAND_LONG_STAMPED', param2, float).
-message_field_type('COMMAND_LONG_STAMPED', param3, float).
-message_field_type('COMMAND_LONG_STAMPED', param4, float).
-message_field_type('COMMAND_LONG_STAMPED', param5, float).
-message_field_type('COMMAND_LONG_STAMPED', param6, float).
-message_field_type('COMMAND_LONG_STAMPED', param7, float).
-message_field_type('SENS_MPPT', mppt1_status, uint(8)).
-message_field_type('SENS_MPPT', mppt2_status, uint(8)).
-message_field_type('SENS_MPPT', mppt3_status, uint(8)).
-message_field_type('ASLCTRL_DATA', aslctrl_mode, uint(8)).
-message_field_type('ASLCTRL_DATA', h, float).
-message_field_type('ASLCTRL_DATA', hRef, float).
-message_field_type('ASLCTRL_DATA', hRef_t, float).
-message_field_type('ASLCTRL_DATA', q, float).
-message_field_type('ASLCTRL_DATA', qRef, float).
-message_field_type('ASLCTRL_DATA', uElev, float).
-message_field_type('ASLCTRL_DATA', uThrot, float).
-message_field_type('ASLCTRL_DATA', uThrot2, float).
-message_field_type('ASLCTRL_DATA', nZ, float).
-message_field_type('ASLCTRL_DATA', 'SpoilersEngaged', uint(8)).
-message_field_type('ASLCTRL_DATA', p, float).
-message_field_type('ASLCTRL_DATA', pRef, float).
-message_field_type('ASLCTRL_DATA', r, float).
-message_field_type('ASLCTRL_DATA', rRef, float).
-message_field_type('ASLCTRL_DATA', uAil, float).
-message_field_type('ASLCTRL_DATA', uRud, float).
-message_field_type('ASLCTRL_DEBUG', i32_1, uint(32)).
-message_field_type('ASLCTRL_DEBUG', i8_1, uint(8)).
-message_field_type('ASLCTRL_DEBUG', i8_2, uint(8)).
-message_field_type('ASLCTRL_DEBUG', f_1, float).
-message_field_type('ASLCTRL_DEBUG', f_2, float).
-message_field_type('ASLCTRL_DEBUG', f_3, float).
-message_field_type('ASLCTRL_DEBUG', f_4, float).
-message_field_type('ASLCTRL_DEBUG', f_5, float).
-message_field_type('ASLCTRL_DEBUG', f_6, float).
-message_field_type('ASLCTRL_DEBUG', f_7, float).
-message_field_type('ASLCTRL_DEBUG', f_8, float).
-message_field_type('ASLUAV_STATUS', 'LED_status', uint(8)).
-message_field_type('ASLUAV_STATUS', 'SATCOM_status', uint(8)).
-message_field_type('ASLUAV_STATUS', 'Servo_status', uint(8)).
-message_field_type('ASLUAV_STATUS', 'Motor_rpm', float).
-message_field_type('ASL_OBCTRL', uElev, float).
-message_field_type('ASL_OBCTRL', uThrot, float).
-message_field_type('ASL_OBCTRL', uThrot2, float).
-message_field_type('ASL_OBCTRL', uAilL, float).
-message_field_type('ASL_OBCTRL', uAilR, float).
-message_field_type('ASL_OBCTRL', uRud, float).
-message_field_type('ASL_OBCTRL', obctrl_status, uint(8)).
-message_field_type('SENS_BATMON', 'SoC', uint(8)).
-message_field_type('SENS_BATMON', batterystatus, uint(16)).
-message_field_type('SENS_BATMON', serialnumber, uint(16)).
-message_field_type('SENS_BATMON', safetystatus, uint(32)).
-message_field_type('SENS_BATMON', operationstatus, uint(32)).
-message_field_type('FW_SOARING_DATA', 'VarW', float).
-message_field_type('FW_SOARING_DATA', 'VarR', float).
-message_field_type('FW_SOARING_DATA', 'VarLat', float).
-message_field_type('FW_SOARING_DATA', 'VarLon', float).
-message_field_type('FW_SOARING_DATA', 'LoiterDirection', float).
-message_field_type('FW_SOARING_DATA', z1_exp, float).
-message_field_type('FW_SOARING_DATA', z2_exp, float).
-message_field_type('FW_SOARING_DATA', 'DebugVar1', float).
-message_field_type('FW_SOARING_DATA', 'DebugVar2', float).
-message_field_type('FW_SOARING_DATA', 'ControlMode', uint(8)).
-message_field_type('FW_SOARING_DATA', valid, uint(8)).
-message_field_type('SENSORPOD_STATUS', visensor_rate_1, uint(8)).
-message_field_type('SENSORPOD_STATUS', visensor_rate_2, uint(8)).
-message_field_type('SENSORPOD_STATUS', visensor_rate_3, uint(8)).
-message_field_type('SENSORPOD_STATUS', visensor_rate_4, uint(8)).
-message_field_type('SENSORPOD_STATUS', recording_nodes_count, uint(8)).
-message_field_type('SENSORPOD_STATUS', free_space, uint(16)).
-message_field_type('SENS_POWER_BOARD', pwr_brd_status, uint(8)).
-message_field_type('SENS_POWER_BOARD', pwr_brd_led_status, uint(8)).
-message_field_type('GSM_LINK_STATUS', rssi, uint(8)).
-message_field_type('GSM_LINK_STATUS', rsrp_rscp, uint(8)).
-message_field_type('GSM_LINK_STATUS', sinr_ecio, uint(8)).
-message_field_type('GSM_LINK_STATUS', rsrq, uint(8)).
-message_field_type('SATCOM_LINK_STATUS', failed_sessions, uint(16)).
-message_field_type('SATCOM_LINK_STATUS', successful_sessions, uint(16)).
-message_field_type('SATCOM_LINK_STATUS', signal_quality, uint(8)).
-message_field_type('SATCOM_LINK_STATUS', ring_pending, uint(8)).
-message_field_type('SATCOM_LINK_STATUS', tx_session_pending, uint(8)).
-message_field_type('SATCOM_LINK_STATUS', rx_session_pending, uint(8)).
-message_field_type('SENSOR_AIRFLOW_ANGLES', angleofattack_valid, uint(8)).
-message_field_type('SENSOR_AIRFLOW_ANGLES', sideslip_valid, uint(8)).
-message_field_type('SYS_STATUS', errors_comm, uint(16)).
-message_field_type('SYS_STATUS', errors_count1, uint(16)).
-message_field_type('SYS_STATUS', errors_count2, uint(16)).
-message_field_type('SYS_STATUS', errors_count3, uint(16)).
-message_field_type('SYS_STATUS', errors_count4, uint(16)).
-message_field_type('PING', seq, uint(32)).
-message_field_type('PING', target_system, uint(8)).
-message_field_type('PING', target_component, uint(8)).
-message_field_type('CHANGE_OPERATOR_CONTROL', target_system, uint(8)).
-message_field_type('CHANGE_OPERATOR_CONTROL', control_request, uint(8)).
-message_field_type('CHANGE_OPERATOR_CONTROL', passkey, char).
-message_field_type('CHANGE_OPERATOR_CONTROL_ACK', gcs_system_id, uint(8)).
-message_field_type('CHANGE_OPERATOR_CONTROL_ACK', control_request, uint(8)).
-message_field_type('CHANGE_OPERATOR_CONTROL_ACK', ack, uint(8)).
-message_field_type('AUTH_KEY', key, char).
-message_field_type('LINK_NODE_STATUS', messages_sent, uint(32)).
-message_field_type('LINK_NODE_STATUS', messages_received, uint(32)).
-message_field_type('LINK_NODE_STATUS', messages_lost, uint(32)).
-message_field_type('SET_MODE', target_system, uint(8)).
-message_field_type('SET_MODE', custom_mode, uint(32)).
-message_field_type('PARAM_REQUEST_READ', target_system, uint(8)).
-message_field_type('PARAM_REQUEST_READ', target_component, uint(8)).
-message_field_type('PARAM_REQUEST_READ', param_id, char).
-message_field_type('PARAM_REQUEST_LIST', target_system, uint(8)).
-message_field_type('PARAM_REQUEST_LIST', target_component, uint(8)).
-message_field_type('PARAM_VALUE', param_id, char).
-message_field_type('PARAM_VALUE', param_value, float).
-message_field_type('PARAM_VALUE', param_count, uint(16)).
-message_field_type('PARAM_VALUE', param_index, uint(16)).
-message_field_type('PARAM_SET', target_system, uint(8)).
-message_field_type('PARAM_SET', target_component, uint(8)).
-message_field_type('PARAM_SET', param_id, char).
-message_field_type('PARAM_SET', param_value, float).
-message_field_type('GPS_STATUS', satellites_visible, uint(8)).
-message_field_type('GPS_STATUS', satellite_prn, uint(8)).
-message_field_type('GPS_STATUS', satellite_used, uint(8)).
-message_field_type('RAW_IMU', xacc, int(16)).
-message_field_type('RAW_IMU', yacc, int(16)).
-message_field_type('RAW_IMU', zacc, int(16)).
-message_field_type('RAW_IMU', xgyro, int(16)).
-message_field_type('RAW_IMU', ygyro, int(16)).
-message_field_type('RAW_IMU', zgyro, int(16)).
-message_field_type('RAW_IMU', xmag, int(16)).
-message_field_type('RAW_IMU', ymag, int(16)).
-message_field_type('RAW_IMU', zmag, int(16)).
-message_field_type('RAW_PRESSURE', press_abs, int(16)).
-message_field_type('RAW_PRESSURE', temperature, int(16)).
-message_field_type('ATTITUDE_QUATERNION', q1, float).
-message_field_type('ATTITUDE_QUATERNION', q2, float).
-message_field_type('ATTITUDE_QUATERNION', q3, float).
-message_field_type('ATTITUDE_QUATERNION', q4, float).
-message_field_type('RC_CHANNELS_SCALED', port, uint(8)).
-message_field_type('RC_CHANNELS_RAW', port, uint(8)).
-message_field_type('SERVO_OUTPUT_RAW', port, uint(8)).
-message_field_type('MISSION_REQUEST_PARTIAL_LIST', target_system, uint(8)).
-message_field_type('MISSION_REQUEST_PARTIAL_LIST', target_component, uint(8)).
-message_field_type('MISSION_REQUEST_PARTIAL_LIST', start_index, int(16)).
-message_field_type('MISSION_REQUEST_PARTIAL_LIST', end_index, int(16)).
-message_field_type('MISSION_WRITE_PARTIAL_LIST', target_system, uint(8)).
-message_field_type('MISSION_WRITE_PARTIAL_LIST', target_component, uint(8)).
-message_field_type('MISSION_WRITE_PARTIAL_LIST', start_index, int(16)).
-message_field_type('MISSION_WRITE_PARTIAL_LIST', end_index, int(16)).
-message_field_type('MISSION_ITEM', target_system, uint(8)).
-message_field_type('MISSION_ITEM', target_component, uint(8)).
-message_field_type('MISSION_ITEM', seq, uint(16)).
-message_field_type('MISSION_ITEM', current, uint(8)).
-message_field_type('MISSION_ITEM', autocontinue, uint(8)).
-message_field_type('MISSION_ITEM', param1, float).
-message_field_type('MISSION_ITEM', param2, float).
-message_field_type('MISSION_ITEM', param3, float).
-message_field_type('MISSION_ITEM', param4, float).
-message_field_type('MISSION_ITEM', x, float).
-message_field_type('MISSION_ITEM', y, float).
-message_field_type('MISSION_ITEM', z, float).
-message_field_type('MISSION_REQUEST', target_system, uint(8)).
-message_field_type('MISSION_REQUEST', target_component, uint(8)).
-message_field_type('MISSION_REQUEST', seq, uint(16)).
-message_field_type('MISSION_SET_CURRENT', target_system, uint(8)).
-message_field_type('MISSION_SET_CURRENT', target_component, uint(8)).
-message_field_type('MISSION_SET_CURRENT', seq, uint(16)).
-message_field_type('MISSION_CURRENT', seq, uint(16)).
-message_field_type('MISSION_REQUEST_LIST', target_system, uint(8)).
-message_field_type('MISSION_REQUEST_LIST', target_component, uint(8)).
-message_field_type('MISSION_COUNT', target_system, uint(8)).
-message_field_type('MISSION_COUNT', target_component, uint(8)).
-message_field_type('MISSION_COUNT', count, uint(16)).
-message_field_type('MISSION_CLEAR_ALL', target_system, uint(8)).
-message_field_type('MISSION_CLEAR_ALL', target_component, uint(8)).
-message_field_type('MISSION_ITEM_REACHED', seq, uint(16)).
-message_field_type('MISSION_ACK', target_system, uint(8)).
-message_field_type('MISSION_ACK', target_component, uint(8)).
-message_field_type('SET_GPS_GLOBAL_ORIGIN', target_system, uint(8)).
-message_field_type('PARAM_MAP_RC', target_system, uint(8)).
-message_field_type('PARAM_MAP_RC', target_component, uint(8)).
-message_field_type('PARAM_MAP_RC', param_id, char).
-message_field_type('PARAM_MAP_RC', param_index, int(16)).
-message_field_type('PARAM_MAP_RC', parameter_rc_channel_index, uint(8)).
-message_field_type('PARAM_MAP_RC', param_value0, float).
-message_field_type('PARAM_MAP_RC', scale, float).
-message_field_type('PARAM_MAP_RC', param_value_min, float).
-message_field_type('PARAM_MAP_RC', param_value_max, float).
-message_field_type('MISSION_REQUEST_INT', target_system, uint(8)).
-message_field_type('MISSION_REQUEST_INT', target_component, uint(8)).
-message_field_type('MISSION_REQUEST_INT', seq, uint(16)).
-message_field_type('SAFETY_SET_ALLOWED_AREA', target_system, uint(8)).
-message_field_type('SAFETY_SET_ALLOWED_AREA', target_component, uint(8)).
-message_field_type('ATTITUDE_QUATERNION_COV', q, float).
-message_field_type('RC_CHANNELS', chancount, uint(8)).
-message_field_type('REQUEST_DATA_STREAM', target_system, uint(8)).
-message_field_type('REQUEST_DATA_STREAM', target_component, uint(8)).
-message_field_type('REQUEST_DATA_STREAM', req_stream_id, uint(8)).
-message_field_type('REQUEST_DATA_STREAM', start_stop, uint(8)).
-message_field_type('DATA_STREAM', stream_id, uint(8)).
-message_field_type('DATA_STREAM', on_off, uint(8)).
-message_field_type('MANUAL_CONTROL', target, uint(8)).
-message_field_type('MANUAL_CONTROL', buttons, uint(16)).
-message_field_type('MANUAL_CONTROL', buttons2, uint(16)).
-message_field_type('MANUAL_CONTROL', enabled_extensions, uint(8)).
-message_field_type('MANUAL_CONTROL', s, int(16)).
-message_field_type('MANUAL_CONTROL', t, int(16)).
-message_field_type('MANUAL_CONTROL', aux1, int(16)).
-message_field_type('MANUAL_CONTROL', aux2, int(16)).
-message_field_type('MANUAL_CONTROL', aux3, int(16)).
-message_field_type('MANUAL_CONTROL', aux4, int(16)).
-message_field_type('MANUAL_CONTROL', aux5, int(16)).
-message_field_type('MANUAL_CONTROL', aux6, int(16)).
-message_field_type('RC_CHANNELS_OVERRIDE', target_system, uint(8)).
-message_field_type('RC_CHANNELS_OVERRIDE', target_component, uint(8)).
-message_field_type('MISSION_ITEM_INT', target_system, uint(8)).
-message_field_type('MISSION_ITEM_INT', target_component, uint(8)).
-message_field_type('MISSION_ITEM_INT', seq, uint(16)).
-message_field_type('MISSION_ITEM_INT', current, uint(8)).
-message_field_type('MISSION_ITEM_INT', autocontinue, uint(8)).
-message_field_type('MISSION_ITEM_INT', param1, float).
-message_field_type('MISSION_ITEM_INT', param2, float).
-message_field_type('MISSION_ITEM_INT', param3, float).
-message_field_type('MISSION_ITEM_INT', param4, float).
-message_field_type('MISSION_ITEM_INT', x, int(32)).
-message_field_type('MISSION_ITEM_INT', y, int(32)).
-message_field_type('MISSION_ITEM_INT', z, float).
-message_field_type('COMMAND_INT', target_system, uint(8)).
-message_field_type('COMMAND_INT', target_component, uint(8)).
-message_field_type('COMMAND_INT', current, uint(8)).
-message_field_type('COMMAND_INT', autocontinue, uint(8)).
-message_field_type('COMMAND_LONG', target_system, uint(8)).
-message_field_type('COMMAND_LONG', target_component, uint(8)).
-message_field_type('COMMAND_LONG', confirmation, uint(8)).
-message_field_type('COMMAND_ACK', result_param2, int(32)).
-message_field_type('COMMAND_ACK', target_system, uint(8)).
-message_field_type('COMMAND_ACK', target_component, uint(8)).
-message_field_type('COMMAND_CANCEL', target_system, uint(8)).
-message_field_type('COMMAND_CANCEL', target_component, uint(8)).
-message_field_type('MANUAL_SETPOINT', thrust, float).
-message_field_type('MANUAL_SETPOINT', mode_switch, uint(8)).
-message_field_type('MANUAL_SETPOINT', manual_override_switch, uint(8)).
-message_field_type('SET_ATTITUDE_TARGET', target_system, uint(8)).
-message_field_type('SET_ATTITUDE_TARGET', target_component, uint(8)).
-message_field_type('SET_ATTITUDE_TARGET', q, float).
-message_field_type('SET_ATTITUDE_TARGET', thrust, float).
-message_field_type('SET_ATTITUDE_TARGET', thrust_body, float).
-message_field_type('ATTITUDE_TARGET', q, float).
-message_field_type('ATTITUDE_TARGET', thrust, float).
-message_field_type('SET_POSITION_TARGET_LOCAL_NED', target_system, uint(8)).
-message_field_type('SET_POSITION_TARGET_LOCAL_NED', target_component, uint(8)).
-message_field_type('SET_POSITION_TARGET_GLOBAL_INT', target_system, uint(8)).
-message_field_type('SET_POSITION_TARGET_GLOBAL_INT', target_component, uint(8)).
-message_field_type('HIL_CONTROLS', roll_ailerons, float).
-message_field_type('HIL_CONTROLS', pitch_elevator, float).
-message_field_type('HIL_CONTROLS', yaw_rudder, float).
-message_field_type('HIL_CONTROLS', throttle, float).
-message_field_type('HIL_CONTROLS', aux1, float).
-message_field_type('HIL_CONTROLS', aux2, float).
-message_field_type('HIL_CONTROLS', aux3, float).
-message_field_type('HIL_CONTROLS', aux4, float).
-message_field_type('HIL_CONTROLS', nav_mode, uint(8)).
-message_field_type('HIL_ACTUATOR_CONTROLS', controls, float).
-message_field_type('OPTICAL_FLOW', sensor_id, uint(8)).
-message_field_type('OPTICAL_FLOW', quality, uint(8)).
-message_field_type('GLOBAL_VISION_POSITION_ESTIMATE', reset_counter, uint(8)).
-message_field_type('VISION_POSITION_ESTIMATE', reset_counter, uint(8)).
-message_field_type('VISION_SPEED_ESTIMATE', reset_counter, uint(8)).
-message_field_type('HIGHRES_IMU', pressure_alt, float).
-message_field_type('OPTICAL_FLOW_RAD', quality, uint(8)).
-message_field_type('HIL_SENSOR', pressure_alt, float).
-message_field_type('HIL_SENSOR', id, uint(8)).
-message_field_type('SIM_STATE', q1, float).
-message_field_type('SIM_STATE', q2, float).
-message_field_type('SIM_STATE', q3, float).
-message_field_type('SIM_STATE', q4, float).
-message_field_type('SIM_STATE', roll, float).
-message_field_type('SIM_STATE', pitch, float).
-message_field_type('SIM_STATE', yaw, float).
-message_field_type('SIM_STATE', std_dev_horz, float).
-message_field_type('SIM_STATE', std_dev_vert, float).
-message_field_type('RADIO_STATUS', rxerrors, uint(16)).
-message_field_type('RADIO_STATUS', fixed, uint(16)).
-message_field_type('FILE_TRANSFER_PROTOCOL', target_network, uint(8)).
-message_field_type('FILE_TRANSFER_PROTOCOL', target_system, uint(8)).
-message_field_type('FILE_TRANSFER_PROTOCOL', target_component, uint(8)).
-message_field_type('FILE_TRANSFER_PROTOCOL', payload, uint(8)).
-message_field_type('TIMESYNC', target_system, uint(8)).
-message_field_type('TIMESYNC', target_component, uint(8)).
-message_field_type('CAMERA_TRIGGER', seq, uint(32)).
-message_field_type('HIL_GPS', fix_type, uint(8)).
-message_field_type('HIL_GPS', id, uint(8)).
-message_field_type('HIL_OPTICAL_FLOW', sensor_id, uint(8)).
-message_field_type('HIL_OPTICAL_FLOW', quality, uint(8)).
-message_field_type('HIL_STATE_QUATERNION', attitude_quaternion, float).
-message_field_type('LOG_REQUEST_LIST', target_system, uint(8)).
-message_field_type('LOG_REQUEST_LIST', target_component, uint(8)).
-message_field_type('LOG_REQUEST_LIST', start, uint(16)).
-message_field_type('LOG_REQUEST_LIST', end, uint(16)).
-message_field_type('LOG_ENTRY', id, uint(16)).
-message_field_type('LOG_ENTRY', num_logs, uint(16)).
-message_field_type('LOG_ENTRY', last_log_num, uint(16)).
-message_field_type('LOG_REQUEST_DATA', target_system, uint(8)).
-message_field_type('LOG_REQUEST_DATA', target_component, uint(8)).
-message_field_type('LOG_REQUEST_DATA', id, uint(16)).
-message_field_type('LOG_REQUEST_DATA', ofs, uint(32)).
-message_field_type('LOG_DATA', id, uint(16)).
-message_field_type('LOG_DATA', ofs, uint(32)).
-message_field_type('LOG_DATA', data, uint(8)).
-message_field_type('LOG_ERASE', target_system, uint(8)).
-message_field_type('LOG_ERASE', target_component, uint(8)).
-message_field_type('LOG_REQUEST_END', target_system, uint(8)).
-message_field_type('LOG_REQUEST_END', target_component, uint(8)).
-message_field_type('GPS_INJECT_DATA', target_system, uint(8)).
-message_field_type('GPS_INJECT_DATA', target_component, uint(8)).
-message_field_type('GPS_INJECT_DATA', data, uint(8)).
-message_field_type('GPS2_RAW', dgps_numch, uint(8)).
-message_field_type('SERIAL_CONTROL', data, uint(8)).
-message_field_type('SERIAL_CONTROL', target_system, uint(8)).
-message_field_type('SERIAL_CONTROL', target_component, uint(8)).
-message_field_type('GPS_RTK', rtk_receiver_id, uint(8)).
-message_field_type('GPS_RTK', wn, uint(16)).
-message_field_type('GPS_RTK', rtk_health, uint(8)).
-message_field_type('GPS_RTK', nsats, uint(8)).
-message_field_type('GPS_RTK', accuracy, uint(32)).
-message_field_type('GPS_RTK', iar_num_hypotheses, int(32)).
-message_field_type('GPS2_RTK', rtk_receiver_id, uint(8)).
-message_field_type('GPS2_RTK', wn, uint(16)).
-message_field_type('GPS2_RTK', rtk_health, uint(8)).
-message_field_type('GPS2_RTK', nsats, uint(8)).
-message_field_type('GPS2_RTK', accuracy, uint(32)).
-message_field_type('GPS2_RTK', iar_num_hypotheses, int(32)).
-message_field_type('DATA_TRANSMISSION_HANDSHAKE', width, uint(16)).
-message_field_type('DATA_TRANSMISSION_HANDSHAKE', height, uint(16)).
-message_field_type('DATA_TRANSMISSION_HANDSHAKE', packets, uint(16)).
-message_field_type('ENCAPSULATED_DATA', seqnr, uint(16)).
-message_field_type('ENCAPSULATED_DATA', data, uint(8)).
-message_field_type('TERRAIN_DATA', gridbit, uint(8)).
-message_field_type('TERRAIN_REPORT', spacing, uint(16)).
-message_field_type('TERRAIN_REPORT', pending, uint(16)).
-message_field_type('TERRAIN_REPORT', loaded, uint(16)).
-message_field_type('ATT_POS_MOCAP', q, float).
-message_field_type('SET_ACTUATOR_CONTROL_TARGET', group_mlx, uint(8)).
-message_field_type('SET_ACTUATOR_CONTROL_TARGET', target_system, uint(8)).
-message_field_type('SET_ACTUATOR_CONTROL_TARGET', target_component, uint(8)).
-message_field_type('SET_ACTUATOR_CONTROL_TARGET', controls, float).
-message_field_type('ACTUATOR_CONTROL_TARGET', group_mlx, uint(8)).
-message_field_type('ACTUATOR_CONTROL_TARGET', controls, float).
-message_field_type('RESOURCE_REQUEST', request_id, uint(8)).
-message_field_type('RESOURCE_REQUEST', uri_type, uint(8)).
-message_field_type('RESOURCE_REQUEST', uri, uint(8)).
-message_field_type('RESOURCE_REQUEST', transfer_type, uint(8)).
-message_field_type('RESOURCE_REQUEST', storage, uint(8)).
-message_field_type('FOLLOW_TARGET', est_capabilities, uint(8)).
-message_field_type('FOLLOW_TARGET', position_cov, float).
-message_field_type('FOLLOW_TARGET', custom_state, uint(64)).
-message_field_type('CONTROL_SYSTEM_STATE', vel_variance, float).
-message_field_type('CONTROL_SYSTEM_STATE', pos_variance, float).
-message_field_type('CONTROL_SYSTEM_STATE', q, float).
-message_field_type('AUTOPILOT_VERSION', flight_sw_version, uint(32)).
-message_field_type('AUTOPILOT_VERSION', middleware_sw_version, uint(32)).
-message_field_type('AUTOPILOT_VERSION', os_sw_version, uint(32)).
-message_field_type('AUTOPILOT_VERSION', board_version, uint(32)).
-message_field_type('AUTOPILOT_VERSION', flight_custom_version, uint(8)).
-message_field_type('AUTOPILOT_VERSION', middleware_custom_version, uint(8)).
-message_field_type('AUTOPILOT_VERSION', os_custom_version, uint(8)).
-message_field_type('AUTOPILOT_VERSION', vendor_id, uint(16)).
-message_field_type('AUTOPILOT_VERSION', product_id, uint(16)).
-message_field_type('AUTOPILOT_VERSION', uid, uint(64)).
-message_field_type('AUTOPILOT_VERSION', uid2, uint(8)).
-message_field_type('LANDING_TARGET', target_num, uint(8)).
-message_field_type('LANDING_TARGET', q, float).
-message_field_type('FENCE_STATUS', breach_status, uint(8)).
-message_field_type('FENCE_STATUS', breach_count, uint(16)).
-message_field_type('MAG_CAL_REPORT', autosaved, uint(8)).
-message_field_type('MAG_CAL_REPORT', ofs_x, float).
-message_field_type('MAG_CAL_REPORT', ofs_y, float).
-message_field_type('MAG_CAL_REPORT', ofs_z, float).
-message_field_type('MAG_CAL_REPORT', diag_x, float).
-message_field_type('MAG_CAL_REPORT', diag_y, float).
-message_field_type('MAG_CAL_REPORT', diag_z, float).
-message_field_type('MAG_CAL_REPORT', offdiag_x, float).
-message_field_type('MAG_CAL_REPORT', offdiag_y, float).
-message_field_type('MAG_CAL_REPORT', offdiag_z, float).
-message_field_type('MAG_CAL_REPORT', orientation_confidence, float).
-message_field_type('MAG_CAL_REPORT', scale_factor, float).
-message_field_type('EFI_STATUS', health, uint(8)).
-message_field_type('EFI_STATUS', ecu_index, float).
-message_field_type('EFI_STATUS', rpm, float).
-message_field_type('EFI_STATUS', pt_compensation, float).
-message_field_type('ESTIMATOR_STATUS', vel_ratio, float).
-message_field_type('ESTIMATOR_STATUS', pos_horiz_ratio, float).
-message_field_type('ESTIMATOR_STATUS', pos_vert_ratio, float).
-message_field_type('ESTIMATOR_STATUS', mag_ratio, float).
-message_field_type('ESTIMATOR_STATUS', hagl_ratio, float).
-message_field_type('ESTIMATOR_STATUS', tas_ratio, float).
-message_field_type('GPS_INPUT', time_week, uint(16)).
-message_field_type('GPS_INPUT', fix_type, uint(8)).
-message_field_type('GPS_INPUT', satellites_visible, uint(8)).
-message_field_type('GPS_RTCM_DATA', flags, uint(8)).
-message_field_type('GPS_RTCM_DATA', data, uint(8)).
-message_field_type('HIGH_LATENCY', failsafe, uint(8)).
-message_field_type('HIGH_LATENCY', wp_num, uint(8)).
-message_field_type('HIGH_LATENCY2', wp_num, uint(16)).
-message_field_type('HIGH_LATENCY2', custom0, int(8)).
-message_field_type('HIGH_LATENCY2', custom1, int(8)).
-message_field_type('HIGH_LATENCY2', custom2, int(8)).
-message_field_type('VIBRATION', vibration_x, float).
-message_field_type('VIBRATION', vibration_y, float).
-message_field_type('VIBRATION', vibration_z, float).
-message_field_type('VIBRATION', clipping_0, uint(32)).
-message_field_type('VIBRATION', clipping_1, uint(32)).
-message_field_type('VIBRATION', clipping_2, uint(32)).
-message_field_type('SET_HOME_POSITION', target_system, uint(8)).
-message_field_type('SET_HOME_POSITION', q, float).
-message_field_type('MESSAGE_INTERVAL', message_id, uint(16)).
-message_field_type('ADSB_VEHICLE', 'ICAO_address', uint(32)).
-message_field_type('ADSB_VEHICLE', callsign, char).
-message_field_type('ADSB_VEHICLE', squawk, uint(16)).
-message_field_type('COLLISION', id, uint(32)).
-message_field_type('V2_EXTENSION', target_network, uint(8)).
-message_field_type('V2_EXTENSION', target_system, uint(8)).
-message_field_type('V2_EXTENSION', target_component, uint(8)).
-message_field_type('V2_EXTENSION', message_type, uint(16)).
-message_field_type('V2_EXTENSION', payload, uint(8)).
-message_field_type('MEMORY_VECT', address, uint(16)).
-message_field_type('MEMORY_VECT', type, uint(8)).
-message_field_type('MEMORY_VECT', value, int(8)).
-message_field_type('DEBUG_VECT', x, float).
-message_field_type('DEBUG_VECT', y, float).
-message_field_type('DEBUG_VECT', z, float).
-message_field_type('NAMED_VALUE_FLOAT', value, float).
-message_field_type('NAMED_VALUE_INT', value, int(32)).
-message_field_type('STATUSTEXT', text, char).
-message_field_type('STATUSTEXT', id, uint(16)).
-message_field_type('STATUSTEXT', chunk_seq, uint(8)).
-message_field_type('DEBUG', ind, uint(8)).
-message_field_type('DEBUG', value, float).
-message_field_type('SETUP_SIGNING', target_system, uint(8)).
-message_field_type('SETUP_SIGNING', target_component, uint(8)).
-message_field_type('SETUP_SIGNING', secret_key, uint(8)).
-message_field_type('SETUP_SIGNING', initial_timestamp, uint(64)).
-message_field_type('PLAY_TUNE', target_system, uint(8)).
-message_field_type('PLAY_TUNE', target_component, uint(8)).
-message_field_type('PLAY_TUNE', tune, char).
-message_field_type('PLAY_TUNE', tune2, char).
-message_field_type('CAMERA_INFORMATION', vendor_name, uint(8)).
-message_field_type('CAMERA_INFORMATION', model_name, uint(8)).
-message_field_type('CAMERA_INFORMATION', cam_definition_version, uint(16)).
-message_field_type('CAMERA_INFORMATION', cam_definition_uri, char).
-message_field_type('STORAGE_INFORMATION', storage_count, uint(8)).
-message_field_type('STORAGE_INFORMATION', name, char).
-message_field_type('CAMERA_CAPTURE_STATUS', image_status, uint(8)).
-message_field_type('CAMERA_CAPTURE_STATUS', video_status, uint(8)).
-message_field_type('CAMERA_CAPTURE_STATUS', image_count, int(32)).
-message_field_type('CAMERA_IMAGE_CAPTURED', camera_id, uint(8)).
-message_field_type('CAMERA_IMAGE_CAPTURED', q, float).
-message_field_type('CAMERA_IMAGE_CAPTURED', image_index, int(32)).
-message_field_type('CAMERA_IMAGE_CAPTURED', capture_result, int(8)).
-message_field_type('CAMERA_IMAGE_CAPTURED', file_url, char).
-message_field_type('FLIGHT_INFORMATION', flight_uuid, uint(64)).
-message_field_type('LOGGING_DATA', target_system, uint(8)).
-message_field_type('LOGGING_DATA', target_component, uint(8)).
-message_field_type('LOGGING_DATA', sequence, uint(16)).
-message_field_type('LOGGING_DATA', data, uint(8)).
-message_field_type('LOGGING_DATA_ACKED', target_system, uint(8)).
-message_field_type('LOGGING_DATA_ACKED', target_component, uint(8)).
-message_field_type('LOGGING_DATA_ACKED', sequence, uint(16)).
-message_field_type('LOGGING_DATA_ACKED', data, uint(8)).
-message_field_type('LOGGING_ACK', target_system, uint(8)).
-message_field_type('LOGGING_ACK', target_component, uint(8)).
-message_field_type('LOGGING_ACK', sequence, uint(16)).
-message_field_type('VIDEO_STREAM_INFORMATION', count, uint(8)).
-message_field_type('VIDEO_STREAM_INFORMATION', name, char).
-message_field_type('VIDEO_STREAM_INFORMATION', uri, char).
-message_field_type('CAMERA_FOV_STATUS', q, float).
-message_field_type('GIMBAL_MANAGER_STATUS', primary_control_sysid, uint(8)).
-message_field_type('GIMBAL_MANAGER_STATUS', primary_control_compid, uint(8)).
-message_field_type('GIMBAL_MANAGER_STATUS', secondary_control_sysid, uint(8)).
-message_field_type('GIMBAL_MANAGER_STATUS', secondary_control_compid, uint(8)).
-message_field_type('GIMBAL_MANAGER_SET_ATTITUDE', target_system, uint(8)).
-message_field_type('GIMBAL_MANAGER_SET_ATTITUDE', target_component, uint(8)).
-message_field_type('GIMBAL_MANAGER_SET_ATTITUDE', q, float).
-message_field_type('GIMBAL_DEVICE_INFORMATION', vendor_name, char).
-message_field_type('GIMBAL_DEVICE_INFORMATION', model_name, char).
-message_field_type('GIMBAL_DEVICE_INFORMATION', custom_name, char).
-message_field_type('GIMBAL_DEVICE_INFORMATION', firmware_version, uint(32)).
-message_field_type('GIMBAL_DEVICE_INFORMATION', hardware_version, uint(32)).
-message_field_type('GIMBAL_DEVICE_SET_ATTITUDE', target_system, uint(8)).
-message_field_type('GIMBAL_DEVICE_SET_ATTITUDE', target_component, uint(8)).
-message_field_type('GIMBAL_DEVICE_ATTITUDE_STATUS', target_system, uint(8)).
-message_field_type('GIMBAL_DEVICE_ATTITUDE_STATUS', target_component, uint(8)).
-message_field_type('GIMBAL_DEVICE_ATTITUDE_STATUS', q, float).
-message_field_type('AUTOPILOT_STATE_FOR_GIMBAL_DEVICE', target_system, uint(8)).
-message_field_type('AUTOPILOT_STATE_FOR_GIMBAL_DEVICE', target_component, uint(8)).
-message_field_type('AUTOPILOT_STATE_FOR_GIMBAL_DEVICE', q, float).
-message_field_type('GIMBAL_MANAGER_SET_PITCHYAW', target_system, uint(8)).
-message_field_type('GIMBAL_MANAGER_SET_PITCHYAW', target_component, uint(8)).
-message_field_type('GIMBAL_MANAGER_SET_MANUAL_CONTROL', target_system, uint(8)).
-message_field_type('GIMBAL_MANAGER_SET_MANUAL_CONTROL', target_component, uint(8)).
-message_field_type('ESC_INFO', counter, uint(16)).
-message_field_type('ESC_INFO', count, uint(8)).
-message_field_type('ESC_INFO', error_count, uint(32)).
-message_field_type('WIFI_CONFIG_AP', ssid, char).
-message_field_type('WIFI_CONFIG_AP', password, char).
-message_field_type('AIS_VESSEL', 'MMSI', uint(32)).
-message_field_type('AIS_VESSEL', callsign, char).
-message_field_type('AIS_VESSEL', name, char).
-message_field_type('UAVCAN_NODE_STATUS', sub_mode, uint(8)).
-message_field_type('UAVCAN_NODE_STATUS', vendor_specific_status_code, uint(16)).
-message_field_type('UAVCAN_NODE_INFO', name, char).
-message_field_type('UAVCAN_NODE_INFO', hw_version_major, uint(8)).
-message_field_type('UAVCAN_NODE_INFO', hw_version_minor, uint(8)).
-message_field_type('UAVCAN_NODE_INFO', hw_unique_id, uint(8)).
-message_field_type('UAVCAN_NODE_INFO', sw_version_major, uint(8)).
-message_field_type('UAVCAN_NODE_INFO', sw_version_minor, uint(8)).
-message_field_type('PARAM_EXT_REQUEST_READ', target_system, uint(8)).
-message_field_type('PARAM_EXT_REQUEST_READ', target_component, uint(8)).
-message_field_type('PARAM_EXT_REQUEST_READ', param_id, char).
-message_field_type('PARAM_EXT_REQUEST_LIST', target_system, uint(8)).
-message_field_type('PARAM_EXT_REQUEST_LIST', target_component, uint(8)).
-message_field_type('PARAM_EXT_VALUE', param_id, char).
-message_field_type('PARAM_EXT_VALUE', param_value, char).
-message_field_type('PARAM_EXT_VALUE', param_count, uint(16)).
-message_field_type('PARAM_EXT_VALUE', param_index, uint(16)).
-message_field_type('PARAM_EXT_SET', target_system, uint(8)).
-message_field_type('PARAM_EXT_SET', target_component, uint(8)).
-message_field_type('PARAM_EXT_SET', param_id, char).
-message_field_type('PARAM_EXT_SET', param_value, char).
-message_field_type('PARAM_EXT_ACK', param_id, char).
-message_field_type('PARAM_EXT_ACK', param_value, char).
-message_field_type('ODOMETRY', q, float).
-message_field_type('ODOMETRY', reset_counter, uint(8)).
-message_field_type('TRAJECTORY_REPRESENTATION_WAYPOINTS', valid_points, uint(8)).
-message_field_type('TRAJECTORY_REPRESENTATION_BEZIER', valid_points, uint(8)).
-message_field_type('ISBD_LINK_STATUS', failed_sessions, uint(16)).
-message_field_type('ISBD_LINK_STATUS', successful_sessions, uint(16)).
-message_field_type('ISBD_LINK_STATUS', signal_quality, uint(8)).
-message_field_type('ISBD_LINK_STATUS', ring_pending, uint(8)).
-message_field_type('ISBD_LINK_STATUS', tx_session_pending, uint(8)).
-message_field_type('ISBD_LINK_STATUS', rx_session_pending, uint(8)).
-message_field_type('CELLULAR_CONFIG', enable_lte, uint(8)).
-message_field_type('CELLULAR_CONFIG', enable_pin, uint(8)).
-message_field_type('CELLULAR_CONFIG', pin, char).
-message_field_type('CELLULAR_CONFIG', new_pin, char).
-message_field_type('CELLULAR_CONFIG', apn, char).
-message_field_type('CELLULAR_CONFIG', puk, char).
-message_field_type('CELLULAR_CONFIG', roaming, uint(8)).
-message_field_type('RAW_RPM', index, uint(8)).
-message_field_type('UTM_GLOBAL_POSITION', uas_id, uint(8)).
-message_field_type('DEBUG_FLOAT_ARRAY', name, char).
-message_field_type('DEBUG_FLOAT_ARRAY', data, float).
-message_field_type('ORBIT_EXECUTION_STATUS', x, int(32)).
-message_field_type('ORBIT_EXECUTION_STATUS', y, int(32)).
-message_field_type('ACTUATOR_OUTPUT_STATUS', actuator, float).
-message_field_type('TUNNEL', target_system, uint(8)).
-message_field_type('TUNNEL', target_component, uint(8)).
-message_field_type('TUNNEL', payload_length, uint(8)).
-message_field_type('TUNNEL', payload, uint(8)).
-message_field_type('CAN_FRAME', target_system, uint(8)).
-message_field_type('CAN_FRAME', target_component, uint(8)).
-message_field_type('CAN_FRAME', bus, uint(8)).
-message_field_type('CAN_FRAME', len, uint(8)).
-message_field_type('CAN_FRAME', id, uint(32)).
-message_field_type('CAN_FRAME', data, uint(8)).
-message_field_type('ONBOARD_COMPUTER_STATUS', type, uint(8)).
-message_field_type('ONBOARD_COMPUTER_STATUS', link_type, uint(32)).
-message_field_type('COMPONENT_INFORMATION', general_metadata_file_crc, uint(32)).
-message_field_type('COMPONENT_INFORMATION', general_metadata_uri, char).
-message_field_type('COMPONENT_INFORMATION', peripherals_metadata_file_crc, uint(32)).
-message_field_type('COMPONENT_INFORMATION', peripherals_metadata_uri, char).
-message_field_type('COMPONENT_METADATA', file_crc, uint(32)).
-message_field_type('COMPONENT_METADATA', uri, char).
-message_field_type('PLAY_TUNE_V2', target_system, uint(8)).
-message_field_type('PLAY_TUNE_V2', target_component, uint(8)).
-message_field_type('PLAY_TUNE_V2', tune, char).
-message_field_type('SUPPORTED_TUNES', target_system, uint(8)).
-message_field_type('SUPPORTED_TUNES', target_component, uint(8)).
-message_field_type('EVENT', destination_component, uint(8)).
-message_field_type('EVENT', destination_system, uint(8)).
-message_field_type('EVENT', id, uint(32)).
-message_field_type('EVENT', sequence, uint(16)).
-message_field_type('EVENT', log_levels, uint(8)).
-message_field_type('EVENT', arguments, uint(8)).
-message_field_type('CURRENT_EVENT_SEQUENCE', sequence, uint(16)).
-message_field_type('REQUEST_EVENT', target_system, uint(8)).
-message_field_type('REQUEST_EVENT', target_component, uint(8)).
-message_field_type('REQUEST_EVENT', first_sequence, uint(16)).
-message_field_type('REQUEST_EVENT', last_sequence, uint(16)).
-message_field_type('RESPONSE_EVENT_ERROR', target_system, uint(8)).
-message_field_type('RESPONSE_EVENT_ERROR', target_component, uint(8)).
-message_field_type('RESPONSE_EVENT_ERROR', sequence, uint(16)).
-message_field_type('RESPONSE_EVENT_ERROR', sequence_oldest_available, uint(16)).
-message_field_type('CANFD_FRAME', target_system, uint(8)).
-message_field_type('CANFD_FRAME', target_component, uint(8)).
-message_field_type('CANFD_FRAME', bus, uint(8)).
-message_field_type('CANFD_FRAME', len, uint(8)).
-message_field_type('CANFD_FRAME', id, uint(32)).
-message_field_type('CANFD_FRAME', data, uint(8)).
-message_field_type('CAN_FILTER_MODIFY', target_system, uint(8)).
-message_field_type('CAN_FILTER_MODIFY', target_component, uint(8)).
-message_field_type('CAN_FILTER_MODIFY', bus, uint(8)).
-message_field_type('CAN_FILTER_MODIFY', num_ids, uint(8)).
-message_field_type('CAN_FILTER_MODIFY', ids, uint(16)).
-message_field_type('WHEEL_DISTANCE', count, uint(8)).
-message_field_type('OPEN_DRONE_ID_BASIC_ID', target_system, uint(8)).
-message_field_type('OPEN_DRONE_ID_BASIC_ID', target_component, uint(8)).
-message_field_type('OPEN_DRONE_ID_BASIC_ID', id_or_mac, uint(8)).
-message_field_type('OPEN_DRONE_ID_BASIC_ID', uas_id, uint(8)).
-message_field_type('OPEN_DRONE_ID_LOCATION', target_system, uint(8)).
-message_field_type('OPEN_DRONE_ID_LOCATION', target_component, uint(8)).
-message_field_type('OPEN_DRONE_ID_LOCATION', id_or_mac, uint(8)).
-message_field_type('OPEN_DRONE_ID_AUTHENTICATION', target_system, uint(8)).
-message_field_type('OPEN_DRONE_ID_AUTHENTICATION', target_component, uint(8)).
-message_field_type('OPEN_DRONE_ID_AUTHENTICATION', id_or_mac, uint(8)).
-message_field_type('OPEN_DRONE_ID_AUTHENTICATION', data_page, uint(8)).
-message_field_type('OPEN_DRONE_ID_AUTHENTICATION', last_page_index, uint(8)).
-message_field_type('OPEN_DRONE_ID_AUTHENTICATION', authentication_data, uint(8)).
-message_field_type('OPEN_DRONE_ID_SELF_ID', target_system, uint(8)).
-message_field_type('OPEN_DRONE_ID_SELF_ID', target_component, uint(8)).
-message_field_type('OPEN_DRONE_ID_SELF_ID', id_or_mac, uint(8)).
-message_field_type('OPEN_DRONE_ID_SELF_ID', description, char).
-message_field_type('OPEN_DRONE_ID_SYSTEM', target_system, uint(8)).
-message_field_type('OPEN_DRONE_ID_SYSTEM', target_component, uint(8)).
-message_field_type('OPEN_DRONE_ID_SYSTEM', id_or_mac, uint(8)).
-message_field_type('OPEN_DRONE_ID_SYSTEM', area_count, uint(16)).
-message_field_type('OPEN_DRONE_ID_OPERATOR_ID', target_system, uint(8)).
-message_field_type('OPEN_DRONE_ID_OPERATOR_ID', target_component, uint(8)).
-message_field_type('OPEN_DRONE_ID_OPERATOR_ID', id_or_mac, uint(8)).
-message_field_type('OPEN_DRONE_ID_OPERATOR_ID', operator_id, char).
-message_field_type('OPEN_DRONE_ID_MESSAGE_PACK', target_system, uint(8)).
-message_field_type('OPEN_DRONE_ID_MESSAGE_PACK', target_component, uint(8)).
-message_field_type('OPEN_DRONE_ID_MESSAGE_PACK', id_or_mac, uint(8)).
-message_field_type('OPEN_DRONE_ID_MESSAGE_PACK', msg_pack_size, uint(8)).
-message_field_type('OPEN_DRONE_ID_MESSAGE_PACK', messages, uint(8)).
-message_field_type('OPEN_DRONE_ID_ARM_STATUS', error, char).
-message_field_type('OPEN_DRONE_ID_SYSTEM_UPDATE', target_system, uint(8)).
-message_field_type('OPEN_DRONE_ID_SYSTEM_UPDATE', target_component, uint(8)).
-message_field_type('PARAM_ACK_TRANSACTION', target_system, uint(8)).
-message_field_type('PARAM_ACK_TRANSACTION', target_component, uint(8)).
-message_field_type('PARAM_ACK_TRANSACTION', param_id, char).
-message_field_type('PARAM_ACK_TRANSACTION', param_value, float).
-message_field_type('WIFI_NETWORK_INFO', ssid, char).
-message_field_type('WIFI_NETWORK_INFO', channel_id, uint(8)).
-message_field_type('FIGURE_EIGHT_EXECUTION_STATUS', x, int(32)).
-message_field_type('FIGURE_EIGHT_EXECUTION_STATUS', y, int(32)).
-message_field_type('COMPONENT_INFORMATION_BASIC', vendor_name, char).
-message_field_type('COMPONENT_INFORMATION_BASIC', model_name, char).
-message_field_type('COMPONENT_INFORMATION_BASIC', software_version, char).
-message_field_type('COMPONENT_INFORMATION_BASIC', hardware_version, char).
-message_field_type('COMPONENT_INFORMATION_BASIC', serial_number, char).
-message_field_type('GROUP_START', group_id, uint(32)).
-message_field_type('GROUP_START', mission_checksum, uint(32)).
-message_field_type('GROUP_END', group_id, uint(32)).
-message_field_type('GROUP_END', mission_checksum, uint(32)).
-message_field_type('AVAILABLE_MODES', number_modes, uint(8)).
-message_field_type('AVAILABLE_MODES', mode_index, uint(8)).
-message_field_type('AVAILABLE_MODES', custom_mode, uint(32)).
-message_field_type('AVAILABLE_MODES', mode_name, char).
-message_field_type('CURRENT_MODE', custom_mode, uint(32)).
-message_field_type('AVAILABLE_MODES_MONITOR', seq, uint(8)).
-message_field_type('TARGET_ABSOLUTE', id, uint(8)).
-message_field_type('TARGET_RELATIVE', q_target, float).
-message_field_type('TARGET_RELATIVE', q_sensor, float).
-message_field_type('ICAROUS_KINEMATIC_BANDS', numBands, int(8)).
-message_field_type('HEARTBEAT', custom_mode, uint(32)).
-message_field_type('HEARTBEAT', mavlink_version, uint(8)).
-message_field_type('PROTOCOL_VERSION', version, uint(16)).
-message_field_type('PROTOCOL_VERSION', min_version, uint(16)).
-message_field_type('PROTOCOL_VERSION', max_version, uint(16)).
-message_field_type('PROTOCOL_VERSION', spec_version_hash, uint(8)).
-message_field_type('PROTOCOL_VERSION', library_version_hash, uint(8)).
-message_field_type('ARRAY_TEST_0', v1, uint(8)).
-message_field_type('ARRAY_TEST_0', ar_i8, int(8)).
-message_field_type('ARRAY_TEST_0', ar_u8, uint(8)).
-message_field_type('ARRAY_TEST_0', ar_u16, uint(16)).
-message_field_type('ARRAY_TEST_0', ar_u32, uint(32)).
-message_field_type('ARRAY_TEST_1', ar_u32, uint(32)).
-message_field_type('ARRAY_TEST_3', v, uint(8)).
-message_field_type('ARRAY_TEST_3', ar_u32, uint(32)).
-message_field_type('ARRAY_TEST_4', ar_u32, uint(32)).
-message_field_type('ARRAY_TEST_4', v, uint(8)).
-message_field_type('ARRAY_TEST_5', c1, char).
-message_field_type('ARRAY_TEST_5', c2, char).
-message_field_type('ARRAY_TEST_6', v1, uint(8)).
-message_field_type('ARRAY_TEST_6', v2, uint(16)).
-message_field_type('ARRAY_TEST_6', v3, uint(32)).
-message_field_type('ARRAY_TEST_6', ar_u32, uint(32)).
-message_field_type('ARRAY_TEST_6', ar_i32, int(32)).
-message_field_type('ARRAY_TEST_6', ar_u16, uint(16)).
-message_field_type('ARRAY_TEST_6', ar_i16, int(16)).
-message_field_type('ARRAY_TEST_6', ar_u8, uint(8)).
-message_field_type('ARRAY_TEST_6', ar_i8, int(8)).
-message_field_type('ARRAY_TEST_6', ar_c, char).
-message_field_type('ARRAY_TEST_6', ar_d, double).
-message_field_type('ARRAY_TEST_6', ar_f, float).
-message_field_type('ARRAY_TEST_7', ar_d, double).
-message_field_type('ARRAY_TEST_7', ar_f, float).
-message_field_type('ARRAY_TEST_7', ar_u32, uint(32)).
-message_field_type('ARRAY_TEST_7', ar_i32, int(32)).
-message_field_type('ARRAY_TEST_7', ar_u16, uint(16)).
-message_field_type('ARRAY_TEST_7', ar_i16, int(16)).
-message_field_type('ARRAY_TEST_7', ar_u8, uint(8)).
-message_field_type('ARRAY_TEST_7', ar_i8, int(8)).
-message_field_type('ARRAY_TEST_7', ar_c, char).
-message_field_type('ARRAY_TEST_8', v3, uint(32)).
-message_field_type('ARRAY_TEST_8', ar_d, double).
-message_field_type('ARRAY_TEST_8', ar_u16, uint(16)).
-message_field_type('TEST_TYPES', c, char).
-message_field_type('TEST_TYPES', s, char).
-message_field_type('TEST_TYPES', u8, uint(8)).
-message_field_type('TEST_TYPES', u16, uint(16)).
-message_field_type('TEST_TYPES', u64, uint(64)).
-message_field_type('TEST_TYPES', s8, int(8)).
-message_field_type('TEST_TYPES', s16, int(16)).
-message_field_type('TEST_TYPES', s32, int(32)).
-message_field_type('TEST_TYPES', s64, int(64)).
-message_field_type('TEST_TYPES', f, float).
-message_field_type('TEST_TYPES', d, double).
-message_field_type('TEST_TYPES', u8_array, uint(8)).
-message_field_type('TEST_TYPES', u16_array, uint(16)).
-message_field_type('TEST_TYPES', u32_array, uint(32)).
-message_field_type('TEST_TYPES', u64_array, uint(64)).
-message_field_type('TEST_TYPES', s8_array, int(8)).
-message_field_type('TEST_TYPES', s16_array, int(16)).
-message_field_type('TEST_TYPES', s32_array, int(32)).
-message_field_type('TEST_TYPES', s64_array, int(64)).
-message_field_type('TEST_TYPES', f_array, float).
-message_field_type('TEST_TYPES', d_array, double).
-message_field_type('NAV_FILTER_BIAS', usec, uint(64)).
-message_field_type('NAV_FILTER_BIAS', accel_0, float).
-message_field_type('NAV_FILTER_BIAS', accel_1, float).
-message_field_type('NAV_FILTER_BIAS', accel_2, float).
-message_field_type('NAV_FILTER_BIAS', gyro_0, float).
-message_field_type('NAV_FILTER_BIAS', gyro_1, float).
-message_field_type('NAV_FILTER_BIAS', gyro_2, float).
-message_field_type('RADIO_CALIBRATION', aileron, uint(16)).
-message_field_type('RADIO_CALIBRATION', elevator, uint(16)).
-message_field_type('RADIO_CALIBRATION', rudder, uint(16)).
-message_field_type('RADIO_CALIBRATION', gyro, uint(16)).
-message_field_type('RADIO_CALIBRATION', pitch, uint(16)).
-message_field_type('RADIO_CALIBRATION', throttle, uint(16)).
-message_field_type('UALBERTA_SYS_STATUS', mode, uint(8)).
-message_field_type('UALBERTA_SYS_STATUS', nav_mode, uint(8)).
-message_field_type('UALBERTA_SYS_STATUS', pilot, uint(8)).
-message_field_type('UAVIONIX_ADSB_OUT_CFG', 'ICAO', uint(32)).
-message_field_type('UAVIONIX_ADSB_OUT_CFG', callsign, char).
-message_field_type('UAVIONIX_ADSB_OUT_DYNAMIC', numSats, uint(8)).
-message_field_type('UAVIONIX_ADSB_OUT_DYNAMIC', squawk, uint(16)).
-message_field_type('STORM32_GIMBAL_MANAGER_CONTROL', target_system, uint(8)).
-message_field_type('STORM32_GIMBAL_MANAGER_CONTROL', target_component, uint(8)).
-message_field_type('STORM32_GIMBAL_MANAGER_CONTROL_PITCHYAW', target_system, uint(8)).
-message_field_type('STORM32_GIMBAL_MANAGER_CONTROL_PITCHYAW', target_component, uint(8)).
-message_field_type('STORM32_GIMBAL_MANAGER_CORRECT_ROLL', target_system, uint(8)).
-message_field_type('STORM32_GIMBAL_MANAGER_CORRECT_ROLL', target_component, uint(8)).
-message_field_type('QSHOT_STATUS', shot_state, uint(16)).
-message_field_type('RADIO_RC_CHANNELS', count, uint(8)).
-message_field_type('RADIO_RC_CHANNELS', channels, int(16)).
-message_field_type('FRSKY_PASSTHROUGH_ARRAY', count, uint(8)).
-message_field_type('FRSKY_PASSTHROUGH_ARRAY', packet_buf, uint(8)).
-message_field_type('PARAM_VALUE_ARRAY', param_count, uint(16)).
-message_field_type('PARAM_VALUE_ARRAY', param_index_first, uint(16)).
-message_field_type('PARAM_VALUE_ARRAY', param_array_len, uint(8)).
-message_field_type('PARAM_VALUE_ARRAY', flags, uint(16)).
-message_field_type('PARAM_VALUE_ARRAY', packet_buf, uint(8)).
-message_field_type('AVSS_PRS_SYS_STATUS', error_status, uint(32)).
-message_field_type('AVSS_PRS_SYS_STATUS', battery_status, uint(32)).
-message_field_type('AVSS_PRS_SYS_STATUS', arm_status, uint(8)).
-message_field_type('AVSS_PRS_SYS_STATUS', charge_status, uint(8)).
-message_field_type('AVSS_DRONE_IMU', q1, float).
-message_field_type('AVSS_DRONE_IMU', q2, float).
-message_field_type('AVSS_DRONE_IMU', q3, float).
-message_field_type('AVSS_DRONE_IMU', q4, float).
-message_field_type('AVSS_DRONE_OPERATION_MODE', 'M300_operation_mode', uint(8)).
-message_field_type('AVSS_DRONE_OPERATION_MODE', horsefly_operation_mode, uint(8)).
-message_field_type('CUBEPILOT_RAW_RC', rc_raw, uint(8)).
-message_field_type('HERELINK_VIDEO_STREAM_INFORMATION', camera_id, uint(8)).
-message_field_type('HERELINK_VIDEO_STREAM_INFORMATION', status, uint(8)).
-message_field_type('HERELINK_VIDEO_STREAM_INFORMATION', uri, char).
-message_field_type('HERELINK_TELEM', rssi, uint(8)).
-message_field_type('HERELINK_TELEM', snr, int(16)).
-message_field_type('HERELINK_TELEM', rf_freq, uint(32)).
-message_field_type('HERELINK_TELEM', link_bw, uint(32)).
-message_field_type('HERELINK_TELEM', link_rate, uint(32)).
-message_field_type('HERELINK_TELEM', cpu_temp, int(16)).
-message_field_type('HERELINK_TELEM', board_temp, int(16)).
-message_field_type('CUBEPILOT_FIRMWARE_UPDATE_START', target_system, uint(8)).
-message_field_type('CUBEPILOT_FIRMWARE_UPDATE_START', target_component, uint(8)).
-message_field_type('CUBEPILOT_FIRMWARE_UPDATE_START', crc, uint(32)).
-message_field_type('CUBEPILOT_FIRMWARE_UPDATE_RESP', target_system, uint(8)).
-message_field_type('CUBEPILOT_FIRMWARE_UPDATE_RESP', target_component, uint(8)).
-message_field_type('AIRLINK_AUTH', login, char).
-message_field_type('AIRLINK_AUTH', password, char).
 
 :- dynamic message_include/2.
 
@@ -10760,6 +9833,8 @@ message_include('HYGROMETER_SENSOR', common).
 message_include('PARAM_ACK_TRANSACTION', development).
 message_include('AIRSPEED', development).
 message_include('WIFI_NETWORK_INFO', development).
+message_include('SET_VELOCITY_LIMITS', development).
+message_include('VELOCITY_LIMITS', development).
 message_include('FIGURE_EIGHT_EXECUTION_STATUS', development).
 message_include('BATTERY_STATUS_V2', development).
 message_include('COMPONENT_INFORMATION_BASIC', development).
@@ -10826,6 +9901,8 @@ message_wip('EVENT').
 message_wip('CURRENT_EVENT_SEQUENCE').
 message_wip('REQUEST_EVENT').
 message_wip('RESPONSE_EVENT_ERROR').
+message_wip('SET_VELOCITY_LIMITS').
+message_wip('VELOCITY_LIMITS').
 message_wip('FIGURE_EIGHT_EXECUTION_STATUS').
 message_wip('PROTOCOL_VERSION').
 message_wip('QSHOT_STATUS').
