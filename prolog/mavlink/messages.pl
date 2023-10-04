@@ -80,8 +80,8 @@ mavlink_sorted_fields(MessageName, SortedFields) :-
     predsort(compare_fields, Fields, SortedFields).
 
 compare_fields(Order, _FieldName1-Type1, _FieldName2-Type2) :-
-    mavlink_type_atom_size(Type1, Size1),
-    mavlink_type_atom_size(Type2, Size2),
+    mavlink_type_size(Type1, Size1),
+    mavlink_type_size(Type2, Size2),
     compare(Order_, Size2, Size1),
     (   Order_ == (=)
     ->  Order = (<)
