@@ -80,8 +80,8 @@ type(int(Width)) -->
     "_t".
 type(uint(Width)) --> "u", uint_type(Width).
 type(char) --> "char".
-type(float) --> "float".
-type(double) --> "double".
+type(float(32)) --> "float".
+type(float(64)) --> "double".
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -117,8 +117,8 @@ Unifies a type's Term and Size.
 mavlink_type_size(int(Width), Size) :- width(Width), Size is Width >> 3.
 mavlink_type_size(uint(Width), Size) :- width(Width), Size is Width >> 3.
 mavlink_type_size(char, 1).
-mavlink_type_size(float, 4).
-mavlink_type_size(double, 8).
+mavlink_type_size(float(32), 4).
+mavlink_type_size(float(64), 8).
 
 %!  mavlink_type_atom_size(+Atom, ?Size) is semidet.
 %!  mavlink_type_atom_size(-Atom, ?Size) is nondet.
