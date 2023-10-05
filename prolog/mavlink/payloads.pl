@@ -13,6 +13,8 @@
 :- use_module(library(mavlink/ieee)).
 :- use_module(library(mavlink/types)).
 
+:- ensure_loaded(library(mavlink)).
+
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 Decode a heartbeat payload phrase using:
