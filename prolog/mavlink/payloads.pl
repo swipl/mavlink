@@ -109,13 +109,17 @@ int(Width, Value0) -->
 
 signed_unsigned(Width, Signed, Unsigned), integer(Signed) =>
     (   Signed < 0
-    ->  -(1 << (Width - 1)) =< Signed, Unsigned is (1 << Width) + Signed
-    ;   Signed < 1 << (Width - 1), Unsigned = Signed
+    ->  -(1 << (Width - 1)) =< Signed,
+        Unsigned is (1 << Width) + Signed
+    ;   Signed < 1 << (Width - 1),
+        Unsigned = Signed
     ).
 signed_unsigned(Width, Signed, Unsigned), integer(Unsigned) =>
     (   Unsigned < 1 << (Width - 1)
-    ->  0 =< Unsigned, Signed = Unsigned
-    ;   Unsigned < 1 << Width, Signed is Unsigned - (1 << Width)
+    ->  0 =< Unsigned,
+        Signed = Unsigned
+    ;   Unsigned < 1 << Width,
+        Signed is Unsigned - (1 << Width)
     ).
 
 uint(Width, Value) -->
