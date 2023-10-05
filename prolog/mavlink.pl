@@ -17,6 +17,7 @@ mavlink_definitions_r(all, A),
 Predicate ordering matters.
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
 :- dynamic enum/2.
 
 enum('ACCELCAL_VEHICLE_POS', []).
