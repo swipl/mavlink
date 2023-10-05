@@ -63,9 +63,8 @@ payload([H|T], Terms, [Term|Terms_]) -->
     field(H, Term),
     payload(T, Terms, Terms_).
 
-field(FieldName-AtomicType, Term, H, T) :-
+field(FieldName-Type, Term, H, T) :-
     Term =.. [FieldName, Value],
-    mavlink_type_atom(Type, AtomicType),
     mavlink_type_size(Type, Size),
     (   nonvar(H),
         length(H, Len),
