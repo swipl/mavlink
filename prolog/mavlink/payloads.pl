@@ -72,10 +72,55 @@ field(FieldName-Type, Term, H, T) :-
     ->  Size_ = Len
     ;   Size_ = Size
     ),
-    Width is Size_ << 3,
-    field(Type, Width, Value, H, T).
+    field(Type, Size_, Value, H, T).
 
-field(float, Width, Value) --> float(Width, Value).
+field(int(Width), Size, Value) -->
+    { Width is Size << 3
+    },
+    int(Width, Value).
+field(uint(Width), Size, Value) -->
+    { Width is Size << 3
+    },
+    uint(Width, Value).
+field(float(Width), Size, Value) -->
+    { Width is Size << 3
+    },
+    float(Width, Value).
+
+int(Width, Value) -->
+    { var(Value), !
+    },
+    endian(little, Width, Value0),
+    { signed_unsigned(Width, Value, Value0)
+    }.
+int(Width, Value0) -->
+    { signed_unsigned(Width, Value0, Value)
+    },
+    endian(little, Width, Value).
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    Converts between signed and unsigned integers based on Width in
+    bits. Fails for integers outside the available range.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+signed_unsigned(Width, Signed, Unsigned), integer(Signed) =>
+    (   Signed < 0
+    ->  -(1 << (Width - 1)) =< Signed, Unsigned is (1 << Width) + Signed
+    ;   Signed < 1 << (Width - 1), Unsigned = Signed
+    ).
+signed_unsigned(Width, Signed, Unsigned), integer(Unsigned) =>
+    (   Unsigned < 1 << (Width - 1)
+    ->  0 =< Unsigned, Signed = Unsigned
+    ;   Unsigned < 1 << Width, Signed is Unsigned - (1 << Width)
+    ).
+
+uint(Width, Value) -->
+    { var(Value), !
+    },
+    endian(little, Width, Value).
+uint(Width, Value) --> endian(little, Width, Value).
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
