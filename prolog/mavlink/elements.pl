@@ -98,10 +98,8 @@ element_(field, Attrs, Options0, Options) :-
     phrase(type(Type1), Codes),
     option(name(MessageName), MessageAttrs),
     option(extensions(Extensions), Options0),
-    term(message_field(MessageName, Name, Type1,
-                       [ extensions(Extensions)
-                       | Attrs2
-                       ]), Options0, Options).
+    merge_options([extensions(Extensions)], Attrs2, Attrs3),
+    term(message_field(MessageName, Name, Type1, Attrs3), Options0, Options).
 element_(Tag, Attrs, Options, Options) :-
     (   debugging(mavlink(elements))
     ->  args(1, Tags, Options),
