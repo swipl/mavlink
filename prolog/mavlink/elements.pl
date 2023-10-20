@@ -74,9 +74,9 @@ element_(extensions, _, Options0, [extensions(true)|Options]) :-
     !,
     select_option(extensions(false), Options0, Options).
 element_(field, Attrs, Options0, Options) :-
-    tags([message|_], Options0),
+    args(1, [message|_], Options0),
     !,
-    attrs([MessageAttrs|_], Options0),
+    args(2, [MessageAttrs|_], Options0),
     select_option(name(Name), Attrs, Attrs1),
     select_option(type(Type0), Attrs1, Attrs2),
     atom_codes(Type0, Codes),
@@ -89,7 +89,7 @@ element_(field, Attrs, Options0, Options) :-
                        ]), Options0, Options).
 element_(Tag, Attrs, Options, Options) :-
     (   debugging(mavlink(elements))
-    ->  tags(Tags, Options),
+    ->  args(1, Tags, Options),
         atomic_list_concat([Tag|Tags], '_', Name),
         Term =.. [Name|Attrs],
         debug(mavlink(elements), '~q', [Term])
@@ -104,13 +104,9 @@ select_option_(H, Option, Options0, [Option_|Options]) :-
     Option =.. [Name, T],
     Option_ =.. [Name, [H|T]].
 
-tags(Tags, Options) :-
+args(Arg, Args, Options) :-
     option(elements(Elements), Options, []),
-    maplist(arg(1), Elements, Tags).
-
-attrs(Attrs, Options) :-
-    option(elements(Elements), Options, []),
-    maplist(arg(2), Elements, Attrs).
+    maplist(arg(Arg), Elements, Args).
 
 type(Array) -->
     csym(Basic),
