@@ -67,6 +67,16 @@ element_(enum, Attrs, Options0, Options) :-
     !,
     select_option(name(Name), Attrs, Attrs1),
     term(enum(Name, Attrs1), Options0, Options).
+element_(entry, Attrs, Options0, Options) :-
+    args(1, [enum, enums, mavlink], Options0),
+    !,
+    args(2, [EnumAttrs|_], Options0),
+    select_option(name(Name), Attrs, Attrs1),
+    select_option(value(Value), Attrs1, Attrs2),
+    option(name(EnumName), EnumAttrs),
+    atom_number(Value, Value1),
+    merge_options([], Attrs2, Attrs3),
+    term(enum_entry(EnumName, Name, Value1, Attrs3), Options0, Options).
 element_(message, Attrs, Options0, [extensions(false)|Options]) :-
     args(1, [messages, mavlink], Options0),
     !,
