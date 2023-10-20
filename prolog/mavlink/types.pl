@@ -8,8 +8,10 @@
           [ mavlink_type_len_atom/3,            % ?Term,?Len,?Atom
             mavlink_type_atom/2,                % ?Term,?Atom
             mavlink_type_atom/3,                % ?Term,?Len,?Atom
-            mavlink_type_size/2,                % ?Term,?Size
-            mavlink_type_atom_size/2            % ?Atom,?Size
+            mavlink_type_atom_size/2,           % ?Atom,?Size
+            mavlink_basic_size/2,               % ?Basic,?Size
+            mavlink_array_len/4,                % ?Array,?Basic,?Size,?Len
+            mavlink_array_size/4                % ?Array,?Basic,?Len,?Size
           ]).
 :- autoload(library(dcg/basics), [integer//1]).
 
@@ -106,20 +108,6 @@ width(16).
 width(32).
 width(64).
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-Unifies a type's Term and Size.
-
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-
-%!  mavlink_type_size(?Term, ?Size) is nondet.
-
-mavlink_type_size(int(Width), Size) :- width(Width), Size is Width >> 3.
-mavlink_type_size(uint(Width), Size) :- width(Width), Size is Width >> 3.
-mavlink_type_size(char, 1).
-mavlink_type_size(float(32), 4).
-mavlink_type_size(float(64), 8).
-
 %!  mavlink_type_atom_size(+Atom, ?Size) is semidet.
 %!  mavlink_type_atom_size(-Atom, ?Size) is nondet.
 %
@@ -138,3 +126,48 @@ mavlink_type_atom_size(Atom, Size) :-
 mavlink_type_atom_size(Atom, Size) :-
     mavlink_type_atom(Type, Atom),
     mavlink_type_size(Type, Size).
+
+%!  mavlink_basic_size(?Basic, ?Size) is nondet.
+%
+%   Unifies a type's basic Type and Size. Aims for simplicity. Type is
+%   the basic type *without* a length suffix as in the case for arrays
+%   of Type.
+
+mavlink_basic_size(char, 1).
+mavlink_basic_size(int8_t, 1).
+mavlink_basic_size(uint8_t, 1).
+mavlink_basic_size(uint8_t_mavlink_version, 1).
+mavlink_basic_size(int16_t, 2).
+mavlink_basic_size(uint16_t, 2).
+mavlink_basic_size(int32_t, 4).
+mavlink_basic_size(uint32_t, 4).
+mavlink_basic_size(float, 4).
+mavlink_basic_size(int64_t, 8).
+mavlink_basic_size(uint64_t, 8).
+mavlink_basic_size(double, 8).
+
+%!  mavlink_array_size(?Array, ?Basic, ?Len, ?Size) is nondet.
+%
+%   True when Array has Basic type of Len items spanning Size octets.
+
+mavlink_array_size(Array, Basic, Len, Size) :-
+    mavlink_array_len(Array, Basic, BasicSize, Len),
+    between(1, 255, Len),
+    Size is BasicSize * Len.
+
+%!  mavlink_array_len(?Array, ?Basic, ?Size, ?Len) is nondet.
+%
+%   Finds Len of Array type comprising one or more Basic types each of
+%   Size octets. Fails for non-Array types.
+%
+%   @arg Array must be a variable or arity-1 compound.
+%   @arg Basic is the basic type atom.
+%   @arg Size is the basic size in octets.
+%   @arg Len is the array length, between 1 and 255 inclusive.
+
+mavlink_array_len(Array, Basic, Size, Len), compound(Array) =>
+    Array =.. [Basic, Len],
+    mavlink_basic_size(Basic, Size).
+mavlink_array_len(Array, Basic, Size, Len) =>
+    mavlink_basic_size(Basic, Size),
+    Array =.. [Basic, Len].
