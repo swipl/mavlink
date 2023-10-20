@@ -57,6 +57,7 @@ element(Options0, [elements(Elements)|Options]) -->
                                 ])
                      | Options__
                      ], Options___), Content),
+      !,
       select_option(elements(_), Options___, Options)
     }.
 element(Options, Options) --> [_].
