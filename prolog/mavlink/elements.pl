@@ -48,7 +48,7 @@ content(Options0, Options) -->
 element(Options0, [elements(Elements)|Options]) -->
     [element(Tag, Attrs, Content)],
     !,
-    { element(Tag, Attrs, Content, Options0, Options_),
+    { element_(Tag, Attrs, Options0, Options_),
       select_option(elements(Elements), Options_, Options__, []),
       phrase(content([ elements([ element(Tag, Attrs, Content)|
                                   Elements ])|
@@ -57,19 +57,17 @@ element(Options0, [elements(Elements)|Options]) -->
     }.
 element(Options, Options) --> [_].
 
-element(Tag, Attrs, Content) --> [element(Tag, Attrs, Content)].
-
-element(message, Attrs, _, Options0, [extensions(false)|Options]) :-
+element_(message, Attrs, Options0, [extensions(false)|Options]) :-
     !,
     select_option(name(Name), Attrs, Attrs1),
     select_option(id(Id), Attrs1, Attrs2),
     atom_number(Id, Id1),
     term(message(Name, Id1, Attrs2), Options0, Options_),
     select_option(extensions(_), Options_, Options, _).
-element(extensions, _, _, Options0, [extensions(true)|Options]) :-
+element_(extensions, _, Options0, [extensions(true)|Options]) :-
     !,
     select_option(extensions(false), Options0, Options).
-element(field, Attrs, _, Options0, Options) :-
+element_(field, Attrs, Options0, Options) :-
     !,
     tags([message|_], Options0),
     attrs([MessageAttrs|_], Options0),
@@ -79,7 +77,7 @@ element(field, Attrs, _, Options0, Options) :-
     option(extensions(Extensions), Options0),
     term(message_field(MessageName, Name, Type,
                        [extensions(Extensions)|Attrs2]), Options0, Options).
-element(Tag, Attrs, _, Options, Options) :-
+element_(Tag, Attrs, Options, Options) :-
     (   debugging(mavlink(elements))
     ->  tags(Tags, Options),
         atomic_list_concat([Tag|Tags], '_', Name),
