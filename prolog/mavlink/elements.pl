@@ -112,9 +112,9 @@ type(Array) -->
     csym(Basic),
     "[",
     !,
+    integer(Len),
     { between(1, 255, Len)
     },
-    integer(Len),
     "]",
     { Array =.. [Basic, Len]
     }.
