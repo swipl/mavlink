@@ -106,6 +106,18 @@ attrs(Attrs, Options) :-
     option(elements(Elements), Options, []),
     maplist(arg(2), Elements, Attrs).
 
+type(Array) -->
+    csym(Basic),
+    "[",
+    !,
+    { between(1, 255, Len)
+    },
+    integer(Len),
+    "]",
+    { Array =.. [Basic, Len]
+    }.
+type(Basic) --> csym(Basic).
+
 description(enum, enums, enum_description).
 description(message, messages, message_description).
 
