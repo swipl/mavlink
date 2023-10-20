@@ -59,6 +59,10 @@ element(Options0, [elements(Elements)|Options]) -->
     }.
 element(Options, Options) --> [_].
 
+element_(enum, Attrs, Options0, Options) :-
+    !,
+    select_option(name(Name), Attrs, Attrs1),
+    term(enum(Name, Attrs1), Options0, Options).
 element_(message, Attrs, Options0, [extensions(false)|Options]) :-
     !,
     select_option(name(Name), Attrs, Attrs1),
