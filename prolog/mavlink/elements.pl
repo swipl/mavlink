@@ -82,12 +82,12 @@ element_(field, Attrs, Options0, Options) :-
     !,
     args(2, [MessageAttrs|_], Options0),
     select_option(name(Name), Attrs, Attrs1),
-    select_option(type(Type0), Attrs1, Attrs2),
-    atom_codes(Type0, Codes),
-    phrase(type(Type), Codes),
+    select_option(type(Type), Attrs1, Attrs2),
+    atom_codes(Type, Codes),
+    phrase(type(Type1), Codes),
     option(name(MessageName), MessageAttrs),
     option(extensions(Extensions), Options0),
-    term(message_field(MessageName, Name, Type,
+    term(message_field(MessageName, Name, Type1,
                        [ extensions(Extensions)
                        | Attrs2
                        ]), Options0, Options).
