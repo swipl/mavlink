@@ -63,6 +63,7 @@ element(Options0, [elements(Elements)|Options]) -->
 element(Options, Options) --> [_].
 
 element_(enum, Attrs, Options0, Options) :-
+    args(1, [enums, mavlink], Options0),
     !,
     select_option(name(Name), Attrs, Attrs1),
     term(enum(Name, Attrs1), Options0, Options).
