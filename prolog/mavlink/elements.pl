@@ -6,9 +6,11 @@
 
 :- module(mavlink_elements,
           []).
-:- autoload(library(option),
-            [select_option/4, select_option/3, option/3, option/2]).
 :- autoload(library(apply), [maplist/3]).
+:- autoload(library(lists), [reverse/2]).
+:- autoload(library(option),
+            [select_option/4, select_option/3, option/2, option/3]).
+:- autoload(library(dcg/basics), [csym/3, integer/3]).
 :- use_module(library(debug), [debugging/1, debug/3]).
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
