@@ -50,9 +50,11 @@ element(Options0, [elements(Elements)|Options]) -->
     !,
     { element_(Tag, Attrs, Options0, Options_),
       select_option(elements(Elements), Options_, Options__, []),
-      phrase(content([ elements([ element(Tag, Attrs, Content)|
-                                  Elements ])|
-                       Options__ ], Options___), Content),
+      phrase(content([ elements([ element(Tag, Attrs, Content)
+                                | Elements
+                                ])
+                     | Options__
+                     ], Options___), Content),
       select_option(elements(_), Options___, Options)
     }.
 element(Options, Options) --> [_].
@@ -76,7 +78,9 @@ element_(field, Attrs, Options0, Options) :-
     option(name(MessageName), MessageAttrs),
     option(extensions(Extensions), Options0),
     term(message_field(MessageName, Name, Type,
-                       [extensions(Extensions)|Attrs2]), Options0, Options).
+                       [ extensions(Extensions)
+                       | Attrs2
+                       ]), Options0, Options).
 element_(Tag, Attrs, Options, Options) :-
     (   debugging(mavlink(elements))
     ->  tags(Tags, Options),
