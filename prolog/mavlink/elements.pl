@@ -78,7 +78,7 @@ element_(extensions, _, Options0, [extensions(true)|Options]) :-
     !,
     select_option(extensions(false), Options0, Options).
 element_(field, Attrs, Options0, Options) :-
-    args(1, [message|_], Options0),
+    args(1, [message, messages, mavlink], Options0),
     !,
     args(2, [MessageAttrs|_], Options0),
     select_option(name(Name), Attrs, Attrs1),
