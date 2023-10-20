@@ -74,8 +74,8 @@ element_(extensions, _, Options0, [extensions(true)|Options]) :-
     !,
     select_option(extensions(false), Options0, Options).
 element_(field, Attrs, Options0, Options) :-
-    !,
     tags([message|_], Options0),
+    !,
     attrs([MessageAttrs|_], Options0),
     select_option(name(Name), Attrs, Attrs1),
     select_option(type(Type), Attrs1, Attrs2),
