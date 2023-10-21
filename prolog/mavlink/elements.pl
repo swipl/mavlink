@@ -143,15 +143,3 @@ type(Array) -->
     { Array =.. [Basic, Len]
     }.
 type(Basic) --> csym(Basic).
-
-description(enum, enums, enum_description).
-description(message, messages, message_description).
-
-description(entry, enum, enums, enum_entry_description).
-description(field, message, messages, message_field_description).
-
-deprecated(enum, enums, enum_deprecated).
-deprecated(message, messages, message_deprecated).
-
-deprecated(entry, enum, enums, enum_entry_deprecated).
-deprecated(field, message, messages, message_field_deprecated).
