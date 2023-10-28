@@ -47,10 +47,18 @@ mavlink_array(Basic, Len) -->
 %   checks come later when incoming message fields unify with message
 %   frame octets. Allow flexibility at this stage.
 %
+%   Basic type grammar amounts to simply translating an atom to codes or
+%   vice versa. Valid basic types have C symbol syntax with a known
+%   basic size.
+%
 %   Utilises the csym//1 grammar. It has one problem when Basic is
-%   non-variable. The implementation leaves a choicepoint which blows
-%   up the trail stack. Fix this issue by preempting the non-variable
-%   choice and introducing a cut.
+%   non-variable. The implementation leaves a choicepoint which blows up
+%   the trail stack because csym//1 fails to cut for non-variable
+%   arguments. Fix this issue by preempting the non-variable choice and
+%   introducing a cut.
+%
+%   Heartbeat messages in the common dialect have a special
+%   `uint8_t_mavlink_version` field type.
 
 mavlink_basic(Basic) -->
     { nonvar(Basic), !
