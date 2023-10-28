@@ -11,7 +11,8 @@
           ]).
 :- autoload(library(dcg/basics), [integer/3, csym/3]).
 
-%!  mavlink_array(?Array) is semidet.
+%!  mavlink_array(?Array)// is semidet.
+%!  mavlink_array(?Basic, ?Len)// is semidet.
 %
 %   True when a basic-length phrase matches Basic type of Len items.
 %   Fails for non-array type phrases.
@@ -36,7 +37,7 @@ mavlink_array(Array) -->
 mavlink_array(Basic, Len) -->
     mavlink_basic(Basic), "[", integer(Len), "]".
 
-%!  mavlink_basic(?Basic) is semidet.
+%!  mavlink_basic(?Basic)// is semidet.
 %
 %   Implements the MAVLink basic type grammar. Allows for *any* C-style
 %   type specifier without strict checking for validity of type; valid
