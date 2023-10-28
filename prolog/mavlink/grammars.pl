@@ -5,7 +5,10 @@
 */
 
 :- module(mavlink_grammars,
-          []).
+          [ mavlink_array//1,
+            mavlink_array//2,
+            mavlink_basic//1
+          ]).
 :- autoload(library(dcg/basics), [integer/3, csym/3]).
 
 %!  mavlink_array(?Array) is semidet.
