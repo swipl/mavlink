@@ -8,6 +8,20 @@
           []).
 :- autoload(library(dcg/basics), [integer/3, csym/3]).
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    True when a basic-length phrase matches Basic type of Len items.
+    Fails for non-array type phrases.
+
+Array types fail for +uint8_t_mavlink_version+ basic types. The MAVLink
+version must be a single basic field, not an array.
+
+@arg Basic is the base type atom.
+@arg Len is the integer length of the array between 1 and 255
+inclusively.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
 mavlink_array(Array) -->
     { nonvar(Array), !, Array =.. [Basic, Len]
     },
