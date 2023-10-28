@@ -17,8 +17,11 @@
 %   True when a basic-length phrase matches Basic type of Len items.
 %   Fails for non-array type phrases.
 %
-%   Array types _should_ fail for +uint8_t_mavlink_version+ basic types.
+%   Array types _should_ fail for `uint8_t_mavlink_version` basic types.
 %   The MAVLink version must be a single basic field, not an array.
+%
+%   @arg Array is an arity-1 compound where the functor name matches the
+%   Basic type and the argument is an array Len integer.
 %
 %   @arg Basic is the base type atom.
 %
