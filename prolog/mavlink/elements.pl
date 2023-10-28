@@ -37,9 +37,9 @@ element(Tag, Attrs, _Content, Options, Options) :-
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-mavlink_terms(Mavlink, Terms) :-
+mavlink_clauses(Mavlink, Terms) :-
     phrase(element([], Options), [Mavlink]),
-    memberchk(terms(Terms0), Options),
+    memberchk(clauses(Terms0), Options),
     reverse(Terms0, Terms).
 
 content(Options, Options) --> [].
@@ -66,7 +66,8 @@ element_(enum, Attrs, Options0, Options) :-
     args(1, [enums, mavlink], Options0),
     !,
     select_option(name(Name), Attrs, Attrs1),
-    term(enum(Name, Attrs1), Options0, Options).
+    merge_options([], Attrs1, Attrs2),
+    select_clause(enum(Name, Attrs2), Options0, Options).
 element_(entry, Attrs, Options0, Options) :-
     args(1, [enum, enums, mavlink], Options0),
     !,
@@ -76,7 +77,8 @@ element_(entry, Attrs, Options0, Options) :-
     option(name(EnumName), EnumAttrs),
     atom_number(Value, Value1),
     merge_options([], Attrs2, Attrs3),
-    term(enum_entry(EnumName, Name, Value1, Attrs3), Options0, Options).
+    select_clause(enum_entry(EnumName, Name, Value1, Attrs3),
+                  Options0, Options).
 element_(param, Attrs, Options0, Options) :-
     args(1, [entry, enum, enums, mavlink], Options0),
     !,
@@ -86,15 +88,15 @@ element_(param, Attrs, Options0, Options) :-
     option(name(EnumName), EnumAttrs),
     atom_number(Index, Index1),
     merge_options([], Attrs1, Attrs2),
-    term(enum_entry_param(EnumName, EntryName, Index1, Attrs2),
-         Options0, Options).
+    select_clause(enum_entry_param(EnumName, EntryName, Index1, Attrs2),
+                  Options0, Options).
 element_(message, Attrs, Options0, [extensions(false)|Options]) :-
     args(1, [messages, mavlink], Options0),
     !,
     select_option(name(Name), Attrs, Attrs1),
     select_option(id(Id), Attrs1, Attrs2),
     atom_number(Id, Id1),
-    term(message(Name, Id1, Attrs2), Options0, Options_),
+    select_clause(message(Name, Id1, Attrs2), Options0, Options_),
     select_option(extensions(_), Options_, Options, _).
 element_(extensions, _, Options0, [extensions(true)|Options]) :-
     !,
@@ -110,7 +112,8 @@ element_(field, Attrs, Options0, Options) :-
     option(name(MessageName), MessageAttrs),
     option(extensions(Extensions), Options0),
     merge_options([extensions(Extensions)], Attrs2, Attrs3),
-    term(message_field(MessageName, Name, Type1, Attrs3), Options0, Options).
+    select_clause(message_field(MessageName, Name, Type1, Attrs3),
+                  Options0, Options).
 element_(Tag, Attrs, Options, Options) :-
     (   debugging(mavlink(elements))
     ->  args(1, Tags, Options),
@@ -120,8 +123,8 @@ element_(Tag, Attrs, Options, Options) :-
     ;   true
     ).
 
-term(H, Options0, Options) :-
-    select_option_(H, terms(_), Options0, Options).
+select_clause(H, Options0, Options) :-
+    select_option_(H, clauses(_), Options0, Options).
 
 select_option_(H, Option, Options0, [Option_|Options]) :-
     select_option(Option, Options0, Options, []),
